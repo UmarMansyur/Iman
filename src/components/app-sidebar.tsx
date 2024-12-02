@@ -25,6 +25,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { usePathname } from "next/navigation";
 
 
 // This is sample data.
@@ -172,15 +173,30 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Add usePathname hook to get current route
+  const pathname = usePathname()
+
+  // Determine which nav to show based on pathname
+  const getNavItems = () => {
+    if (pathname?.startsWith('/admin')) {
+      return <NavMain title="Administrator" items={data.navAdmin} />
+    }
+    if (pathname?.startsWith('/owner')) {
+      return <NavMain title="Owner" items={data.navOwner} />
+    }
+    if (pathname?.startsWith('/')) {
+      return <NavMain title="Operator" items={data.navOperator} />
+    }
+    return null
+  }
+
   return (
     <Sidebar collapsible="icon" {...props} >
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain title="Administrator" items={data.navAdmin} />
-        <NavMain title="Owner" items={data.navOwner} />
-        <NavMain title="Operator" items={data.navOperator} />
+        {getNavItems()}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

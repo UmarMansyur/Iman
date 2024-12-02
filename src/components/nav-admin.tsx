@@ -45,7 +45,7 @@ export function NavAdmin({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title} className="py-5 hover:text-white hover:bg-blue-400 transition-colors">
+                <SidebarMenuButton tooltip={item.title} className="py-5 transition-colors">
                   {item.icon && <item.icon />}
                   <span className="ps-2">{item.title}</span>
                   {item.items && <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />}
@@ -55,7 +55,7 @@ export function NavAdmin({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title} className="ps-2">
-                      <SidebarMenuSubButton asChild className="py-5 text-gray-700 hover:text-white hover:bg-blue-400 transition-colors">
+                      <SidebarMenuSubButton asChild className="py-5 text-gray-700 transition-colors">
                         <a href={subItem.url}>
                           <span className="ps-2">{subItem.title}</span>
                         </a>

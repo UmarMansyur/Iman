@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import React from "react";
-import Layout from "../../page";
+import Layout from "../page";
 
 
 async function Dashboard() {

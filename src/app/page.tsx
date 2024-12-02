@@ -18,7 +18,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main>
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b border-border">
             <div className="flex items-center gap-2 px-4">
@@ -26,7 +25,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Separator orientation="vertical" className="mr-2 h-4" />
             </div>
           </header>
-          <div className="px-4 my-5">
+          <div className="px-4 my-5 flex flex-row gap-4 w-full">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
@@ -38,10 +37,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-            {children}
           </div>
+          <div className="px-4 w-full">{children}</div>
         </SidebarInset>
-      </main>
     </SidebarProvider>
   );
 }
