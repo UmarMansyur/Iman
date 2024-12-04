@@ -58,19 +58,19 @@ const data = {
         },
         {
           title: "Pabrik",
-          url: "#",
+          url: "/admin/pabrik",
         },
         {
           title: "Satuan",
-          url: "#",
+          url: "/admin/satuan",
         },
         {
           title: "Material",
-          url: "#",
+          url: "/admin/material",
         },
         {
           title: "Hak Akses",
-          url: "#",
+          url: "/admin/hak-akses",
         },
       ],
     },

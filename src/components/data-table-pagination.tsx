@@ -43,6 +43,9 @@ export function DataTablePagination<TData>({
                   setPageSize(size);
                   table.setPageIndex(0);
                 }}
+                className={`${
+                  pageSize === size ? "bg-blue-500 text-white hover:bg-blue-600 hover:text-white" : ""
+                }`}
               >
                 {size} baris
               </DropdownMenuItem>
