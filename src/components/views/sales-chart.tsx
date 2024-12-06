@@ -8,8 +8,8 @@ const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 export function SalesChart(){
     const option: ApexOptions = {
       chart: {
-        height: '100%',
-        type: 'line',
+        height: 350,
+        type: 'bar',
         zoom: {
           enabled: false
         },
@@ -18,13 +18,14 @@ export function SalesChart(){
         },
         parentHeightOffset: 0,
       },
-      colors: ['#1d4ed8'],
+      colors: ['#3b82f6'],
     
       title: {
         text: 'Penjualan & Pendapatan',
         align: 'left',
+        margin: 10,
         style: {
-          fontSize: '24px',
+          fontSize: '20px',
           fontWeight: '600',
         }
       },
@@ -38,10 +39,6 @@ export function SalesChart(){
           bottom: 0,
           left: 0
         }
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 3
       },
       dataLabels: {
         enabled: false
@@ -88,7 +85,13 @@ export function SalesChart(){
             return value.toString();
           }
         }
-      }
+      },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          columnWidth: '60%',
+        }
+      },
     };
 
     const series = [{
@@ -97,12 +100,14 @@ export function SalesChart(){
       }]
 
     return(
-        <>
+        <div className="p-4 bg-white rounded-lg h-[400px]">
           <ApexChart 
             options={option} 
             series={series}  
+            type="bar"   
+            height={350}
           />
-        </>
+        </div>
     )
     
 }

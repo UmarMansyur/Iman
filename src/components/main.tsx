@@ -19,7 +19,7 @@ export default function MainPage({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex sticky top-0 bg-background h-16 shrink-0 items-center gap-2 border-b px-4 mb-5">
+        <header className="flex fixed w-full top-0 bg-white h-16 shrink-0 items-center gap-2 border-b px-4 shadow-sm z-10">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
@@ -36,7 +36,7 @@ export default function MainPage({ children }: { children: React.ReactNode }) {
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 w-full">
+        <div className="flex flex-1 flex-col gap-4 px-4 w-full bg-[#F5F6FA] pt-20">
           {children}
         </div>
       </SidebarInset>

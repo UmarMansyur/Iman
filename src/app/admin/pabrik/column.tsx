@@ -131,7 +131,8 @@ export const columns: ColumnDef<Factory>[] = [
             <Button variant="outline" onClick={() => console.log("Cancelled")}>
               Batal
             </Button>
-            <Button className="bg-transparent text-black" onClick={() => console.log("Factory deleted")}>
+            <Button className="bg-red-500 hover:bg-red-600 text-white" onClick={() => console.log("Factory deleted")}>
+              Hapus
             </Button>
           </div>
         </DialogContent>

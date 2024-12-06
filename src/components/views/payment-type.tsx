@@ -15,7 +15,7 @@ export function PaymentTypeChart() {
           show: false
         },
       },
-      colors: ['#1d4ed8', '#2563eb', '#3b82f6', '#60a5fa'],
+      colors: ['#4069E5', '#F59E0B', '#EC4899', '#10B981'],
      
       title: {
         text: 'Metode Pembayaran',
@@ -48,13 +48,13 @@ export function PaymentTypeChart() {
     const series = [35, 25, 30, 10];  // Persentase untuk setiap metode pembayaran
 
     return (
-        <>
+        <div className="p-4 bg-white rounded-lg">
           <ApexChart 
             options={option} 
             series={series} 
             type="pie"
             height={400} 
           />
-        </>
+        </div>
     )
 }

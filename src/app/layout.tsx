@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const dmSans = DM_Sans({
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-public-sans",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dmSans.variable} antialiased`}
+        className={`${publicSans.variable} antialiased`}
+        style={{ backgroundColor: "#EFF6FF !important" }}
       >
         {children}
         <Toaster />

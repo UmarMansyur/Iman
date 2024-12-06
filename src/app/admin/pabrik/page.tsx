@@ -45,7 +45,7 @@ export default function FactoryPage() {
 
   return (
     <MainPage>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2">
         <div className="relative w-64">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
@@ -56,6 +56,7 @@ export default function FactoryPage() {
         <div>
           <StatusFilter selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
         </div>
+        <div className="flex items-center gap-2 ml-auto">
         <Dialog>
         <DialogTrigger asChild>
           <Button className="bg-blue-500 hover:bg-blue-600 text-white">
@@ -80,9 +81,10 @@ export default function FactoryPage() {
           </div>
         </DialogContent>
       </Dialog>
+        </div>
       </div>
 
-      <div className="flex flex-col w-full mx-0 overflow-x-auto mt-6">
+      <div className="flex flex-col w-full mx-0 overflow-x-auto mt-2">
         <DataFactory
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           columns={columns as any}
