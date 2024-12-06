@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-
 const publicSans = Public_Sans({
   subsets: ["latin"],
   variable: "--font-public-sans",

@@ -44,6 +44,8 @@ model User {
   invoices        Invoice[]
   reportProducts  ReportProduct[]
   reportCosts     ReportCost[]
+
+  @@map("users")
 }
 
 model Factory {
@@ -64,6 +66,8 @@ model Factory {
   reportCosts     ReportCost[]
   MaterialStock   MaterialStock[]
   ProductUnit     ProductUnit[]
+
+  @@map("factories")
 }
 
 enum FactoryStatus {
@@ -75,17 +79,19 @@ enum FactoryStatus {
 
 model MemberFactory {
   id         Int                 @id @default(autoincrement())
-  factory    Factory             @relation(fields: [factory_id], references: [id])
+  factory    Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id Int
-  role       Role                @relation(fields: [role_id], references: [id])
+  role       Role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
   role_id    Int
-  user       User                @relation(fields: [user_id], references: [id])
+  user       User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id    Int
   status     MemberFactoryStatus @default(Pending)
   created_at DateTime            @default(now())
   updated_at DateTime            @updatedAt
 
   @@unique([factory_id, user_id])
+
+  @@map("member_factories")
 }
 
 enum MemberFactoryStatus {
@@ -98,22 +104,29 @@ model Role {
   id              Int             @id @default(autoincrement())
   role            String
   memberFactories MemberFactory[]
+
+  @@map("roles")
 }
 
 model BankAccount {
   id         Int      @id @default(autoincrement())
-  factory    Factory  @relation(fields: [factory_id], references: [id])
+  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id Int
   name       String
   rekening   String
   bank_name  String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@map("bank_accounts")
 }
 
 model PaymentMethod {
-  id   Int    @id @default(autoincrement())
-  name String
+  id      Int       @id @default(autoincrement())
+  name    String
+  Invoice Invoice[]
+
+  @@map("payment_methods")
 }
 
 model Material {
@@ -121,70 +134,90 @@ model Material {
   name         String
   reportCosts  ReportCost[]
   MaterialUnit MaterialUnit[]
+
+  @@map("materials")
 }
 
 model Unit {
   id             Int             @id @default(autoincrement())
   name           String
-  stockProducts  StockProduct[]
   reportProducts ReportProduct[]
   reportCosts    ReportCost[]
   detailInvoices DetailInvoice[]
   MaterialUnit   MaterialUnit[]
   ProductUnit    ProductUnit[]
+
+  @@map("units")
 }
 
 model MaterialUnit {
   id            Int             @id @default(autoincrement())
-  material      Material        @relation(fields: [material_id], references: [id])
+  material      Material        @relation(fields: [material_id], references: [id], onDelete: Cascade)
   material_id   Int
-  unit          Unit            @relation(fields: [unit_id], references: [id])
+  unit          Unit            @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id       Int
   MaterialStock MaterialStock[]
+
+  @@map("material_units")
 }
 
 model MaterialStock {
   id               Int          @id @default(autoincrement())
-  factory          Factory      @relation(fields: [factory_id], references: [id])
+  factory          Factory      @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id       Int
-  materialUnit     MaterialUnit @relation(fields: [material_unit_id], references: [id])
+  materialUnit     MaterialUnit @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
   material_unit_id Int
   amount           Float
+
+  @@map("material_stocks")
 }
 
 model Product {
   id             Int             @id @default(autoincrement())
-  factory        Factory         @relation(fields: [factory_id], references: [id])
+  factory        Factory         @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id     Int
   name           String
+  type           ProductType
   stockProducts  StockProduct[]
   reportProducts ReportProduct[]
   ProductUnit    ProductUnit[]
+
+  @@map("products")
+}
+
+enum ProductType {
+  Kretek
+  Gabus
 }
 
 model ProductUnit {
   id                  Int                @id @default(autoincrement())
-  product             Product            @relation(fields: [product_id], references: [id])
+  product             Product            @relation(fields: [product_id], references: [id], onDelete: Cascade)
   product_id          Int
-  unit                Unit               @relation(fields: [unit_id], references: [id])
+  unit                Unit               @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id             Int
   amount              Float
+  parent_id           Int?
   convert_from_parent Float?
   StockProduct        StockProduct[]
-  Factory             Factory?           @relation(fields: [factoryId], references: [id])
+  Factory             Factory?           @relation(fields: [factoryId], references: [id], onDelete: Cascade)
   factoryId           Int?
   PriceProductUnit    PriceProductUnit[]
+
+  @@map("product_units")
 }
 
 model PriceProductUnit {
-  id            Int                    @id @default(autoincrement())
-  productUnit   ProductUnit            @relation(fields: [productUnitId], references: [id])
-  productUnitId Int
-  price         Float
-  sale_price    Float
-  status        PriceProductUnitStatus @default(Active)
-  created_at    DateTime               @default(now())
-  updated_at    DateTime               @updatedAt
+  id              Int                    @id @default(autoincrement())
+  productUnit     ProductUnit            @relation(fields: [product_unit_id], references: [id], onDelete: Cascade)
+  product_unit_id Int
+  price           Float
+  sale_price      Float
+  status          PriceProductUnitStatus @default(Active)
+  created_at      DateTime               @default(now())
+  updated_at      DateTime               @updatedAt
+
+  @@map("price_product_units")
 }
 
 enum PriceProductUnitStatus {
@@ -194,45 +227,59 @@ enum PriceProductUnitStatus {
 
 model StockProduct {
   id              Int         @id @default(autoincrement())
-  productUnit     ProductUnit @relation(fields: [product_unit_id], references: [id])
+  productUnit     ProductUnit @relation(fields: [product_unit_id], references: [id], onDelete: Cascade)
   product_unit_id Int
   amount          Float
-  Unit            Unit?       @relation(fields: [unitId], references: [id])
-  unitId          Int?
-  Product         Product?    @relation(fields: [productId], references: [id])
-  productId       Int?
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
+  Product         Product?    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId       Int?
+
+  @@map("stock_products")
 }
 
 model ReportProduct {
-  id         Int      @id @default(autoincrement())
-  product    Product  @relation(fields: [product_id], references: [id])
-  product_id Int
-  user       User     @relation(fields: [user_id], references: [id])
-  user_id    Int
-  factory    Factory  @relation(fields: [factory_id], references: [id])
-  factory_id Int
-  unit       Unit     @relation(fields: [unit_id], references: [id])
-  unit_id    Int
-  amount     Float
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                     Int               @id @default(autoincrement())
+  product                Product           @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id             Int
+  user                   User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                Int
+  factory                Factory           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int
+  unit                   Unit              @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id                Int
+  amount                 Float
+  morning_shift_amount   Float?
+  morning_shift_time     DateTime?         @db.Time
+  afternoon_shift_amount Float?
+  afternoon_shift_time   DateTime?         @db.Time
+  type                   ReportProductType @default(In)
+  created_at             DateTime          @default(now())
+  updated_at             DateTime          @updatedAt
+
+  @@map("report_products")
+}
+
+enum ReportProductType {
+  In
+  Out
 }
 
 model ReportCost {
   id          Int      @id @default(autoincrement())
-  material    Material @relation(fields: [material_id], references: [id])
+  material    Material @relation(fields: [material_id], references: [id], onDelete: Cascade)
   material_id Int
-  factory     Factory  @relation(fields: [factory_id], references: [id])
+  factory     Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id  Int
-  unit        Unit     @relation(fields: [unit_id], references: [id])
+  unit        Unit     @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id     Int
-  user        User     @relation(fields: [user_id], references: [id])
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id     Int
   amount      Float
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+
+  @@map("report_costs")
 }
 
 model Discount {
@@ -240,21 +287,25 @@ model Discount {
   code   String @unique
   name   String
   amount Float
+
+  @@map("discounts")
 }
 
 model PPN {
   id         Int    @id @default(autoincrement())
   desc       String
   percentage Float
+
+  @@map("ppns")
 }
 
 model Invoice {
-  id                Int           @id @default(autoincrement())
-  factory           Factory       @relation(fields: [factory_id], references: [id])
+  id                Int                @id @default(autoincrement())
+  factory           Factory            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id        Int
-  user              User          @relation(fields: [user_id], references: [id])
+  user              User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id           Int
-  invoice_code      String        @unique
+  invoice_code      String             @unique
   amount            Float
   discount          Float?
   ppn               Float?
@@ -270,29 +321,38 @@ model Invoice {
   sub_total         Float
   remaining_balance Float
   payment_status    PaymentStatus
+  payment_method    PaymentMethod      @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id Int
+  detailInvoices    DetailInvoice[]
+  deliveryTracking  DeliveryTracking[]
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
 
-  detailInvoices   DetailInvoice[]
-  deliveryTracking DeliveryTracking[]
+  @@map("invoices")
 }
 
 model DetailInvoice {
   id         Int     @id @default(autoincrement())
-  unit       Unit    @relation(fields: [unit_id], references: [id])
+  unit       Unit    @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id    Int
   desc       String
-  amount     Float
-  discount   Float?
-  sub_total  Float
-  invoice    Invoice @relation(fields: [invoice_id], references: [id])
+  amount     Float   @default(0)
+  discount   Float?  @default(0)
+  sub_total  Float   @default(0)
+  invoice    Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
   invoice_id Int
+
+  @@map("detail_invoices")
 }
 
 model DeliveryTracking {
   id         Int     @id @default(autoincrement())
-  invoice    Invoice @relation(fields: [invoice_id], references: [id])
+  invoice    Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
   invoice_id Int
   desc       String
   location   String
   latitude   Float
   longitude  Float
+
+  @@map("delivery_trackings")
 }

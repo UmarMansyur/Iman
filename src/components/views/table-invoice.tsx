@@ -1,5 +1,7 @@
 "use client";
+import { ArrowUpRight } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { Card } from "../ui/card";
 import {
   Table,
   TableBody,
@@ -11,8 +13,18 @@ import {
 
 export default function TableInvoice() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-3">Transaksi Terbaru</h1>
+    <Card className="bg-white rounded-lg border border-gray-200">
+      <div className="flex justify-between items-center border-b border-gray-200 px-2 py-2 mb-3">
+        <div className="flex flex-col gap-1 ps-2">
+        <h1 className="text-xl font-bold">Transaksi Terbaru</h1>
+          <p className="text-sm text-gray-500">
+            Transaksi terbaru dari semua pabrik
+          </p>
+        </div>
+        <button type="button" className="text-sm bg-transparent p-2">
+          <ArrowUpRight className="w-4 h-4" />
+        </button>
+      </div>
       <Table className="rounded-lg">
         <TableHeader className="overflow-hidden">
           <TableRow className="bg-gray-100">
@@ -39,6 +51,6 @@ export default function TableInvoice() {
           ))}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 }

@@ -1,4 +1,4 @@
-
+'use client'
 import { Package2, ShoppingCart, Receipt, DollarSign } from "lucide-react";
 import MainPage from "@/components/main";
 import CardDashboard from "@/components/card-dashboard";
