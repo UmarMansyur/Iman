@@ -100,7 +100,7 @@ export function SalesChart(){
       }]
 
     return(
-        <div className="p-4 bg-white rounded-lg h-[400px]">
+        <div className="p-4 bg-white rounded-lg h-[400px] border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
           <ApexChart 
             options={option} 
             series={series}  

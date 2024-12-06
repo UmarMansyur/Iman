@@ -36,7 +36,7 @@ export default function MainPage({ children }: { children: React.ReactNode }) {
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 w-full bg-[#F5F6FA] pt-20">
+        <div className="flex flex-1 flex-col gap-4 px-4 w-full bg-white pt-20">
           {children}
         </div>
       </SidebarInset>

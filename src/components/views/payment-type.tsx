@@ -20,7 +20,7 @@ export function PaymentTypeChart() {
       title: {
         text: 'Metode Pembayaran',
         // align: 'center',
-        align: 'center',
+        align: 'left',
         margin: 10,
         style: {
           fontSize: '24px',
@@ -48,7 +48,7 @@ export function PaymentTypeChart() {
     const series = [35, 25, 30, 10];  // Persentase untuk setiap metode pembayaran
 
     return (
-        <div className="p-4 bg-white rounded-lg">
+        <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
           <ApexChart 
             options={option} 
             series={series} 

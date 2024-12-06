@@ -46,7 +46,7 @@ export default function Pengguna() {
 
   return (
     <MainPage>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-blue-500 hover:shadow-sm hover:shadow-blue-500/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -107,34 +107,43 @@ export default function Pengguna() {
           </CardContent>
         </Card>
       </div>
-
-      <div className="flex items-center gap-2 mb-3">
-        <div className="relative w-64">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Cari Pengguna"
-            className="w-full pl-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-gray-300 focus:border-gray-300"
+      <Card className="bg-white rounded-lg">
+        <div className="border-b p-4">
+          <h1 className="text-lg font-medium">Pengguna</h1>
+          <p className="text-sm text-muted-foreground">
+          Berikut adalah daftar pengguna yang terdaftar di aplikasi, anda tidak dapat mengubah akun di halaman ini. Untuk mengubah akun pengguna, silahkan pergi ke halaman Pengaturan Akun
+          </p>
+        </div>
+        <CardContent className="p-4">
+        <div className="flex items-center gap-2 my-5">
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Cari Pengguna"
+              className="w-full pl-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-gray-300 focus:border-gray-300"
+            />
+          </div>
+          <div>
+            <StatusFilter
+              selectedStatus={selectedStatus}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+          <Link href="/admin/pengguna/create" className="ms-auto">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Plus /> Tambah Pengguna
+            </Button>
+          </Link>
+        </div>
+        <div className="flex flex-col w-full mx-0 overflow-x-auto">
+          <DataPengguna
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            columns={columns as any}
+            data={data}
           />
         </div>
-        <div>
-          <StatusFilter
-            selectedStatus={selectedStatus}
-            onStatusChange={handleStatusChange}
-          />
-        </div>
-        <Link href="/admin/pengguna/create" className="ms-auto">
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-            <Plus /> Tambah Pengguna
-          </Button>
-        </Link>
-      </div>
-      <div className="flex flex-col w-full mx-0 overflow-x-auto">
-        <DataPengguna
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          columns={columns as any}
-          data={data}
-        />
-      </div>
+        </CardContent>
+      </Card>
     </MainPage>
   );
 }

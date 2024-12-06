@@ -4,6 +4,8 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Edit, Pencil, Trash } from "lucide-react";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -76,8 +78,23 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "status",
     cell: ({ row }) => {
       const status = row.getValue("status")
-      if (status === "Aktif") return <Badge className="bg-green-500">Aktif</Badge>
-      if (status === "Tidak Aktif") return <Badge className="bg-red-500">Tidak Aktif</Badge>
+      if (status === "Aktif") return <Badge className="bg-blue-500 hover:bg-blue-600">Aktif</Badge>
+      if (status === "Tidak Aktif") return <Badge className="bg-red-500 hover:bg-red-600">Tidak Aktif</Badge>
+    },
+  },
+  {
+    accessorKey: "action",
+    header: 'Aksi',
+    cell: ({ row }) => {
+      // buatkan button edit dan delete
+      return <div className="flex items-center gap-2">
+        <button type="button" className="text-white hover:text-white bg-yellow-500 hover:bg-yellow-600 rounded-md p-2" onClick={() => console.log(row.original.id)}>
+          <Pencil className="w-[10px] h-[10px]" />
+        </button>
+        <button type="button" className="text-white hover:text-white bg-red-500 hover:bg-red-600 rounded-md p-2" onClick={() => console.log(row.original.id)}>
+          <Trash className="w-[10px] h-[10px]" />
+        </button>
+      </div>
     },
   },
 ]

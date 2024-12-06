@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${publicSans.variable} antialiased`}
-        style={{ backgroundColor: "#EFF6FF !important" }}
+        // style={{ backgroundColor: "#EFF6FF !important" }}
       >
         {children}
         <Toaster />

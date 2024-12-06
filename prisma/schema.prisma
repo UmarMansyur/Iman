@@ -9,70 +9,89 @@ datasource db {
 }
 
 enum Gender {
-  MALE
-  FEMALE
+  Male
+  Female
 }
 
 enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  CANCELLED
+  Pending
+  Paid
+  Failed
+  Cancelled
+}
+
+enum UserType {
+  Administrator
+  Operator
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
-  username      String    @unique
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  username      String   @unique
   password      String
   gender        Gender
-  tanggal_lahir DateTime
+  date_of_birth DateTime
   thumbnail     String?
   address       String
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  is_active     Boolean   @default(true)
-  is_verified   Boolean   @default(false)
+  user_type     UserType @default(Operator)
+  is_active     Boolean  @default(true)
+  is_verified   Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
   memberFactories MemberFactory[]
   invoices        Invoice[]
-  products        Product[]
   reportProducts  ReportProduct[]
   reportCosts     ReportCost[]
 }
 
 model Factory {
-  id           Int       @id @default(autoincrement())
-  nickname     String
-  name         String
-  logo         String?
-  address      String
-  status       FactoryStatus
-  
+  id         Int           @id @default(autoincrement())
+  nickname   String
+  name       String
+  logo       String?
+  address    String
+  status     FactoryStatus @default(Pending)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+
   bankAccounts    BankAccount[]
   memberFactories MemberFactory[]
   products        Product[]
   invoices        Invoice[]
   reportProducts  ReportProduct[]
   reportCosts     ReportCost[]
+  MaterialStock   MaterialStock[]
+  ProductUnit     ProductUnit[]
 }
 
 enum FactoryStatus {
-  ACTIVE
-  PENDING
-  INACTIVE
-  SUSPENDED
+  Active
+  Pending
+  Inactive
+  Suspended
 }
 
 model MemberFactory {
-  id         Int      @id @default(autoincrement())
-  factory    Factory  @relation(fields: [factory_id], references: [id])
+  id         Int                 @id @default(autoincrement())
+  factory    Factory             @relation(fields: [factory_id], references: [id])
   factory_id Int
-  role       Role     @relation(fields: [role_id], references: [id])
+  role       Role                @relation(fields: [role_id], references: [id])
   role_id    Int
-  user       User     @relation(fields: [user_id], references: [id])
+  user       User                @relation(fields: [user_id], references: [id])
   user_id    Int
+  status     MemberFactoryStatus @default(Pending)
+  created_at DateTime            @default(now())
+  updated_at DateTime            @updatedAt
 
   @@unique([factory_id, user_id])
+}
+
+enum MemberFactoryStatus {
+  Active
+  Pending
+  Inactive
 }
 
 model Role {
@@ -82,165 +101,198 @@ model Role {
 }
 
 model BankAccount {
-  id          Int      @id @default(autoincrement())
-  factory     Factory  @relation(fields: [factory_id], references: [id])
-  factory_id  Int
-  name        String
-  rekening    String
-  bank_name   String
+  id         Int      @id @default(autoincrement())
+  factory    Factory  @relation(fields: [factory_id], references: [id])
+  factory_id Int
+  name       String
+  rekening   String
+  bank_name  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PaymentMethod {
-  id    Int     @id @default(autoincrement())
-  name  String
+  id   Int    @id @default(autoincrement())
+  name String
 }
 
 model Material {
-  id            Int            @id @default(autoincrement())
-  name          String
-  materialUnits MaterialUnit[]
-  reportCosts   ReportCost[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  reportCosts  ReportCost[]
+  MaterialUnit MaterialUnit[]
 }
 
 model Unit {
-  id              Int            @id @default(autoincrement())
-  name            String
-  materialUnits   MaterialUnit[]
-  stockProducts   StockProduct[]
-  reportProducts  ReportProduct[]
-  reportCosts     ReportCost[]
-  detailInvoices  DetailInvoice[]
-  products        Product[]
+  id             Int             @id @default(autoincrement())
+  name           String
+  stockProducts  StockProduct[]
+  reportProducts ReportProduct[]
+  reportCosts    ReportCost[]
+  detailInvoices DetailInvoice[]
+  MaterialUnit   MaterialUnit[]
+  ProductUnit    ProductUnit[]
 }
 
 model MaterialUnit {
-  id                 Int           @id @default(autoincrement())
-  unit               Unit          @relation(fields: [unit_id], references: [id])
-  unit_id            Int
-  material           Material      @relation(fields: [material_id], references: [id])
-  material_id        Int
-  parent             MaterialUnit? @relation("MaterialUnitConversion", fields: [parent_id], references: [id])
-  parent_id          Int?
-  amount             Float
-  convert_from_parent Float?
-  
-  children MaterialUnit[] @relation("MaterialUnitConversion")
+  id            Int             @id @default(autoincrement())
+  material      Material        @relation(fields: [material_id], references: [id])
+  material_id   Int
+  unit          Unit            @relation(fields: [unit_id], references: [id])
+  unit_id       Int
+  MaterialStock MaterialStock[]
+}
+
+model MaterialStock {
+  id               Int          @id @default(autoincrement())
+  factory          Factory      @relation(fields: [factory_id], references: [id])
+  factory_id       Int
+  materialUnit     MaterialUnit @relation(fields: [material_unit_id], references: [id])
+  material_unit_id Int
+  amount           Float
 }
 
 model Product {
-  id               Int            @id @default(autoincrement())
-  unit             Unit           @relation(fields: [unit_id], references: [id])
-  unit_id          Int
-  factory          Factory        @relation(fields: [factory_id], references: [id])
-  factory_id       Int
-  user             User           @relation(fields: [user_id], references: [id])
-  user_id          Int
-  name             String
-  sale_price       Float
-  production_cost  Float
-  stock            Int
-  
-  stockProducts   StockProduct[]
-  reportProducts  ReportProduct[]
+  id             Int             @id @default(autoincrement())
+  factory        Factory         @relation(fields: [factory_id], references: [id])
+  factory_id     Int
+  name           String
+  stockProducts  StockProduct[]
+  reportProducts ReportProduct[]
+  ProductUnit    ProductUnit[]
+}
+
+model ProductUnit {
+  id                  Int                @id @default(autoincrement())
+  product             Product            @relation(fields: [product_id], references: [id])
+  product_id          Int
+  unit                Unit               @relation(fields: [unit_id], references: [id])
+  unit_id             Int
+  amount              Float
+  convert_from_parent Float?
+  StockProduct        StockProduct[]
+  Factory             Factory?           @relation(fields: [factoryId], references: [id])
+  factoryId           Int?
+  PriceProductUnit    PriceProductUnit[]
+}
+
+model PriceProductUnit {
+  id            Int                    @id @default(autoincrement())
+  productUnit   ProductUnit            @relation(fields: [productUnitId], references: [id])
+  productUnitId Int
+  price         Float
+  sale_price    Float
+  status        PriceProductUnitStatus @default(Active)
+  created_at    DateTime               @default(now())
+  updated_at    DateTime               @updatedAt
+}
+
+enum PriceProductUnitStatus {
+  Active
+  Inactive
 }
 
 model StockProduct {
-  id          Int     @id @default(autoincrement())
-  product     Product @relation(fields: [product_id], references: [id])
-  product_id  Int
-  unit        Unit    @relation(fields: [unit_id], references: [id])
-  unit_id     Int
-  amount      Float
+  id              Int         @id @default(autoincrement())
+  productUnit     ProductUnit @relation(fields: [product_unit_id], references: [id])
+  product_unit_id Int
+  amount          Float
+  Unit            Unit?       @relation(fields: [unitId], references: [id])
+  unitId          Int?
+  Product         Product?    @relation(fields: [productId], references: [id])
+  productId       Int?
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
 }
 
 model ReportProduct {
+  id         Int      @id @default(autoincrement())
+  product    Product  @relation(fields: [product_id], references: [id])
+  product_id Int
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  factory    Factory  @relation(fields: [factory_id], references: [id])
+  factory_id Int
+  unit       Unit     @relation(fields: [unit_id], references: [id])
+  unit_id    Int
+  amount     Float
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model ReportCost {
   id          Int      @id @default(autoincrement())
-  product     Product  @relation(fields: [product_id], references: [id])
-  product_id  Int
-  user        User     @relation(fields: [user_id], references: [id])
-  user_id     Int
+  material    Material @relation(fields: [material_id], references: [id])
+  material_id Int
   factory     Factory  @relation(fields: [factory_id], references: [id])
   factory_id  Int
   unit        Unit     @relation(fields: [unit_id], references: [id])
   unit_id     Int
+  user        User     @relation(fields: [user_id], references: [id])
+  user_id     Int
   amount      Float
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
 
-model ReportCost {
-  id           Int      @id @default(autoincrement())
-  material     Material @relation(fields: [material_id], references: [id])
-  material_id  Int
-  factory      Factory  @relation(fields: [factory_id], references: [id])
-  factory_id   Int
-  unit         Unit     @relation(fields: [unit_id], references: [id])
-  unit_id      Int
-  user         User     @relation(fields: [user_id], references: [id])
-  user_id      Int
-  amount       Float
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-}
-
 model Discount {
-  id      String   @id @default(uuid())
-  code    String   @unique
-  name    String
-  amount  Float
+  id     String @id @default(uuid())
+  code   String @unique
+  name   String
+  amount Float
 }
 
 model PPN {
-  id          Int     @id @default(autoincrement())
-  desc        String
-  percentage  Float
+  id         Int    @id @default(autoincrement())
+  desc       String
+  percentage Float
 }
 
 model Invoice {
-  id               Int           @id @default(autoincrement())
-  factory          Factory       @relation(fields: [factory_id], references: [id])
-  factory_id       Int
-  user             User          @relation(fields: [user_id], references: [id])
-  user_id          Int
-  invoice_code     String        @unique
-  amount           Float
-  discount         Float?
-  ppn              Float?
-  buyer            String
-  sales_man        String
-  recipient        String
-  maturity_date    DateTime
-  item_amount      Float
-  discon_member    Float?
-  buyer_address    String
-  down_payment     Float
-  total            Float
-  sub_total        Float
+  id                Int           @id @default(autoincrement())
+  factory           Factory       @relation(fields: [factory_id], references: [id])
+  factory_id        Int
+  user              User          @relation(fields: [user_id], references: [id])
+  user_id           Int
+  invoice_code      String        @unique
+  amount            Float
+  discount          Float?
+  ppn               Float?
+  buyer             String
+  sales_man         String
+  recipient         String
+  maturity_date     DateTime
+  item_amount       Float
+  discon_member     Float?
+  buyer_address     String
+  down_payment      Float
+  total             Float
+  sub_total         Float
   remaining_balance Float
-  payment_status   PaymentStatus
-  
-  detailInvoices    DetailInvoice[]
-  deliveryTracking  DeliveryTracking[]
+  payment_status    PaymentStatus
+
+  detailInvoices   DetailInvoice[]
+  deliveryTracking DeliveryTracking[]
 }
 
 model DetailInvoice {
-  id          Int      @id @default(autoincrement())
-  unit        Unit     @relation(fields: [unit_id], references: [id])
-  unit_id     Int
-  desc        String
-  amount      Float
-  discount    Float?
-  sub_total   Float
-  invoice     Invoice  @relation(fields: [invoice_id], references: [id])
-  invoice_id  Int
+  id         Int     @id @default(autoincrement())
+  unit       Unit    @relation(fields: [unit_id], references: [id])
+  unit_id    Int
+  desc       String
+  amount     Float
+  discount   Float?
+  sub_total  Float
+  invoice    Invoice @relation(fields: [invoice_id], references: [id])
+  invoice_id Int
 }
 
 model DeliveryTracking {
-  id          Int      @id @default(autoincrement())
-  invoice     Invoice  @relation(fields: [invoice_id], references: [id])
-  invoice_id  Int
-  desc        String
-  location    String
-  latitude    Float
-  longitude   Float
+  id         Int     @id @default(autoincrement())
+  invoice    Invoice @relation(fields: [invoice_id], references: [id])
+  invoice_id Int
+  desc       String
+  location   String
+  latitude   Float
+  longitude  Float
 }
