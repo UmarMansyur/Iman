@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `User` (
+CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(191) NOT NULL,
     `username` VARCHAR(191) NOT NULL,
@@ -14,13 +14,13 @@ CREATE TABLE `User` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `User_email_key`(`email`),
-    UNIQUE INDEX `User_username_key`(`username`),
+    UNIQUE INDEX `users_email_key`(`email`),
+    UNIQUE INDEX `users_username_key`(`username`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Factory` (
+CREATE TABLE `factories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `nickname` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE `Factory` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `MemberFactory` (
+CREATE TABLE `member_factories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `factory_id` INTEGER NOT NULL,
     `role_id` INTEGER NOT NULL,
@@ -43,12 +43,12 @@ CREATE TABLE `MemberFactory` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `MemberFactory_factory_id_user_id_key`(`factory_id`, `user_id`),
+    UNIQUE INDEX `member_factories_factory_id_user_id_key`(`factory_id`, `user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Role` (
+CREATE TABLE `roles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `role` VARCHAR(191) NOT NULL,
 
@@ -56,7 +56,7 @@ CREATE TABLE `Role` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `BankAccount` (
+CREATE TABLE `bank_accounts` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `factory_id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE `BankAccount` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `PaymentMethod` (
+CREATE TABLE `payment_methods` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
 
@@ -77,7 +77,7 @@ CREATE TABLE `PaymentMethod` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Material` (
+CREATE TABLE `materials` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
 
@@ -85,7 +85,7 @@ CREATE TABLE `Material` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Unit` (
+CREATE TABLE `units` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
 
@@ -93,7 +93,7 @@ CREATE TABLE `Unit` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `MaterialUnit` (
+CREATE TABLE `material_units` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `material_id` INTEGER NOT NULL,
     `unit_id` INTEGER NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE `MaterialUnit` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `MaterialStock` (
+CREATE TABLE `material_stocks` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `factory_id` INTEGER NOT NULL,
     `material_unit_id` INTEGER NOT NULL,
@@ -112,20 +112,22 @@ CREATE TABLE `MaterialStock` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Product` (
+CREATE TABLE `products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `factory_id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
+    `type` ENUM('Kretek', 'Gabus') NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ProductUnit` (
+CREATE TABLE `product_units` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_id` INTEGER NOT NULL,
     `unit_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
+    `parent_id` INTEGER NULL,
     `convert_from_parent` DOUBLE NULL,
     `factoryId` INTEGER NULL,
 
@@ -133,9 +135,9 @@ CREATE TABLE `ProductUnit` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `PriceProductUnit` (
+CREATE TABLE `price_product_units` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `productUnitId` INTEGER NOT NULL,
+    `product_unit_id` INTEGER NOT NULL,
     `price` DOUBLE NOT NULL,
     `sale_price` DOUBLE NOT NULL,
     `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
@@ -146,26 +148,30 @@ CREATE TABLE `PriceProductUnit` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `StockProduct` (
+CREATE TABLE `stock_products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_unit_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
-    `unitId` INTEGER NULL,
-    `productId` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `productId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ReportProduct` (
+CREATE TABLE `report_products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_id` INTEGER NOT NULL,
     `user_id` INTEGER NOT NULL,
     `factory_id` INTEGER NOT NULL,
     `unit_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
+    `morning_shift_amount` DOUBLE NULL,
+    `morning_shift_time` TIME NULL,
+    `afternoon_shift_amount` DOUBLE NULL,
+    `afternoon_shift_time` TIME NULL,
+    `type` ENUM('In', 'Out') NOT NULL DEFAULT 'In',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -173,7 +179,7 @@ CREATE TABLE `ReportProduct` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ReportCost` (
+CREATE TABLE `report_costs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `material_id` INTEGER NOT NULL,
     `factory_id` INTEGER NOT NULL,
@@ -187,18 +193,18 @@ CREATE TABLE `ReportCost` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Discount` (
+CREATE TABLE `discounts` (
     `id` VARCHAR(191) NOT NULL,
     `code` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `amount` DOUBLE NOT NULL,
 
-    UNIQUE INDEX `Discount_code_key`(`code`),
+    UNIQUE INDEX `discounts_code_key`(`code`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `PPN` (
+CREATE TABLE `ppns` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `desc` VARCHAR(191) NOT NULL,
     `percentage` DOUBLE NOT NULL,
@@ -207,7 +213,7 @@ CREATE TABLE `PPN` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Invoice` (
+CREATE TABLE `invoices` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `factory_id` INTEGER NOT NULL,
     `user_id` INTEGER NOT NULL,
@@ -227,26 +233,29 @@ CREATE TABLE `Invoice` (
     `sub_total` DOUBLE NOT NULL,
     `remaining_balance` DOUBLE NOT NULL,
     `payment_status` ENUM('Pending', 'Paid', 'Failed', 'Cancelled') NOT NULL,
+    `payment_method_id` INTEGER NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Invoice_invoice_code_key`(`invoice_code`),
+    UNIQUE INDEX `invoices_invoice_code_key`(`invoice_code`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `DetailInvoice` (
+CREATE TABLE `detail_invoices` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `unit_id` INTEGER NOT NULL,
     `desc` VARCHAR(191) NOT NULL,
-    `amount` DOUBLE NOT NULL,
-    `discount` DOUBLE NULL,
-    `sub_total` DOUBLE NOT NULL,
+    `amount` DOUBLE NOT NULL DEFAULT 0,
+    `discount` DOUBLE NULL DEFAULT 0,
+    `sub_total` DOUBLE NOT NULL DEFAULT 0,
     `invoice_id` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `DeliveryTracking` (
+CREATE TABLE `delivery_trackings` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `invoice_id` INTEGER NOT NULL,
     `desc` VARCHAR(191) NOT NULL,
@@ -258,88 +267,88 @@ CREATE TABLE `DeliveryTracking` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `MemberFactory` ADD CONSTRAINT `MemberFactory_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `member_factories` ADD CONSTRAINT `member_factories_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MemberFactory` ADD CONSTRAINT `MemberFactory_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `Role`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `member_factories` ADD CONSTRAINT `member_factories_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MemberFactory` ADD CONSTRAINT `MemberFactory_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `member_factories` ADD CONSTRAINT `member_factories_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `BankAccount` ADD CONSTRAINT `BankAccount_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `bank_accounts` ADD CONSTRAINT `bank_accounts_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MaterialUnit` ADD CONSTRAINT `MaterialUnit_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `material_units` ADD CONSTRAINT `material_units_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `materials`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MaterialUnit` ADD CONSTRAINT `MaterialUnit_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `material_units` ADD CONSTRAINT `material_units_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MaterialStock` ADD CONSTRAINT `MaterialStock_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `material_stocks` ADD CONSTRAINT `material_stocks_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MaterialStock` ADD CONSTRAINT `MaterialStock_material_unit_id_fkey` FOREIGN KEY (`material_unit_id`) REFERENCES `MaterialUnit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `material_stocks` ADD CONSTRAINT `material_stocks_material_unit_id_fkey` FOREIGN KEY (`material_unit_id`) REFERENCES `material_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Product` ADD CONSTRAINT `Product_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `products` ADD CONSTRAINT `products_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductUnit` ADD CONSTRAINT `ProductUnit_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `product_units` ADD CONSTRAINT `product_units_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductUnit` ADD CONSTRAINT `ProductUnit_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `product_units` ADD CONSTRAINT `product_units_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ProductUnit` ADD CONSTRAINT `ProductUnit_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `Factory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `product_units` ADD CONSTRAINT `product_units_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `PriceProductUnit` ADD CONSTRAINT `PriceProductUnit_productUnitId_fkey` FOREIGN KEY (`productUnitId`) REFERENCES `ProductUnit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `price_product_units` ADD CONSTRAINT `price_product_units_product_unit_id_fkey` FOREIGN KEY (`product_unit_id`) REFERENCES `product_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `StockProduct` ADD CONSTRAINT `StockProduct_product_unit_id_fkey` FOREIGN KEY (`product_unit_id`) REFERENCES `ProductUnit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_products` ADD CONSTRAINT `stock_products_product_unit_id_fkey` FOREIGN KEY (`product_unit_id`) REFERENCES `product_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `StockProduct` ADD CONSTRAINT `StockProduct_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `Unit`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `stock_products` ADD CONSTRAINT `stock_products_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `StockProduct` ADD CONSTRAINT `StockProduct_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `Product`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `report_products` ADD CONSTRAINT `report_products_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportProduct` ADD CONSTRAINT `ReportProduct_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `Product`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_products` ADD CONSTRAINT `report_products_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportProduct` ADD CONSTRAINT `ReportProduct_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_products` ADD CONSTRAINT `report_products_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportProduct` ADD CONSTRAINT `ReportProduct_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_products` ADD CONSTRAINT `report_products_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportProduct` ADD CONSTRAINT `ReportProduct_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `materials`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportCost` ADD CONSTRAINT `ReportCost_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportCost` ADD CONSTRAINT `ReportCost_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportCost` ADD CONSTRAINT `ReportCost_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ReportCost` ADD CONSTRAINT `ReportCost_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invoices` ADD CONSTRAINT `invoices_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Invoice` ADD CONSTRAINT `Invoice_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `Factory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invoices` ADD CONSTRAINT `invoices_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Invoice` ADD CONSTRAINT `Invoice_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invoices` ADD CONSTRAINT `invoices_payment_method_id_fkey` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `DetailInvoice` ADD CONSTRAINT `DetailInvoice_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `detail_invoices` ADD CONSTRAINT `detail_invoices_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `DetailInvoice` ADD CONSTRAINT `DetailInvoice_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `Invoice`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `detail_invoices` ADD CONSTRAINT `detail_invoices_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `DeliveryTracking` ADD CONSTRAINT `DeliveryTracking_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `Invoice`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

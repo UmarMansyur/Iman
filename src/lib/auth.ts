@@ -1,6 +1,7 @@
-import { serialize } from 'cookie';
-import * as bcrypt from 'bcrypt'
+import { cookies } from 'next/headers';
+import bcrypt from 'bcrypt'
 import { PrismaClient, User } from '@prisma/client'
+import { redirect } from 'next/navigation';
 const prisma = new PrismaClient();
 
 
@@ -14,16 +15,22 @@ export async function verifyCredentials(email: string, password: string): Promis
 }
 
 export async function createSession(user: User) {
-  const session = serialize("session", JSON.stringify(user), {
+  const cookieStore = await cookies();
+  cookieStore.set("session", JSON.stringify(user), {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
     sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/'
   })
-  return session
+  return user
 }
 
-export async function decrypt(cookie: string) {
-  return JSON.parse(cookie);
+export async function decrypt() {
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get("session")?.value;
+  if(cookie) {
+    return JSON.parse(cookie)
+  }
+  redirect('/login')
 }

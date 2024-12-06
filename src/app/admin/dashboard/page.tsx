@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import MainPage from "@/components/main";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { PaymentTypeChart } from "@/components/views/payment-type";
-
 import { SalesChart } from "@/components/views/sales-chart";
 import TableInvoice from "@/components/views/table-invoice";
 import {
@@ -15,8 +13,11 @@ import {
   Users,
 } from "lucide-react";
 import { DashboardCard } from "@/components/views/dashboard-card";
+import { decrypt } from "@/lib/auth";
 
-export default function Page() {
+export default async function Page() {
+  const user = await decrypt();
+  console.log(user);
   const dashboardCards = [
     {
       title: "Total Pengguna",
@@ -83,7 +84,6 @@ export default function Page() {
       },
     },
   ];
-  
 
   const data = [
     {
@@ -138,16 +138,21 @@ export default function Page() {
             {data.map((item: any) => (
               <Card
                 className={`p-2 duration-100 ease-in-out ${
-                  item.backgroundColor === 'blue' ? 'hover:bg-blue-500' :
-                  item.backgroundColor === 'yellow' ? 'hover:bg-yellow-500' :
-                  item.backgroundColor === 'green' ? 'hover:bg-green-500' :
-                  'hover:bg-red-500'
+                  item.backgroundColor === "blue"
+                    ? "hover:bg-blue-500"
+                    : item.backgroundColor === "yellow"
+                    ? "hover:bg-yellow-500"
+                    : item.backgroundColor === "green"
+                    ? "hover:bg-green-500"
+                    : "hover:bg-red-500"
                 } hover:lg:-rotate-6 hover:rounded-2xl hover:text-white`}
                 key={item.title}
               >
                 <CardHeader className="mb-0 pb-2 bg-transparent">
                   <CardTitle className="flex items-center gap-2 mb-5">
-                    <div className={`flex gap-2 rounded-2xl ${item.background} w-18 h-18 items-center justify-center p-4`}>
+                    <div
+                      className={`flex gap-2 rounded-2xl ${item.background} w-18 h-18 items-center justify-center p-4`}
+                    >
                       {item.icon}
                     </div>
                     <small className="hover:text-white">{item.title}</small>
@@ -157,9 +162,7 @@ export default function Page() {
                   <div className="flex items-center gap-2 justify-between">
                     <p className="text-4xl font-medium">{item.value}</p>
                   </div>
-                  <span className="text-xs hover:text-white">
-                    {item.title}
-                  </span>
+                  <span className="text-xs hover:text-white">{item.title}</span>
                 </CardContent>
               </Card>
             ))}

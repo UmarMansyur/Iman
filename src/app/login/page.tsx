@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
+import { redirect } from "next/navigation";
+import { decrypt } from "@/lib/auth";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +21,10 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
+      // const user = await decrypt();
+      // if(user) {
+      //   return redirect('/admin/dashboard')
+      // }
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -29,8 +35,6 @@ const LoginPage = () => {
       if (!response.ok) {
         throw new Error("Failed to login");
       }
-      const data = await response.json();
-      console.log(data);
     } catch (error) {
       console.error("Error during login:", error);
     }
