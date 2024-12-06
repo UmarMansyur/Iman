@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -125,39 +126,9 @@ async function main(): Promise<void> {
       { 
         factory_id: djava.id,
         name: "ST Premium",
-        unit_id: 5,
       },
     ]
   });
-
-  const productUnit = await prisma.unit.createMany({
-    data: [
-      { name: "Box", parent_unit_id: 5, convert_from_parent: 12 },
-    ]
-  });
-
-
-  const materialStock = await prisma.materialStock.createMany({
-    data: [
-      { material_id: 1, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 2, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 3, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 4, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 5, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 6, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 7, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 8, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 9, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 10, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 11, factory_id: djava.id, unit_id: 1, amount: 1000 },
-      { material_id: 12, factory_id: djava.id, unit_id: 1, amount: 1000 },
-    ]
-  });
-
-
-  
-
-
 }
 
 main()
