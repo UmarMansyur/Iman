@@ -1,26 +1,27 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+
 import MainPage from '@/components/main';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@radix-ui/react-dropdown-menu';
+import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { CalendarIcon, Loader2 } from "lucide-react"
-import { format } from "date-fns"
-import { id } from 'date-fns/locale'
-import { useState } from "react"
+import { CalendarIcon } from "lucide-react"
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { User } from "../../column";
 
 const userSchema = z.object({
   email: z.string().email("Email tidak valid"),
   username: z.string().min(3, "Username minimal 3 karakter"),
-  password: z.string().min(6, "Password minimal 6 karakter"),
   gender: z.enum(["Male", "Female"], {
     required_error: "Pilih jenis kelamin",
   }),
@@ -31,59 +32,141 @@ const userSchema = z.object({
   user_type: z.enum(["Operator", "Administrator"], {
     required_error: "Pilih tipe pengguna",
   }),
-  thumbnail: z.any(),
+  thumbnail: z.instanceof(FileList)
+    .optional()
+    .refine(
+      (files) => {
+        if (!files || files.length === 0) return true;
+        const file = files[0];
+        return file.size <= 5 * 1024 * 1024; // 5MB limit
+      },
+      "Ukuran file maksimal 5MB"
+    )
+    .refine(
+      (files) => {
+        if (!files || files.length === 0) return true;
+        const file = files[0];
+        return file.type.startsWith('image/');
+      },
+      "File harus berupa gambar"
+    ),
 });
 
 type UserSchema = z.infer<typeof userSchema>;
 
-export default function CreateUserPage() {
+export default function EditUserPage() {
+  const params = useParams();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [date, setDate] = useState<Date | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
   const form = useForm<UserSchema>({
     resolver: zodResolver(userSchema),
   });
 
-  const [date, setDate] = useState<Date | undefined>(form.getValues("date_of_birth"));
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const id = params.id;
+  useEffect(() => {
+    if (id) fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      if (id) {
+        const response = await fetch(`/api/user?id=${id}`);
+        if (!response.ok) throw new Error("Failed to fetch user");
+        const userData = await response.json();
+        setUser(userData);
+        
+        const birthDate = new Date(userData.user.date_of_birth);
+        setDate(birthDate);
+        
+        if (userData.user) {
+          form.reset({
+            email: userData.user.email,
+            username: userData.user.username,
+            gender: userData.user.gender as "Male" | "Female",
+            date_of_birth: birthDate,
+            address: userData.user.address,
+            user_type: userData.user.user_type as "Operator" | "Administrator",
+          });
+        }
+      }
+      setIsInitialized(true);
+    } catch (error) {
+      console.error(error);
+      setIsInitialized(true);
+    }
+  };
+
 
   const onSubmit = async (data: UserSchema) => {
     try {
-      setIsSubmitting(true);
+      setIsLoading(true);
       const formData = new FormData();
+      formData.append('id', id as string);
       formData.append('email', data.email);
       formData.append('username', data.username);
-      formData.append('password', data.password);
       formData.append('gender', data.gender);
       formData.append('date_of_birth', data.date_of_birth.toISOString());
       formData.append('address', data.address);
       formData.append('user_type', data.user_type);
-      const file = (data.thumbnail as FileList)[0];
-      if (file) {
-        formData.append('thumbnail', file);
+      
+      if (data.thumbnail instanceof FileList && data.thumbnail.length > 0) {
+        formData.append('thumbnail', data.thumbnail[0]);
       }
 
       const response = await fetch('/api/user', {
-        method: 'POST',
+        method: 'PUT',
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Gagal menyimpan data');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Gagal mengupdate data');
+      }
       
       router.push('/admin/pengguna');
-    } catch (error) {
-      console.error(error);
-      // Add toast notification here if you have one
+    } catch (error: any) {
+      console.log(error);
+      // Tambahkan toast notification di sini jika ada
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  return(
-    <MainPage>
+  if (!isInitialized) {
+    return (
+      <MainPage>
         <Card>
+          <CardContent className="flex items-center justify-center min-h-[200px]">
+            <p>Loading...</p>
+          </CardContent>
+        </Card>
+      </MainPage>
+    );
+  }
+
+  if (!user) {
+    return (
+      <MainPage>
+        <Card>
+          <CardContent className="flex items-center justify-center min-h-[200px]">
+            <p>User not found</p>
+          </CardContent>
+        </Card>
+      </MainPage>
+    );
+  }
+
+  return (
+    <MainPage>
+      <Card>
         <CardHeader className="border-b pt-4 pb-2">
-          <h1 className="text-lg font-semibold">Tambah Pengguna</h1>
+          <h1 className="text-lg font-semibold">Edit Pengguna</h1>
           <p className="text-sm text-muted-foreground">
-            Tambahkan pengguna baru ke sistem.
+            Edit data pengguna sistem.
           </p>
         </CardHeader>
         <CardContent>
@@ -112,19 +195,11 @@ export default function CreateUserPage() {
                 )}
               </div>
               <div>
-                <Label className='text-sm font-medium mb-3'>Password:</Label>
-                <Input 
-                  type="password" 
-                  placeholder="******"
-                  {...form.register("password")}
-                />
-                {form.formState.errors.password && (
-                  <span className="text-sm text-red-500">{form.formState.errors.password.message}</span>
-                )}
-              </div>
-              <div>
                 <Label className='text-sm font-medium mb-3'>Jenis Kelamin:</Label>
-                <Select onValueChange={(value) => form.setValue("gender", value as "Male" | "Female")}>
+                <Select 
+                  onValueChange={(value) => form.setValue("gender", value as "Male" | "Female")} 
+                  value={form.getValues("gender")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Jenis Kelamin" />
                   </SelectTrigger>
@@ -138,6 +213,7 @@ export default function CreateUserPage() {
                 )}
               </div>
               <div>
+
                 <Label className='text-sm font-medium mb-3'>Tanggal Lahir:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -146,18 +222,20 @@ export default function CreateUserPage() {
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP", { locale: id }) : <span>Pilih tanggal</span>}
+                      {form.getValues("date_of_birth") ? 
+                        new Date(date?.toDateString() || '').toLocaleDateString() : <span>Pilih tanggal</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={date}
+                      selected={form.getValues("date_of_birth")}
                       onSelect={(newDate) => {
-                        setDate(newDate);
-                        form.setValue("date_of_birth", newDate as Date);
+                        if (newDate) {
+                          setDate(newDate);
+                          form.setValue("date_of_birth", newDate);
+                        }
                       }}
-                      locale={id}
                       initialFocus
                     />
                   </PopoverContent>
@@ -168,7 +246,10 @@ export default function CreateUserPage() {
               </div>
               <div>
                 <Label className='text-sm font-medium mb-3'>Tipe Pengguna:</Label>
-                <Select onValueChange={(value) => form.setValue("user_type", value as "Operator" | "Administrator")}>
+                <Select 
+                  onValueChange={(value) => form.setValue("user_type", value as "Operator" | "Administrator")} 
+                  value={form.getValues("user_type")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Tipe Pengguna" />
                   </SelectTrigger>
@@ -181,7 +262,7 @@ export default function CreateUserPage() {
                   <span className="text-sm text-red-500">{form.formState.errors.user_type.message}</span>
                 )}
               </div>
-              <div className='col-span-2'>
+              <div>
                 <Label className='text-sm font-medium mb-3'>Thumbnail:</Label>
                 <Input 
                   type="file" 
@@ -215,16 +296,9 @@ export default function CreateUserPage() {
               <Button 
                 type="submit" 
                 className='bg-blue-500 hover:bg-blue-600'
-                disabled={isSubmitting}
+                disabled={isLoading}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  'Simpan'
-                )}
+                {isLoading ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>
           </form>

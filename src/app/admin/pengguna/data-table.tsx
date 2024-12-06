@@ -53,7 +53,7 @@ export function DataPengguna<TData, TValue>({
   });
 
   return (
-    <div className="overflow-x-auto w-full">
+    <div className="overflow-x-auto w-full px-4">
       <div className="rounded-md border">
         <Table className="w-full">
           <TableHeader>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState } from "react";
 import {
@@ -12,19 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
-import { redirect } from "next/navigation";
-import { decrypt } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+
 
 const LoginPage = () => {
+  const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
     try {
-      // const user = await decrypt();
-      // if(user) {
-      //   return redirect('/admin/dashboard')
-      // }
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -35,8 +35,14 @@ const LoginPage = () => {
       if (!response.ok) {
         throw new Error("Failed to login");
       }
-    } catch (error) {
-      console.error("Error during login:", error);
+      router.push('/admin/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to login",
+        description: error.message,
+        duration: 5000,
+      });
     }
   };
 

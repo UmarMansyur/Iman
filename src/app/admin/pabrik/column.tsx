@@ -88,6 +88,7 @@ export const columns: ColumnDef<Factory>[] = [
     header: "Aksi",
     cell: ({ row }) => {
       // buatkan tombol edit dan delete
+      console.log(row.original.id);
       return (
         <div className="flex gap-2">
           <Dialog>

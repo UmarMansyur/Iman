@@ -1,48 +1,51 @@
 "use client";
 
-import MainPage from "@/components/main";
+import { useEffect, useState } from "react";
+import { columns, User } from "./column";
 import { DataPengguna } from "./data-table";
-import { columns } from "./column";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Users, UserCheck, UserX, UserCog, Search } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import StatusFilter from "./StatusFilter";
-import { useState } from "react";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, UserCheck, UserCog, Users, UserX } from "lucide-react";
+import { useRouter } from "next/navigation";
+import MainPage from "@/components/main";
 
-export default function Pengguna() {
-  const data = [
-    {
-      id: "1",
-      email: "test@test.com",
-      username: "test",
-      gender: "Laki-laki",
-      tanggal_lahir: "1990-01-01",
-      thumbnail: "test.com",
-      address: "test",
-      status: "Aktif",
-    },
-  ];
+export default function PenggunaPage() {
+  const router = useRouter();
+  const [data, setData] = useState<User[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [active, setActive] = useState(0);
+  const [verified, setVerified] = useState(0);
 
-  for (let i = 0; i < 100; i++) {
-    data.push({
-      id: i.toString(),
-      email: `test${i}@test.com`,
-      username: `test${i}`,
-      gender: "Laki-laki",
-      tanggal_lahir: "1990-01-01",
-      thumbnail: "test.com",
-      address: "test",
-      status: "Aktif",
-    });
-  }
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const [selectedStatus, setSelectedStatus] = useState("Aktif");
-
-  const handleStatusChange = (status: string) => {
-    setSelectedStatus(status);
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/user");
+      const { users, total, active, verified } = await response.json();
+      setData(users);
+      setTotal(total);
+      setActive(active);
+      setVerified(verified);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const filteredData = data.filter((user) => {
+    if (selectedStatus === "Semua") return true;
+    if (selectedStatus === "Belum Verifikasi") return !user.is_verified;
+    if (selectedStatus === "Aktif") return user.is_verified && user.is_active;
+    if (selectedStatus === "Tidak Aktif")
+      return user.is_verified && !user.is_active;
+    return true;
+  });
 
   return (
     <MainPage>
@@ -55,10 +58,7 @@ export default function Pengguna() {
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              +12% dari bulan lalu
-            </p>
+            <div className="text-2xl font-bold">{total}</div>
           </CardContent>
         </Card>
 
@@ -70,10 +70,7 @@ export default function Pengguna() {
             <UserCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              80% dari total pengguna
-            </p>
+            <div className="text-2xl font-bold">{active}</div>
           </CardContent>
         </Card>
 
@@ -85,10 +82,7 @@ export default function Pengguna() {
             <UserX className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              15% dari total pengguna
-            </p>
+            <div className="text-2xl font-bold">{verified}</div>
           </CardContent>
         </Card>
 
@@ -100,49 +94,36 @@ export default function Pengguna() {
             <UserCog className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              5% dari total pengguna
-            </p>
+            <div className="text-2xl font-bold">{verified}</div>
           </CardContent>
         </Card>
       </div>
-      <Card className="bg-white rounded-lg">
-        <div className="border-b p-4">
-          <h1 className="text-lg font-medium">Pengguna</h1>
+      <Card>
+        <CardHeader className="border-b pt-4 pb-2 mb-2">
+          <h1 className="text-lg font-semibold">Daftar Pengguna</h1>
           <p className="text-sm text-muted-foreground">
-          Berikut adalah daftar pengguna yang terdaftar di aplikasi, anda tidak dapat mengubah akun di halaman ini. Untuk mengubah akun pengguna, silahkan pergi ke halaman Pengaturan Akun
+            Daftar pengguna sistem yang terdaftar. Untuk mengubah data pengguna, klik icon <span className="font-bold">pencil</span> pada baris yang diinginkan. Pastikan untuk mengubah data yang sesuai dengan data pengguna.
           </p>
-        </div>
-        <CardContent className="p-4">
-        <div className="flex items-center gap-2 my-5">
-          <div className="relative w-64">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Cari Pengguna"
-              className="w-full pl-8 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-gray-300 focus:border-gray-300"
-            />
-          </div>
-          <div>
-            <StatusFilter
-              selectedStatus={selectedStatus}
-              onStatusChange={handleStatusChange}
-            />
-          </div>
-          <Link href="/admin/pengguna/create" className="ms-auto">
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-              <Plus /> Tambah Pengguna
-            </Button>
-          </Link>
-        </div>
-        <div className="flex flex-col w-full mx-0 overflow-x-auto">
-          <DataPengguna
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            columns={columns as any}
-            data={data}
+        </CardHeader>
+        <div className="flex justify-between items-center mb-4 p-4">
+          <StatusFilter
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
           />
+          <Button
+            onClick={() => router.push("/admin/pengguna/create")}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah Pengguna
+          </Button>
         </div>
-        </CardContent>
+
+        {loading ? (
+          <div>Loading...</div>
+        ) : (
+          <DataPengguna columns={columns} data={filteredData} />
+        )}
       </Card>
     </MainPage>
   );

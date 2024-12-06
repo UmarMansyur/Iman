@@ -16,6 +16,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.0.1",
+    "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -36,6 +37,7 @@
     "clsx": "^2.1.1",
     "cookie": "^1.0.2",
     "date-fns": "^3.6.0",
+    "imagekit": "^6.0.0",
     "lucide-react": "^0.464.0",
     "next": "15.0.3",
     "next-auth": "^4.24.10",
