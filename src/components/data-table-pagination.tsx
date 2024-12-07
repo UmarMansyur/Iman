@@ -43,8 +43,8 @@ export function DataTablePagination<TData>({
                   setPageSize(size);
                   table.setPageIndex(0);
                 }}
-                className={`${
-                  pageSize === size ? "bg-blue-500 text-white hover:bg-blue-600 hover:text-white" : ""
+                className={`hover:text-black ${
+                  pageSize === size ? "bg-gray-200 text-black hover:bg-gray-200/90 hover:text-black" : ""
                 }`}
               >
                 {size} baris
@@ -117,7 +117,7 @@ export function DataTablePagination<TData>({
                       onClick={() => table.setPageIndex(pageIndex)}
                       className={`${
                         currentPage === pageIndex
-                          ? "bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
+                          ? "bg-primary2 text-white hover:bg-primary2/90"
                           : ""
                       }`}
                     >

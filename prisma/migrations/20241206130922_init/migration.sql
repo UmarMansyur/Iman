@@ -107,6 +107,7 @@ CREATE TABLE `material_stocks` (
     `factory_id` INTEGER NOT NULL,
     `material_unit_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
+    `status` ENUM('In', 'Out') NOT NULL DEFAULT 'In',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -260,8 +261,11 @@ CREATE TABLE `delivery_trackings` (
     `invoice_id` INTEGER NOT NULL,
     `desc` VARCHAR(191) NOT NULL,
     `location` VARCHAR(191) NOT NULL,
-    `latitude` DOUBLE NOT NULL,
-    `longitude` DOUBLE NOT NULL,
+    `latitude` DOUBLE NULL,
+    `longitude` DOUBLE NULL,
+    `cost` DOUBLE NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

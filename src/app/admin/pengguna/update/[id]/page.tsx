@@ -1,14 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-
 import MainPage from '@/components/main';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { CalendarIcon } from "lucide-react"
@@ -173,7 +178,7 @@ export default function EditUserPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 pt-3'>
             <div className='grid grid-cols-2 gap-4'>
               <div>
-                <Label className='text-sm font-medium mb-3'>Email:</Label>
+                <Label className='text-sm font-medium mb-3'>Email: <sup className='text-red-500'>*</sup></Label>
                 <Input 
                   type="email" 
                   placeholder="contoh@email.com"
@@ -184,7 +189,7 @@ export default function EditUserPage() {
                 )}
               </div>
               <div>
-                <Label className='text-sm font-medium mb-3'>Username:</Label>
+                <Label className='text-sm font-medium mb-3'>Username: <sup className='text-red-500'>*</sup></Label>
                 <Input 
                   type="text" 
                   placeholder="username"
@@ -195,10 +200,10 @@ export default function EditUserPage() {
                 )}
               </div>
               <div>
-                <Label className='text-sm font-medium mb-3'>Jenis Kelamin:</Label>
+                <Label className='text-sm font-medium mb-3'>Jenis Kelamin: <sup className='text-red-500'>*</sup></Label>
                 <Select 
+                  defaultValue={form.getValues("gender")}
                   onValueChange={(value) => form.setValue("gender", value as "Male" | "Female")} 
-                  value={form.getValues("gender")}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Jenis Kelamin" />
@@ -213,8 +218,7 @@ export default function EditUserPage() {
                 )}
               </div>
               <div>
-
-                <Label className='text-sm font-medium mb-3'>Tanggal Lahir:</Label>
+                <Label className='text-sm font-medium mb-3'>Tanggal Lahir: <sup className='text-red-500'>*</sup></Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -223,7 +227,11 @@ export default function EditUserPage() {
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {form.getValues("date_of_birth") ? 
-                        new Date(date?.toDateString() || '').toLocaleDateString() : <span>Pilih tanggal</span>}
+                        new Date(date?.toDateString() || '').toLocaleDateString('id-ID', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric'
+                        }) : <span>Pilih tanggal</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -245,7 +253,7 @@ export default function EditUserPage() {
                 )}
               </div>
               <div>
-                <Label className='text-sm font-medium mb-3'>Tipe Pengguna:</Label>
+                <Label className='text-sm font-medium mb-3'>Tipe Pengguna: <sup className='text-red-500'>*</sup></Label>
                 <Select 
                   onValueChange={(value) => form.setValue("user_type", value as "Operator" | "Administrator")} 
                   value={form.getValues("user_type")}
@@ -274,7 +282,7 @@ export default function EditUserPage() {
                 )}
               </div>
               <div className='col-span-2'>
-                <Label className='text-sm font-medium mb-3'>Alamat:</Label>
+                <Label className='text-sm font-medium mb-3'>Alamat: <sup className='text-red-500'>*</sup></Label>
                 <Textarea 
                   rows={5} 
                   {...form.register("address")}

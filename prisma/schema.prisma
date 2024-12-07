@@ -90,7 +90,6 @@ model MemberFactory {
   updated_at DateTime            @updatedAt
 
   @@unique([factory_id, user_id])
-
   @@map("member_factories")
 }
 
@@ -162,14 +161,20 @@ model MaterialUnit {
 }
 
 model MaterialStock {
-  id               Int          @id @default(autoincrement())
-  factory          Factory      @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  id               Int                 @id @default(autoincrement())
+  factory          Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id       Int
-  materialUnit     MaterialUnit @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  materialUnit     MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
   material_unit_id Int
   amount           Float
+  status           MaterialStockStatus @default(In)
 
   @@map("material_stocks")
+}
+
+enum MaterialStockStatus {
+  In
+  Out
 }
 
 model Product {
@@ -346,13 +351,16 @@ model DetailInvoice {
 }
 
 model DeliveryTracking {
-  id         Int     @id @default(autoincrement())
-  invoice    Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
   invoice_id Int
   desc       String
   location   String
-  latitude   Float
-  longitude  Float
+  latitude   Float?
+  longitude  Float?
+  cost       Float
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("delivery_trackings")
 }

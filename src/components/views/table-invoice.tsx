@@ -13,13 +13,10 @@ import {
 
 export default function TableInvoice() {
   return (
-    <Card className="bg-white rounded-lg border border-gray-200">
-      <div className="flex justify-between items-center border-b border-gray-200 px-2 py-2 mb-3">
+    <Card className="bg-white border-none">
+      <div className="flex justify-between items-center px-2 py-2">
         <div className="flex flex-col gap-1 ps-2">
         <h1 className="text-xl font-bold">Transaksi Terbaru</h1>
-          <p className="text-sm text-gray-500">
-            Transaksi terbaru dari semua pabrik
-          </p>
         </div>
         <button type="button" className="text-sm bg-transparent p-2">
           <ArrowUpRight className="w-4 h-4" />
@@ -42,7 +39,7 @@ export default function TableInvoice() {
               <TableCell>Paid</TableCell>
               <TableCell>Credit Card</TableCell>
               <TableCell>
-                <Badge className="bg-blue-500/50 text-blue-600">
+                <Badge className="bg-success2/20 text-success2 hover:bg-success2 hover:text-white">
                   Cash
                 </Badge>
               </TableCell>

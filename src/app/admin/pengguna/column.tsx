@@ -4,7 +4,7 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -42,12 +48,11 @@ export type User = {
 export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "thumbnail",
-    header: "Photo Profile",
+    header: "Foto Profil",
     cell: ({ row }) => {
       const username: string = row.getValue("username");
       const initial = username.charAt(0).toUpperCase();
       return (
-        
         <Avatar>
           {row.original.thumbnail && (
             <AvatarImage src={row.original.thumbnail} />
@@ -125,7 +130,6 @@ export const columns: ColumnDef<User>[] = [
             method: "DELETE",
           });
           if (!response.ok) throw new Error("Gagal menghapus data");
-          // Refresh the page or update the table
           window.location.reload();
         } catch (error) {
           console.error(error);
@@ -133,43 +137,49 @@ export const columns: ColumnDef<User>[] = [
       };
 
       return (
-        <div className="flex items-center gap-2">
-          <Link href={`/admin/pengguna/update/${row.original.id}`}>
-            <button
-              type="button"
-              className="text-white hover:text-white bg-yellow-500 hover:bg-yellow-600 rounded-md p-2"
-            >
-              <Pencil className="w-[10px] h-[10px]" />
-            </button>
-          </Link>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                type="button"
-                className="text-white hover:text-white bg-red-500 hover:bg-red-600 rounded-md p-2"
-              >
-                <Trash className="w-[10px] h-[10px]" />
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Apakah anda yakin?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara
-                  permanen.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Batal</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDelete(row.original.id)}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="rounded-md p-2 cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/pengguna/update/${row.original.id}`}>
+                <Pencil className="w-4 h-4" />
+                Edit
+              </Link>
+            </DropdownMenuItem>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
                 >
+                  <Trash className="w-4 h-4" />
                   Hapus
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apakah anda yakin?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tindakan ini tidak dapat dibatalkan. Data akan dihapus
+                    secara permanen.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction
+                    className="bg-red-500 hover:bg-red-600"
+                    onClick={() => handleDelete(row.original.id)}
+                    >
+                    Ya, Hapus
+                  </AlertDialogAction>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },

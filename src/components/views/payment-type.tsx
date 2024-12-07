@@ -8,14 +8,14 @@ const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 export function PaymentTypeChart() {
     const option: ApexOptions = {
       chart: {
-        type: 'pie',
+        type: 'donut',
         height: "100%",
         width: "100%",
         toolbar: {
           show: false
         },
       },
-      colors: ['#4069E5', '#F59E0B', '#EC4899', '#10B981'],
+      colors: ['#3B82F6', '#FEC53D', '#4AD991', '#FF9066'],
      
       title: {
         text: 'Metode Pembayaran',
@@ -52,7 +52,7 @@ export function PaymentTypeChart() {
           <ApexChart 
             options={option} 
             series={series} 
-            type="pie"
+            type="donut"
             height={400} 
           />
         </div>

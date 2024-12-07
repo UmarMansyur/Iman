@@ -8,12 +8,15 @@ import {
   Box,
   Building2,
   CircleDollarSign,
+  Plus,
   ShoppingCart,
   Truck,
   Users,
 } from "lucide-react";
 import { DashboardCard } from "@/components/views/dashboard-card";
 import { decrypt } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import BreadcrumbNav from "@/components/breadcrumb";
 
 export default async function Page() {
   const user = await decrypt();
@@ -95,7 +98,7 @@ export default async function Page() {
     },
     {
       title: "Pendapatan Hari Ini",
-      background: "bg-yellow-50",
+      background: "bg-secondary2/20",
       backgroundColor: "yellow",
       icon: <CircleDollarSign className="w-6 h-6 text-yellow-600" />,
       value: 100,
@@ -118,10 +121,27 @@ export default async function Page() {
 
   return (
     <MainPage>
+      <BreadcrumbNav
+        list={[
+          { label: "Administrator", href: "/admin/dashboard" },
+          { label: "Dashboard", href: "/admin/dashboard" },
+        ]}
+      />
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 items-start">
         {dashboardCards.map((card, index) => (
           <div key={index}>
-            <DashboardCard {...card} />
+            <DashboardCard
+              {...card}
+              background={
+                card.background as
+                  | "red"
+                  | "blue"
+                  | "green"
+                  | "yellow"
+                  | "purple"
+                  | "pink"
+              }
+            />
           </div>
         ))}
       </div>
@@ -139,19 +159,27 @@ export default async function Page() {
               <Card
                 className={`p-2 duration-100 ease-in-out ${
                   item.backgroundColor === "blue"
-                    ? "hover:bg-blue-500"
+                    ? "hover:bg-[#3B82F6]"
                     : item.backgroundColor === "yellow"
-                    ? "hover:bg-yellow-500"
+                    ? "hover:bg-[#FEC53D]"
                     : item.backgroundColor === "green"
-                    ? "hover:bg-green-500"
-                    : "hover:bg-red-500"
+                    ? "hover:bg-[#4AD991]"
+                    : "hover:bg-[#FF9066]"
                 } hover:lg:-rotate-6 hover:rounded-2xl hover:text-white`}
                 key={item.title}
               >
                 <CardHeader className="mb-0 pb-2 bg-transparent">
                   <CardTitle className="flex items-center gap-2 mb-5">
                     <div
-                      className={`flex gap-2 rounded-2xl ${item.background} w-18 h-18 items-center justify-center p-4`}
+                      className={`flex gap-2 rounded-2xl ${
+                        item.backgroundColor === "blue"
+                          ? "bg-[#3B82F6]/20"
+                          : item.backgroundColor === "yellow"
+                          ? "bg-[#FEC53D]/20"
+                          : item.backgroundColor === "green"
+                          ? "bg-[#4AD991]/20"
+                          : "bg-[#FF9066]/20"
+                      } w-18 h-18 items-center justify-center p-4`}
                     >
                       {item.icon}
                     </div>

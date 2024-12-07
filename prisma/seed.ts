@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from "bcrypt";
 
 async function main(): Promise<void> {
   const admin = await prisma.user.create({
@@ -79,6 +79,8 @@ async function main(): Promise<void> {
       { name: "QRIS" },
       { name: "BOND" },
       { name: "KREDIT" },
+      // jatuh tempo 1 bulan di email
+      // belum  lunas tagihan di distributor yang belum selesai
     ],
   });
 
@@ -170,7 +172,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const ballPriceProductUnit = await prisma.priceProductUnit.create({
+  await prisma.priceProductUnit.create({
     data: {
       product_unit_id: ballProductUnit.id,
       price: 1000,
@@ -179,7 +181,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const pressPriceProductUnit = await prisma.priceProductUnit.create({
+  await prisma.priceProductUnit.create({
     data: {
       product_unit_id: pressProductUnit.id,
       price: 1000,
@@ -188,7 +190,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const kartonPriceProductUnit = await prisma.priceProductUnit.create({
+  await prisma.priceProductUnit.create({
     data: {
       product_unit_id: kartonProdukUnit.id,
       price: 1000,
@@ -197,14 +199,14 @@ async function main(): Promise<void> {
     },
   });
 
-  const stockProduct = await prisma.stockProduct.create({
+  await prisma.stockProduct.create({
     data: {
       product_unit_id: ballProductUnit.id,
       amount: 100,
     },
   });
 
-  const reportProduct = await prisma.reportProduct.create({
+  await prisma.reportProduct.create({
     data: {
       product_id: 1,
       amount: 100,
@@ -218,7 +220,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const reportCost = await prisma.reportCost.create({
+  await prisma.reportCost.create({
     data: {
       material_id: 1,
       amount: 100,
@@ -257,7 +259,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const detailInvoice = await prisma.detailInvoice.create({
+  await prisma.detailInvoice.create({
     data: {
       invoice_id: invoice.id,
       unit_id: 1,
@@ -267,13 +269,14 @@ async function main(): Promise<void> {
     },
   });
 
-  const deliveryTracking = await prisma.deliveryTracking.create({
+  await prisma.deliveryTracking.create({
     data: {
       invoice_id: invoice.id,
       desc: "Delivery",
       location: "Jl. Delivery",
       latitude: -6.2088,
       longitude: 106.8456,
+      cost: 100000,
     },
   });
 }

@@ -1,5 +1,12 @@
 import type { Config } from "tailwindcss";
 
+// ? "bg-[#3B82F6]/20"
+// : item.backgroundColor === "yellow"
+// ? "bg-[#FEC53D]/20"
+// : item.backgroundColor === "green"
+// ? "bg-[#4AD991]/20"
+// : "bg-[#FF9066]/20"
+
 export default {
     darkMode: ["class"],
     content: [
@@ -10,6 +17,10 @@ export default {
   theme: {
   	extend: {
   		colors: {
+				primary2: '#4880FF',
+				secondary2: '#FEC53D',
+				success2: '#4AD991',
+				danger2: '#FF9066',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
