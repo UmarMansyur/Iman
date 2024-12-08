@@ -8,19 +8,14 @@ import {
   Box,
   Building2,
   CircleDollarSign,
-  Plus,
   ShoppingCart,
   Truck,
   Users,
 } from "lucide-react";
 import { DashboardCard } from "@/components/views/dashboard-card";
-import { decrypt } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import BreadcrumbNav from "@/components/breadcrumb";
 
 export default async function Page() {
-  const user = await decrypt();
-  console.log(user);
   const dashboardCards = [
     {
       title: "Total Pengguna",

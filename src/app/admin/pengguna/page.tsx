@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { columns, User } from "./column";
 import { DataPengguna } from "./data-table";
@@ -18,20 +17,21 @@ export default function PenggunaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(`${process.env.BASE_URL}/api/user`);
+        const { users } = await response.json();
+
+        setData(users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUsers();
   }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("/api/user");
-      const { users } = await response.json();
-      setData(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredData = data.filter((user) => {
     if (selectedStatus === "Semua") return true;
