@@ -40,21 +40,24 @@ export type SigninFormState =
     }
   | undefined;
 
+export type Role =
+  | "Owner Pabrik"
+  | "Owner Distributor"
+  | "Operator Pabrik"
+  | "Operator Distributor";
 
-export type Role = 'Owner Pabrik' | 'Owner Distributor' | 'Operator Pabrik' | 'Operator Distributor'
+export type TypeUser = "Operator" | "Administrator";
 
-export type TypeUser = 'Operator' | 'Administrator'
+export type StatusUser = "Active" | "Inactive";
 
-export type StatusUser = 'Active' | 'Inactive'
-
-export type Position = 'Operator' | 'Owner'
+export type Position = "Operator" | "Owner";
 
 export type Factory = {
   id: string;
   name: string;
   address: string;
   position: Position[];
-}
+};
 
 export type SessionPayload = {
   id: string;
@@ -65,4 +68,88 @@ export type SessionPayload = {
   statusUser: StatusUser;
   factory: Factory[];
   thumbnail: string | "";
-}
+};
+
+export const UserSchema = z.object({
+  email: z.string().email("Email tidak valid"),
+  username: z.string().min(3, "Username minimal 3 karakter"),
+  password: z.string().min(6, "Password minimal 6 karakter").optional(),
+  gender: z.enum(["Male", "Female"], {
+    required_error: "Pilih jenis kelamin",
+  }).optional(),
+  date_of_birth: z.coerce.date({
+    required_error: "Pilih tanggal lahir",
+  }),
+  address: z.string().min(10, "Alamat minimal 10 karakter"),
+  user_type: z.enum(["Operator", "Administrator"], {
+    required_error: "Pilih tipe pengguna",
+  }),
+  thumbnail: z.any(),
+});
+
+export type UserFormState =
+  | {
+      errors?: {
+        email?: string[];
+        username?: string[];
+        password?: string[];
+        gender?: string[];
+        date_of_birth?: string[];
+        address?: string[];
+        user_type?: string[];
+        thumbnail?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+
+export const UpdateUserSchema = z.object({
+  email: z.string().email("Email tidak valid"),
+  username: z.string().min(3, "Username minimal 3 karakter"),
+  gender: z.enum(["Male", "Female"], {
+    required_error: "Pilih jenis kelamin",
+  }),
+  date_of_birth: z.coerce.date({
+    required_error: "Pilih tanggal lahir",
+  }),
+  address: z.string().min(10, "Alamat minimal 10 karakter"),
+  user_type: z.enum(["Operator", "Administrator"], {
+    required_error: "Pilih tipe pengguna",
+  }),
+  thumbnail: z.any()
+    .optional()
+    .refine(
+      (file) => {
+        if (!file) return true;
+        // Periksa ukuran file dalam bytes (5MB)
+        return file.size <= 5 * 1024 * 1024;
+      },
+      "Ukuran file maksimal 5MB"
+    )
+    .refine(
+      (file) => {
+        if (!file) return true;
+        // Periksa tipe MIME
+        return file.mimetype?.startsWith('image/');
+      },
+      "File harus berupa gambar"
+    ),
+});
+
+export type UpdateUserFormState =
+  | {
+      errors?: {
+        email?: string[];
+        username?: string[];
+        gender?: string[];
+        date_of_birth?: string[];
+        address?: string[];
+        user_type?: string[];
+        thumbnail?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+

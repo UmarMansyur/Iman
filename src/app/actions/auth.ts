@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
-import { createSession } from '@/lib/session';
+import { createSession, deleteSession } from '@/lib/session';
 import prisma from '@/lib/db';
 import { SigninFromSchema, SigninFormState, SessionPayload, Role, Position } from '@/lib/definitions'
 import bcrypt from 'bcrypt';
@@ -72,5 +72,11 @@ export async function login(state: SigninFormState, formData: FormData) {
   }
 
   redirect('/admin/dashboard');
+}
+
+export async function logout() {
+  console.log('logout');
+  await deleteSession();
+  redirect('/login');
 }
 

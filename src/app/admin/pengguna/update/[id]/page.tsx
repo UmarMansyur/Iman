@@ -17,150 +17,127 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { CalendarIcon } from "lucide-react"
-import { useEffect, useState } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {  useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { User } from "../../column";
+import { getUser, updateUser } from '@/app/actions/user';
+import { User } from '@prisma/client';
+import { UpdateUserFormState } from '@/lib/definitions';
+import toast from 'react-hot-toast';
+import LoaderScreen from '@/components/views/loader';
 
-const userSchema = z.object({
-  email: z.string().email("Email tidak valid"),
-  username: z.string().min(3, "Username minimal 3 karakter"),
-  gender: z.enum(["Male", "Female"], {
-    required_error: "Pilih jenis kelamin",
-  }),
-  date_of_birth: z.date({
-    required_error: "Pilih tanggal lahir",
-  }),
-  address: z.string().min(10, "Alamat minimal 10 karakter"),
-  user_type: z.enum(["Operator", "Administrator"], {
-    required_error: "Pilih tipe pengguna",
-  }),
-  thumbnail: z.instanceof(FileList)
-    .optional()
-    .refine(
-      (files) => {
-        if (!files || files.length === 0) return true;
-        const file = files[0];
-        return file.size <= 5 * 1024 * 1024; // 5MB limit
-      },
-      "Ukuran file maksimal 5MB"
-    )
-    .refine(
-      (files) => {
-        if (!files || files.length === 0) return true;
-        const file = files[0];
-        return file.type.startsWith('image/');
-      },
-      "File harus berupa gambar"
-    ),
-});
-
-type UserSchema = z.infer<typeof userSchema>;
 
 export default function EditUserPage() {
   const params = useParams();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [date, setDate] = useState<Date | undefined>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  const form = useForm<UserSchema>({
-    resolver: zodResolver(userSchema),
-  });
-
+  const [state, setState] = useState<UpdateUserFormState | undefined>(undefined);
   const id = params.id;
   useEffect(() => {
     if (id) fetchUser();
   }, []);
 
+  // const fetchUser = async () => {
+  //   try {
+  //     if (id) {
+  //       const response = await fetch(`/api/user?id=${id}`);
+  //       if (!response.ok) throw new Error("Failed to fetch user");
+  //       const userData = await response.json();
+  //       setUser(userData);
+        
+  //       const birthDate = new Date(userData.user.date_of_birth);
+  //       setDate(birthDate);
+        
+  //       if (userData.user) {
+  //         form.reset({
+  //           email: userData.user.email,
+  //           username: userData.user.username,
+  //           gender: userData.user.gender as "Male" | "Female",
+  //           date_of_birth: birthDate,
+  //           address: userData.user.address,
+  //           user_type: userData.user.user_type as "Operator" | "Administrator",
+  //         });
+  //       }
+  //     }
+  //     setIsInitialized(true);
+  //   } catch (error) {
+  //     console.error(error);
+  //     setIsInitialized(true);
+  //   }
+  // };
+
   const fetchUser = async () => {
-    try {
-      if (id) {
-        const response = await fetch(`/api/user?id=${id}`);
-        if (!response.ok) throw new Error("Failed to fetch user");
-        const userData = await response.json();
-        setUser(userData);
-        
-        const birthDate = new Date(userData.user.date_of_birth);
-        setDate(birthDate);
-        
-        if (userData.user) {
-          form.reset({
-            email: userData.user.email,
-            username: userData.user.username,
-            gender: userData.user.gender as "Male" | "Female",
-            date_of_birth: birthDate,
-            address: userData.user.address,
-            user_type: userData.user.user_type as "Operator" | "Administrator",
-          });
-        }
-      }
-      setIsInitialized(true);
-    } catch (error) {
-      console.error(error);
-      setIsInitialized(true);
+    const user = await getUser(parseInt(id as string));
+    if (user) {
+      setUser(user);
+      const birthDate = new Date(user.date_of_birth);
+      setDate(birthDate);
     }
-  };
+  }
 
-
-  const onSubmit = async (data: UserSchema) => {
-    try {
-      setIsLoading(true);
-      const formData = new FormData();
-      formData.append('id', id as string);
-      formData.append('email', data.email);
-      formData.append('username', data.username);
-      formData.append('gender', data.gender);
-      formData.append('date_of_birth', data.date_of_birth.toISOString());
-      formData.append('address', data.address);
-      formData.append('user_type', data.user_type);
+  // const onSubmit = async (data: UserSchema) => {
+  //   try {
+  //     setIsLoading(true);
+  //     const formData = new FormData();
+  //     formData.append('id', id as string);
+  //     formData.append('email', data.email);
+  //     formData.append('username', data.username);
+  //     formData.append('gender', data.gender);
+  //     formData.append('date_of_birth', data.date_of_birth.toISOString());
+  //     formData.append('address', data.address);
+  //     formData.append('user_type', data.user_type);
       
-      if (data.thumbnail instanceof FileList && data.thumbnail.length > 0) {
-        formData.append('thumbnail', data.thumbnail[0]);
-      }
+  //     if (data.thumbnail instanceof FileList && data.thumbnail.length > 0) {
+  //       formData.append('thumbnail', data.thumbnail[0]);
+  //     }
 
-      const response = await fetch('/api/user', {
-        method: 'PUT',
-        body: formData,
-      });
+  //     const response = await fetch('/api/user', {
+  //       method: 'PUT',
+  //       body: formData,
+  //     });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Gagal mengupdate data');
-      }
+  //     if (!response.ok) {
+  //       const error = await response.json();
+  //       throw new Error(error.message || 'Gagal mengupdate data');
+  //     }
       
+  //     router.push('/admin/pengguna');
+  //   } catch (error: any) {
+  //     console.log(error);
+  //     // Tambahkan toast notification di sini jika ada
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // if (!isInitialized) {
+  //   return (
+  //     <MainPage>
+  //       <Card>
+  //         <CardContent className="flex items-center justify-center min-h-[200px]">
+  //           <p>Loading...</p>
+  //         </CardContent>
+  //       </Card>
+  //     </MainPage>
+  //   );
+  // }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const result = await updateUser(undefined, formData);
+    if(result?.errors) {
+      setState(result);
+    } else {
+      toast.success(result?.message || 'Pengguna berhasil diperbarui');
       router.push('/admin/pengguna');
-    } catch (error: any) {
-      console.log(error);
-      // Tambahkan toast notification di sini jika ada
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  if (!isInitialized) {
-    return (
-      <MainPage>
-        <Card>
-          <CardContent className="flex items-center justify-center min-h-[200px]">
-            <p>Loading...</p>
-          </CardContent>
-        </Card>
-      </MainPage>
-    );
   }
 
   if (!user) {
     return (
       <MainPage>
-        <Card>
-          <CardContent className="flex items-center justify-center min-h-[200px]">
-            <p>User not found</p>
-          </CardContent>
-        </Card>
+        <LoaderScreen />
       </MainPage>
     );
   }
@@ -175,17 +152,23 @@ export default function EditUserPage() {
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 pt-3'>
+          <form onSubmit={handleSubmit} className='space-y-4 pt-3'>
             <div className='grid grid-cols-2 gap-4'>
               <div>
                 <Label className='text-sm font-medium mb-3'>Email: <sup className='text-red-500'>*</sup></Label>
+                <Input
+                  type="hidden"
+                  name="id"
+                  value={user.id}
+                />
                 <Input 
                   type="email" 
                   placeholder="contoh@email.com"
-                  {...form.register("email")}
+                  defaultValue={user.email}
+                  name="email"
                 />
-                {form.formState.errors.email && (
-                  <span className="text-sm text-red-500">{form.formState.errors.email.message}</span>
+                {state?.errors?.email && (
+                  <span className="text-sm text-red-500">{state.errors.email}</span>
                 )}
               </div>
               <div>
@@ -193,17 +176,18 @@ export default function EditUserPage() {
                 <Input 
                   type="text" 
                   placeholder="username"
-                  {...form.register("username")}
+                  defaultValue={user.username}
+                  name="username"
                 />
-                {form.formState.errors.username && (
-                  <span className="text-sm text-red-500">{form.formState.errors.username.message}</span>
+                {state?.errors?.username && (
+                  <span className="text-sm text-red-500">{state.errors.username}</span>
                 )}
               </div>
               <div>
                 <Label className='text-sm font-medium mb-3'>Jenis Kelamin: <sup className='text-red-500'>*</sup></Label>
                 <Select 
-                  defaultValue={form.getValues("gender")}
-                  onValueChange={(value) => form.setValue("gender", value as "Male" | "Female")} 
+                  defaultValue={user.gender}
+                  name="gender"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Jenis Kelamin" />
@@ -213,8 +197,8 @@ export default function EditUserPage() {
                     <SelectItem value="Female">Perempuan</SelectItem>
                   </SelectContent>
                 </Select>
-                {form.formState.errors.gender && (
-                  <span className="text-sm text-red-500">{form.formState.errors.gender.message}</span>
+                {state?.errors?.gender && (
+                  <span className="text-sm text-red-500">{state.errors.gender}</span>
                 )}
               </div>
               <div>
@@ -226,7 +210,7 @@ export default function EditUserPage() {
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {form.getValues("date_of_birth") ? 
+                      {date ? 
                         new Date(date?.toDateString() || '').toLocaleDateString('id-ID', {
                           day: '2-digit',
                           month: 'long',
@@ -237,26 +221,26 @@ export default function EditUserPage() {
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={form.getValues("date_of_birth")}
+                      selected={date}
                       onSelect={(newDate) => {
                         if (newDate) {
                           setDate(newDate);
-                          form.setValue("date_of_birth", newDate);
                         }
                       }}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                {form.formState.errors.date_of_birth && (
-                  <span className="text-sm text-red-500">{form.formState.errors.date_of_birth.message}</span>
+                {state?.errors?.date_of_birth && (
+                  <span className="text-sm text-red-500">{state.errors.date_of_birth}</span>
                 )}
+                <input type="hidden" name="date_of_birth" value={date?.toISOString()} />
               </div>
               <div>
                 <Label className='text-sm font-medium mb-3'>Tipe Pengguna: <sup className='text-red-500'>*</sup></Label>
                 <Select 
-                  onValueChange={(value) => form.setValue("user_type", value as "Operator" | "Administrator")} 
-                  value={form.getValues("user_type")}
+                  defaultValue={user.user_type}
+                  name="user_type"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Tipe Pengguna" />
@@ -266,8 +250,8 @@ export default function EditUserPage() {
                     <SelectItem value="Administrator">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
-                {form.formState.errors.user_type && (
-                  <span className="text-sm text-red-500">{form.formState.errors.user_type.message}</span>
+                {state?.errors?.user_type && (
+                  <span className="text-sm text-red-500">{state.errors.user_type}</span>
                 )}
               </div>
               <div>
@@ -275,20 +259,20 @@ export default function EditUserPage() {
                 <Input 
                   type="file" 
                   accept="image/*"
-                  {...form.register("thumbnail")}
                 />
-                {form.formState.errors.thumbnail && (
-                  <span className="text-sm text-red-500">{form.formState.errors.thumbnail.message as string}</span>
+                {state?.errors?.thumbnail && (
+                  <span className="text-sm text-red-500">{state.errors.thumbnail}</span>
                 )}
               </div>
               <div className='col-span-2'>
                 <Label className='text-sm font-medium mb-3'>Alamat: <sup className='text-red-500'>*</sup></Label>
                 <Textarea 
                   rows={5} 
-                  {...form.register("address")}
+                  defaultValue={user.address}
+                  name="address"
                 />
-                {form.formState.errors.address && (
-                  <span className="text-sm text-red-500">{form.formState.errors.address.message}</span>
+                {state?.errors?.address && (
+                  <span className="text-sm text-red-500">{state.errors.address}</span>
                 )}
               </div>
             </div>
@@ -304,9 +288,8 @@ export default function EditUserPage() {
               <Button 
                 type="submit" 
                 className='bg-blue-500 hover:bg-blue-600'
-                disabled={isLoading}
               >
-                {isLoading ? "Menyimpan..." : "Simpan"}
+                Simpan
               </Button>
             </div>
           </form>

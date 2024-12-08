@@ -8,13 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
 import { useActionState } from "react";
 import { login } from "../actions/auth";
-import { useFormStatus } from "react-dom";
+import { SubmitButton } from "@/components/SubmitButton";
 
 const LoginPage = () => {
   const [state, action] = useActionState(login, undefined);
@@ -71,7 +70,7 @@ const LoginPage = () => {
               </label>
             </div>
             <div className="flex flex-col space-y-4">
-              <LoginButton />
+              <SubmitButton text="Masuk" />
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t"></span>
@@ -94,9 +93,6 @@ const LoginPage = () => {
   );
 };
 
-function LoginButton() {
-  const { pending } = useFormStatus()
-  return <Button disabled={pending} type="submit">{pending ? "Loading..." : "Login"}</Button>
-}
+
 
 export default LoginPage;

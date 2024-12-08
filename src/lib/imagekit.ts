@@ -11,12 +11,13 @@ interface FileObject {
 }
 
 const imageKit = new ImageKit({
-  publicKey: NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-  privateKey: NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY!,
-  urlEndpoint: NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+  publicKey: NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY ?? "",
+  privateKey: NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY ?? "",
+  urlEndpoint: NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "",
 });
 
 async function uploadFile(file: FileObject): Promise<string> {
+  console.log(NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY, NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY, NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT);
   return new Promise(async (resolve, reject) => {
     try {
       const base64Data = file.buffer.toString("base64");

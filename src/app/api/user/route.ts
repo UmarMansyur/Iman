@@ -25,6 +25,7 @@ export async function GET(request: Request) {
           address: true,
           user_type: true,
           is_active: true,
+          is_verified: true,
         },
       });
       return NextResponse.json({ user }, { status: 200 });
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
     
     let thumbnailUrl = null;
     if (thumbnail) {
-      // Convert File to FileObject yang dibutuhkan imagekit
+
       const fileObject = {
         buffer: Buffer.from(await thumbnail.arrayBuffer()),
         originalname: thumbnail.name,
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
         address: formData.get('address') as string,
         user_type: (formData.get('user_type') as UserType) || "Operator",
         is_active: true,
-        is_verified: false,
+        is_verified: true,
       },
     });
 

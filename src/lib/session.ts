@@ -48,3 +48,17 @@ export async function getSession() {
   return cookieStore.get('session')?.value
 }
 
+
+export async function updateSession(payload: SessionPayload) {
+  const session = await getSession();
+  if (session) {
+    await createSession(payload);
+  }
+}
+
+
+export async function deleteSession() 
+{
+  const cookieStore = await cookies();
+  cookieStore.delete('session');
+}

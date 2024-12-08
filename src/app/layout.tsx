@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 import SessionProvider from "@/components/SessionProvider";
+import { Toaster } from 'react-hot-toast';
 const publicSans = Public_Sans({
   subsets: ["latin"],
   variable: "--font-public-sans",
@@ -26,8 +26,8 @@ export default function RootLayout({
         >
         <SessionProvider>
           {children}
-          <Toaster />
         </SessionProvider>
+          <Toaster position="top-right" />
       </body>
     </html>
   );
