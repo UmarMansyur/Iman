@@ -44,6 +44,7 @@ model User {
   invoices        Invoice[]
   reportProducts  ReportProduct[]
   reportCosts     ReportCost[]
+  factories       Factory[]
 
   @@map("users")
 }
@@ -54,6 +55,8 @@ model Factory {
   name       String
   logo       String?
   address    String
+  user       User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    Int
   status     FactoryStatus @default(Pending)
   created_at DateTime      @default(now())
   updated_at DateTime      @updatedAt

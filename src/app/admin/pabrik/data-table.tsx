@@ -1,12 +1,10 @@
-"use client";
+/* eslint-disable react-hooks/exhaustive-deps */
+// "use client";
 import * as React from "react";
 import {
   ColumnDef,
   flexRender,
-  SortingState,
   getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -19,49 +17,75 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
-
+import { SortOrder } from "@/lib/context";
+import { useTableStore } from "@/store/table-store";
+// import { SortOrder } from "@/lib/context";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  sorting: (sortBy: string, sortOrder: SortOrder) => void;
+  onPageSizeChange: (newSize: number) => void;
+  onSortingStateChange?: (length: number) => void;
 }
 
-export function DataFactory<TData, TValue>({
+export function DataPengguna<TData, TValue>({
   columns,
   data,
+  pagination,
+  sorting,
+  onPageSizeChange,
+  // onSortingStateChange
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [{ pageIndex, pageSize }, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 5,
-  });
+  const { sorting: sortingState, setSorting } = useTableStore();
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
+    manualPagination: true,
+    manualSorting: true,
+    pageCount: pagination.totalPages,
+    onSortingChange: (updater) => {
+      // Handle sorting state update
+      const newState = typeof updater === 'function' ? updater(sortingState) : updater;
+      setSorting(newState);
+      
+      // Trigger sorting callback
+      if (newState.length > 0) {
+        const sort = newState[0];
+        sorting(sort.id, sort.desc ? "desc" : "asc");
+      } else {
+        // Jika tidak ada sorting yang aktif
+        sorting("", "asc");
+      }
+    },
+    enableSorting: true,
     state: {
-      sorting,
+      sorting: sortingState,
       pagination: {
-        pageSize,
-        pageIndex,
+        pageIndex: pagination.page - 1,
+        pageSize: pagination.limit,
       },
     },
+    getSortedRowModel: getCoreRowModel(),
   });
 
   return (
-    <div className="overflow-x-auto w-full">
+    <div className="overflow-x-auto w-full px-4">
       <div className="rounded-md border">
         <Table className="w-full">
-          <TableHeader>
+          <TableHeader className="text-black text-[13px] font-bold uppercase">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                      <TableHead key={header.id} className="text-black text-[13px] font-bold uppercase">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -106,9 +130,13 @@ export function DataFactory<TData, TValue>({
       </div>
       <DataTablePagination 
         table={table} 
-        pageSize={pageSize} 
-        setPageSize={(size) => setPagination(prev => ({ ...prev, pageSize: size, pageIndex: 0 }))} 
+        pageSize={pagination.limit} 
+        setPageSize={(size) => {
+          onPageSizeChange(size);
+          sorting("", "asc");
+        }}
       />
     </div>
   );
 }
+

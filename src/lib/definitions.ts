@@ -1,3 +1,4 @@
+import { FactoryStatus, User } from "@prisma/client";
 import { z } from "zod";
 
 export const SingupFromSchema = z.object({
@@ -74,9 +75,11 @@ export const UserSchema = z.object({
   email: z.string().email("Email tidak valid"),
   username: z.string().min(3, "Username minimal 3 karakter"),
   password: z.string().min(6, "Password minimal 6 karakter").optional(),
-  gender: z.enum(["Male", "Female"], {
-    required_error: "Pilih jenis kelamin",
-  }).optional(),
+  gender: z
+    .enum(["Male", "Female"], {
+      required_error: "Pilih jenis kelamin",
+    })
+    .optional(),
   date_of_birth: z.coerce.date({
     required_error: "Pilih tanggal lahir",
   }),
@@ -103,8 +106,6 @@ export type UserFormState =
     }
   | undefined;
 
-
-
 export const UpdateUserSchema = z.object({
   email: z.string().email("Email tidak valid"),
   username: z.string().min(3, "Username minimal 3 karakter"),
@@ -118,24 +119,19 @@ export const UpdateUserSchema = z.object({
   user_type: z.enum(["Operator", "Administrator"], {
     required_error: "Pilih tipe pengguna",
   }),
-  thumbnail: z.any()
+  thumbnail: z
+    .any()
     .optional()
-    .refine(
-      (file) => {
-        if (!file) return true;
-        // Periksa ukuran file dalam bytes (5MB)
-        return file.size <= 5 * 1024 * 1024;
-      },
-      "Ukuran file maksimal 5MB"
-    )
-    .refine(
-      (file) => {
-        if (!file) return true;
-        // Periksa tipe MIME
-        return file.mimetype?.startsWith('image/');
-      },
-      "File harus berupa gambar"
-    ),
+    .refine((file) => {
+      if (!file) return true;
+      // Periksa ukuran file dalam bytes (5MB)
+      return file.size <= 5 * 1024 * 1024;
+    }, "Ukuran file maksimal 5MB")
+    .refine((file) => {
+      if (!file) return true;
+      // Periksa tipe MIME
+      return file.mimetype?.startsWith("image/");
+    }, "File harus berupa gambar"),
 });
 
 export type UpdateUserFormState =
@@ -153,3 +149,21 @@ export type UpdateUserFormState =
     }
   | undefined;
 
+export type MemberFactory = {
+  id: number;
+  user: User;
+  factory: Factory;
+};
+
+export type FactoryTable = {
+  id: number;
+  nickname: string;
+  name: string;
+  logo: string | null;
+  address: string;
+  user_id: string;
+  status: FactoryStatus;
+  members: MemberFactory[];
+  created_at: string;
+  updated_at: string;
+};

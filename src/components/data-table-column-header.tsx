@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Column } from "@tanstack/react-table";
 import { Button } from "./ui/button";
 import { ChevronDown, ChevronsUpDown, ChevronUp, Trash } from "lucide-react";
@@ -7,20 +8,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useTableStore } from "@/store/table-store";
 
 export function DataTableColumnHeader({
   column,
   title,
 }: {
-  column: Column<never, unknown>;
+  column: Column<any, any>;
   title: string;
 }) {
+  const { setSorting } = useTableStore();
   const handleSort = (desc: boolean | undefined) => {
     const currentSort = column.getIsSorted();
     
     if (desc === undefined) {
-      // Jika klik hapus
       column.clearSorting();
+      setSorting([]);
       return;
     }
 
@@ -35,6 +38,10 @@ export function DataTableColumnHeader({
     }
 
     column.toggleSorting(desc);
+    setSorting([{
+      id: column.id,
+      desc: desc
+    }]);
   };
 
   return (
@@ -61,11 +68,17 @@ export function DataTableColumnHeader({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => handleSort(false)}>
+        <DropdownMenuItem 
+          onClick={() => handleSort(false)}
+          className={column.getIsSorted() === "asc" ? "bg-accent" : ""}
+        >
           <ChevronUp className="mr-2 h-4 w-4" />
           Naik (ASC)
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleSort(true)}>
+        <DropdownMenuItem 
+          onClick={() => handleSort(true)}
+          className={column.getIsSorted() === "desc" ? "bg-accent" : ""}
+        >
           <ChevronDown className="mr-2 h-4 w-4" />
           Turun (DESC)
         </DropdownMenuItem>

@@ -35,6 +35,7 @@ async function main(): Promise<void> {
   const djava = await prisma.factory.create({
     data: {
       nickname: "Djava",
+      user_id: admin.id,
       name: "Djava",
       address: "Jl. Djava",
       status: "Active",

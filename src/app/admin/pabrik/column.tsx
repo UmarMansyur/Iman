@@ -1,45 +1,51 @@
 "use client";
-
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreHorizontal, Trash } from "lucide-react";
 import {
-  Dialog,
-  DialogHeader,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Pencil, Trash } from "lucide-react";
-import { Input } from "@/components/ui/input";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FactoryTable } from "@/lib/definitions";
+import { Badge } from "@/components/ui/badge";
+import Form from "./form-edit";
 
-// This type is used to define the shape of our data.
-export type Factory = {
-  id: string;
-  nickname: string;
-  name: string;
-  logo: string | null;
-  address: string;
-  status: string;
-  // Relations are not included in this view
-};
-
-export const columns: ColumnDef<Factory>[] = [
+export const columns: ColumnDef<FactoryTable>[] = [
+  // {
+  //   accessorKey: "user",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Owner"/>
+  //   ),
+  //   cell: ({ row }) => {
+  //     return (
+  //       <div>{row.original.user?.username}</div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: "logo",
     header: "Logo",
     cell: ({ row }) => {
-      const logo = row.getValue("logo");
-      return logo ? (
-        <Avatar>
-          <AvatarFallback>Logo</AvatarFallback>
-        </Avatar>
-      ) : (
-        <Avatar>
-          <AvatarFallback>Logo</AvatarFallback>
+      return (
+        <Avatar className="w-8 h-8">
+          {row.original.logo && (
+            <AvatarImage src={row.original.logo} />
+          )}
+          <AvatarFallback>{row.original.nickname.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
       );
     },
@@ -47,99 +53,114 @@ export const columns: ColumnDef<Factory>[] = [
   {
     accessorKey: "nickname",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nickname" />
+      <DataTableColumnHeader column={column} title="Nama Singkat"/>
     ),
   },
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Factory Name" />
+      <DataTableColumnHeader column={column} title="Nama Pabrik"/>
     ),
+
   },
   {
     accessorKey: "address",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Address" />
+      <DataTableColumnHeader column={column} title="Alamat"/>
     ),
+
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tanggal Dibuat"/>
+    ),
+    cell: ({ row }) => {
+      return (
+        <div>{new Date(row.original.created_at).toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })}</div>
+      );
+    },
   },
   {
     accessorKey: "status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Status"/>
     ),
     cell: ({ row }) => {
-      const status = row.getValue("status");
-      switch (status) {
-        case "ACTIVE":
-          return <Badge className="bg-green-500">Active</Badge>;
-        case "PENDING":
-          return <Badge className="bg-yellow-500">Pending</Badge>;
-        case "INACTIVE":
-          return <Badge className="bg-red-500">Inactive</Badge>;
-        case "SUSPENDED":
-          return <Badge className="bg-gray-500">Suspended</Badge>;
-        default:
-          return <Badge className="bg-gray-300">Unknown</Badge>;
+      if (row.original.status === "Active") {
+        return <Badge className="bg-blue-500 text-white hover:bg-blue-600">Aktif</Badge>;
       }
+      if (row.original.status === "Pending") {
+        return <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">Pending</Badge>;
+      }
+      if (row.original.status === "Inactive") {
+        return <Badge className="bg-red-500 text-white hover:bg-red-600">Tidak Aktif</Badge>;
+      }
+
+      return <Badge className="bg-gray-500 text-white hover:bg-gray-600">Tidak Diketahui</Badge>;
     },
   },
   {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      // buatkan tombol edit dan delete
-      console.log(row.original.id);
+      const handleDelete = async (id: number) => {
+        try {
+          const response = await fetch(`/api/factory?id=${id}`, {
+            method: "DELETE",
+          });
+          if (!response.ok) throw new Error("Gagal menghapus data");
+          window.location.reload();
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
       return (
-        <div className="flex gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button size="sm" className="border bg-transparent hover:bg-gray-50 text-black">
-                <Pencil className="h-3 w-3" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Factory</DialogTitle>
-                <DialogDescription>
-                  Perbarui informasi untuk factory ini.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <Input placeholder="Nickname" />
-                <Input placeholder="Name" />
-                <Input placeholder="Alamat" />
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white w-full mt-4">
-                  Perbarui Factory
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-        <DialogTrigger asChild>
-          <Button size="sm" className="border bg-transparent hover:bg-gray-50 text-black">
-            <Trash className="h-3 w-3" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Apakah Anda Yakin?</DialogTitle>
-            <DialogDescription>
-              Aksi ini tidak bisa dibatalkan. Factory ini akan dihapus
-              secara permanen dan data terkait akan dihapus dari sistem.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-4 mt-4">
-            <Button variant="outline" onClick={() => console.log("Cancelled")}>
-              Batal
-            </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white" onClick={() => console.log("Factory deleted")}>
-              Hapus
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="rounded-md p-2 cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <Form factory={row.original as FactoryTable} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Trash className="w-4 h-4" />
+                  Hapus
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apakah anda yakin?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tindakan ini tidak dapat dibatalkan. Data akan dihapus
+                    secara permanen.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction
+                    className="bg-red-500 hover:bg-red-600"
+                    onClick={() => handleDelete(row.original.id)}
+                    >
+                    Ya, Hapus
+                  </AlertDialogAction>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },
 ];
+

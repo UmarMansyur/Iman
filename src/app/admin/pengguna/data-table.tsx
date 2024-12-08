@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  SortingState,
 } from "@tanstack/react-table";
 
 import {
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { SortOrder } from "@/lib/context";
+import { useTableStore } from "@/store/table-store";
 // import { SortOrder } from "@/lib/context";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -42,7 +42,7 @@ export function DataPengguna<TData, TValue>({
   onPageSizeChange,
   // onSortingStateChange
 }: DataTableProps<TData, TValue>) {
-  const [sortingState, setSortingState] = React.useState<SortingState>([]);
+  const { sorting: sortingState, setSorting } = useTableStore();
 
   const table = useReactTable({
     data,
@@ -54,7 +54,7 @@ export function DataPengguna<TData, TValue>({
     onSortingChange: (updater) => {
       // Handle sorting state update
       const newState = typeof updater === 'function' ? updater(sortingState) : updater;
-      setSortingState(newState);
+      setSorting(newState);
       
       // Trigger sorting callback
       if (newState.length > 0) {
@@ -130,8 +130,7 @@ export function DataPengguna<TData, TValue>({
       </div>
       <DataTablePagination 
         table={table} 
-        pageSize={pagination.limit}
-        totalRows={pagination.total} 
+        pageSize={pagination.limit} 
         setPageSize={(size) => {
           onPageSizeChange(size);
           sorting("", "asc");
