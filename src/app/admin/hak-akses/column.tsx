@@ -9,26 +9,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Form from "./form-edit";
 import DeleteButton from "@/components/delete-button";
-import { Unit } from "@prisma/client";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
+import { RoleUser } from "@/lib/definitions";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<Unit>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<RoleUser>[] => [
   {
     id: "index",
     header: "No",
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "name",
+    accessorKey: "role",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama"/>
+      <DataTableColumnHeader column={column} title="Hak Akses"/>
     ),
   },
   {
-    accessorKey: "delete",
+    accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const unit = row.original as Unit;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -37,8 +36,8 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form unit={unit} fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="unit" id={unit.id.toString()} />
+            <Form role={row.original as RoleUser} fetchData={fetchData} />
+            <DeleteButton fetchData={fetchData} endpoint="role" id={row.original.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

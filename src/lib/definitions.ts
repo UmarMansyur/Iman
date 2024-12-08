@@ -169,7 +169,6 @@ export type FactoryTable = {
   updated_at: string;
 };
 
-
 export const FactorySchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, "Nama minimal 3 karakter"),
@@ -192,11 +191,10 @@ export type FactoryFormState =
     }
   | undefined;
 
-
 export type Unit = {
   id: number;
   name: string;
-}
+};
 
 export const UnitSchema = z.object({
   id: z.string().optional(),
@@ -211,3 +209,65 @@ export type UnitFormState =
       message?: string;
     }
   | undefined;
+
+
+export type Material = {
+  id: number;
+  name: string;
+};
+
+
+export const MaterialSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+});
+
+
+export type MaterialFormState =
+  | {
+      errors?: {
+        name?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+export type RoleUser = {
+  id: number;
+  role: string;
+};
+
+export const RoleSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+});
+
+export type RoleFormState =
+  | {
+      errors?: {
+        name?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export const PaymentSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+});
+
+export type PaymentFormState =
+  | {
+      errors?: {
+        name?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export type PaymentSetting = {
+  id: number;
+  name: string;
+};
+

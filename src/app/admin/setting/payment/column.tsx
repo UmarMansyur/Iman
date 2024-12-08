@@ -7,12 +7,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Form from "./form-edit";
+import Form from "./form";
 import DeleteButton from "@/components/delete-button";
-import { Unit } from "@prisma/client";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
+import { PaymentSetting } from "@/lib/definitions";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<Unit>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<PaymentSetting>[] => [
   {
     id: "index",
     header: "No",
@@ -21,14 +21,13 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama"/>
+      <DataTableColumnHeader column={column} title="Jenis Metode Pembayaran"/>
     ),
   },
   {
-    accessorKey: "delete",
+    accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const unit = row.original as Unit;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -37,8 +36,8 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form unit={unit} fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="unit" id={unit.id.toString()} />
+            <Form payment={row.original as PaymentSetting} fetchData={fetchData} />
+            <DeleteButton fetchData={fetchData} endpoint="payment" id={row.original.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

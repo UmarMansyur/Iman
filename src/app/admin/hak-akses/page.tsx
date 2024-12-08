@@ -9,12 +9,11 @@ import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import { Unit } from "@/lib/definitions";
 import Form from "./form-tambah";
-
+import { RoleUser } from "@/lib/definitions";
 
 export default function PabrikPage() {
-  const [data, setData] = useState<Unit[]>([]);
+  const [data, setData] = useState<RoleUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -42,12 +41,12 @@ export default function PabrikPage() {
         sortOrder: filters.sortOrder,
       });
   
-      const response = await fetch(`/api/unit?${queryParams}`);
+      const response = await fetch(`/api/role?${queryParams}`);
       const data = await response.json();
 
       // ambil user dari data
 
-      setData(data.units);
+      setData(data.roles);
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -101,9 +100,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Satuan</h4>
+            <h4 className="text-base font-semibold mb-0">Daftar Hak Akses</h4>
             <p className="text-xs text-muted-foreground">
-              Daftar satuan yang terdaftar.
+              Daftar hak akses yang terdaftar.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -112,7 +111,7 @@ export default function PabrikPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari satuan"
+                  placeholder="Cari hak akses"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}

@@ -17,9 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
-import { SortOrder } from "@/lib/context";
 import { useTableStore } from "@/store/table-store";
-// import { SortOrder } from "@/lib/context";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -29,30 +27,41 @@ interface DataTableProps<TData, TValue> {
     total: number;
     totalPages: number;
   };
-  sorting: (sortBy: string, sortOrder: SortOrder) => void;
-  onPageChange: (newPage: number) => void;
-  onPageSizeChange: (newSize: number) => void;
-  onSortingStateChange?: (length: number) => void;
+  sorting: (sortBy: string, sortOrder: string) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
-export function DataPengguna<TData, TValue>({
+export function DataTable<TData, TValue>({
   columns,
   data,
   pagination,
   sorting,
-  onPageSizeChange,
   onPageChange,
-  // onSortingStateChange
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
+  const [pageSize, setPageSize] = React.useState(pagination.limit);
   const { sorting: sortingState, setSorting } = useTableStore();
-
+  
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-    manualSorting: true,
     pageCount: pagination.totalPages,
+    state: {
+      pagination: {
+        pageIndex: pagination.page - 1,
+        pageSize: pageSize,
+      },
+    },
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newState = updater({
+          pageIndex: pagination.page - 1,
+          pageSize: pageSize,
+        });
+        onPageChange(newState.pageIndex);
+      }
+    },
     onSortingChange: (updater) => {
       const newState = typeof updater === 'function' ? updater(sortingState) : updater;
       setSorting(newState);
@@ -63,19 +72,8 @@ export function DataPengguna<TData, TValue>({
         sorting("", "asc");
       }
     },
-    enableSorting: true,
-    onPaginationChange: (updater) => {
-      const newState = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
-      onPageChange(newState.pageIndex);
-    },
-    state: {
-      sorting: sortingState,
-      pagination: {
-        pageIndex: pagination.page - 1,
-        pageSize: pagination.limit,
-      },
-    },
-    getSortedRowModel: getCoreRowModel(),
+    manualPagination: true,
+    getCoreRowModel: getCoreRowModel(),
   });
 
   return (
@@ -131,11 +129,11 @@ export function DataPengguna<TData, TValue>({
         </Table>
       </div>
       <DataTablePagination 
-        table={table} 
-        pageSize={pagination.limit} 
+        table={table}
+        pageSize={pageSize}
         setPageSize={(size) => {
+          setPageSize(size);
           onPageSizeChange(size);
-          sorting("", "asc");
         }}
       />
     </div>

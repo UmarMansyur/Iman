@@ -303,8 +303,14 @@ model PPN {
   id         Int    @id @default(autoincrement())
   desc       String
   percentage Float
+  status     PPNStatus @default(Active)
 
   @@map("ppns")
+}
+
+enum PPNStatus {
+  Active
+  Inactive
 }
 
 model Invoice {

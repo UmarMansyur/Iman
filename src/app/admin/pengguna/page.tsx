@@ -172,7 +172,11 @@ export default function PenggunaPage() {
                 setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
               }}
               onPageSizeChange={(size) => {
-                setPagination((prev) => ({ ...prev, limit: size, page: 1 }));
+                setPagination((prev) => ({ 
+                  ...prev, 
+                  limit: size, 
+                  page: 1 
+                }));
               }}
             />
           )}

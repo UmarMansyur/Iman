@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Form from "./form-edit";
 import DeleteButton from "@/components/delete-button";
-import { Unit } from "@prisma/client";
+import { Material } from "@/lib/definitions";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<Unit>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<Material>[] => [
   {
     id: "index",
     header: "No",
@@ -28,7 +28,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     accessorKey: "delete",
     header: "Aksi",
     cell: ({ row }) => {
-      const unit = row.original as Unit;
+      const material = row.original as Material;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -37,8 +37,8 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form unit={unit} fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="unit" id={unit.id.toString()} />
+            <Form material={material} fetchData={fetchData} />
+            <DeleteButton fetchData={fetchData} endpoint="material" id={material.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

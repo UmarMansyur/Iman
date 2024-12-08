@@ -26,7 +26,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
-import { useSession } from "./SessionProvider";
 
 // This is sample data.
 const data = {
@@ -62,7 +61,7 @@ const data = {
         },
         {
           title: "Material",
-          url: "/admin/material",
+          url: "/admin/bahan-baku",
         },
         {
           title: "Hak Akses",
@@ -86,20 +85,16 @@ const data = {
       icon: Settings,
       items: [
         {
-          title: "Hak Akses",
-          url: "#",
-        },
-        {
           title: "Metode Pembayaran",
-          url: "#",
+          url: "/admin/setting/payment",
         },
         {
           title: "PPN",
-          url: "#",
+          url: "/admin/setting/ppn",
         },
         {
           title: "Pengaturan Akun",
-          url: "#",
+          url: "/admin/setting/account",
         },
       ],
     },
@@ -178,8 +173,6 @@ const data = {
 export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const session = useSession();
-  const user = session?.user;
   const pathname = usePathname();
   const addActiveState = (items: typeof data.navAdmin) => {
     return items.map((item) => ({
@@ -217,13 +210,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={{
-            avatar: user?.thumbnail ?? "",
-            email: user?.email ?? "",
-            name: user?.username ?? "",
-          }}
-        />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

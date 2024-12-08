@@ -9,12 +9,11 @@ import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import { Unit } from "@/lib/definitions";
+import { Material } from "@/lib/definitions";
 import Form from "./form-tambah";
 
-
-export default function PabrikPage() {
-  const [data, setData] = useState<Unit[]>([]);
+export default function MaterialPage() {
+  const [data, setData] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -41,13 +40,13 @@ export default function PabrikPage() {
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
       });
-  
-      const response = await fetch(`/api/unit?${queryParams}`);
+
+      const response = await fetch(`/api/material?${queryParams}`);
       const data = await response.json();
 
       // ambil user dari data
 
-      setData(data.units);
+      setData(data.materials);
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -70,7 +69,6 @@ export default function PabrikPage() {
     filters.sortBy,
     filters.sortOrder,
   ]);
-
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
@@ -101,9 +99,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Satuan</h4>
+            <h4 className="text-base font-semibold mb-0">Daftar Bahan Baku</h4>
             <p className="text-xs text-muted-foreground">
-              Daftar satuan yang terdaftar.
+              Daftar bahan baku yang terdaftar.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -112,7 +110,7 @@ export default function PabrikPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari satuan"
+                  placeholder="Cari bahan baku"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}

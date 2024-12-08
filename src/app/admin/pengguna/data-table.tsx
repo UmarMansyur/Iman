@@ -54,9 +54,9 @@ export function DataPengguna<TData, TValue>({
     manualSorting: true,
     onPaginationChange: (updater) => {
       const newState = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
-      onPageChange(newState.pageIndex);
+      onPageChange(newState.pageIndex + 1);
     },
-    pageCount: pagination.totalPages,
+    pageCount: Math.ceil(pagination.total / pagination.limit),
     onSortingChange: (updater) => {
       const newState = typeof updater === 'function' ? updater(sortingState) : updater;
       setSorting(newState);
