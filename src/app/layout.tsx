@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import SessionProvider from "@/components/SessionProvider";
 const publicSans = Public_Sans({
   subsets: ["latin"],
   variable: "--font-public-sans",
@@ -19,12 +20,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${publicSans.variable} antialiased`}
-        // style={{ backgroundColor: "#EFF6FF !important" }}
-      >
-        {children}
-        <Toaster />
+        <body
+          className={`${publicSans.variable} antialiased`}
+          // style={{ backgroundColor: "#EFF6FF !important" }}
+        >
+        <SessionProvider>
+          {children}
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );

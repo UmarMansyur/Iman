@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Building2,
   Combine,
@@ -13,27 +13,23 @@ import {
   Settings,
   Truck,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
-import { NavMain } from "@/components/nav-main"
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
+import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
+import { useSession } from "./SessionProvider";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "Umar Mansyur",
-    email: "umar@unira.ac.id",
-    avatar: "",
-  },
   teams: [
     {
       name: "PT. Segara Catur Perkasa",
@@ -104,10 +100,9 @@ const data = {
         {
           title: "Pengaturan Akun",
           url: "#",
-        }
+        },
       ],
     },
-
   ],
   navOwner: [
     {
@@ -145,8 +140,6 @@ const data = {
       url: "#",
       icon: FileChartLine,
     },
-    
-
   ],
   navOperator: [
     {
@@ -179,51 +172,60 @@ const data = {
       url: "#",
       icon: FileChartLine,
     },
-    
-
   ],
-}
+};
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  // Add usePathname hook to get current route
-  const pathname = usePathname()
-
-  // Fungsi untuk menambahkan isActive ke items berdasarkan pathname
+export function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const session = useSession();
+  const user = session?.user;
+  const pathname = usePathname();
   const addActiveState = (items: typeof data.navAdmin) => {
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
-      isActive: item.url === pathname || 
-                (item.items?.some(subItem => subItem.url === pathname)),
-      items: item.items
-    }))
-  }
+      isActive:
+        item.url === pathname ||
+        item.items?.some((subItem) => subItem.url === pathname),
+      items: item.items,
+    }));
+  };
 
-  // Modify getNavItems to use addActiveState
   const getNavItems = () => {
-    if (pathname?.startsWith('/admin')) {
-      return <NavMain title="Administrator" items={addActiveState(data.navAdmin)} />
+    if (pathname?.startsWith("/admin")) {
+      return (
+        <NavMain title="Administrator" items={addActiveState(data.navAdmin)} />
+      );
     }
-    if (pathname?.startsWith('/owner')) {
-      return <NavMain title="Owner" items={addActiveState(data.navOwner)} />
+    if (pathname?.startsWith("/owner")) {
+      return <NavMain title="Owner" items={addActiveState(data.navOwner)} />;
     }
-    if (pathname?.startsWith('/')) {
-      return <NavMain title="Operator" items={addActiveState(data.navOperator)} />
+    if (pathname?.startsWith("/")) {
+      return (
+        <NavMain title="Operator" items={addActiveState(data.navOperator)} />
+      );
     }
-    return null
-  }
+    return null;
+  };
+
+
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent>
-        {getNavItems()}
-      </SidebarContent>
+      <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            avatar: user?.thumbnail ?? "",
+            email: user?.email ?? "",
+            name: user?.username ?? "",
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

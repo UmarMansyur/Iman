@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
