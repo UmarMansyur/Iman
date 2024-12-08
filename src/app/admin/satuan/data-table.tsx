@@ -29,56 +29,43 @@ interface DataTableProps<TData, TValue> {
     total: number;
     totalPages: number;
   };
-  sorting: (sortBy: string, sortOrder: SortOrder) => void;
-  onPageChange: (newPage: number) => void;
-  onPageSizeChange: (newSize: number) => void;
-  onSortingStateChange?: (length: number) => void;
+  sorting: (sortBy: string, sortOrder: string) => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
-export function DataPengguna<TData, TValue>({
+export function DataTable<TData, TValue>({
   columns,
   data,
   pagination,
   sorting,
-  onPageSizeChange,
   onPageChange,
-  // onSortingStateChange
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
-  const { sorting: sortingState, setSorting } = useTableStore();
-
+  const [pageSize, setPageSize] = React.useState(pagination.limit);
+  
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-    manualSorting: true,
-    onPaginationChange: (updater) => {
-      const newState = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
-      onPageChange(newState.pageIndex);
-    },
     pageCount: pagination.totalPages,
-    onSortingChange: (updater) => {
-      const newState = typeof updater === 'function' ? updater(sortingState) : updater;
-      setSorting(newState);
-      if (newState.length > 0) {
-        const sort = newState[0];
-        sorting(sort.id, sort.desc ? "desc" : "asc");
-      } else {
-        sorting("", "asc");
-      }
-    },
-    enableSorting: true,
     state: {
-      sorting: sortingState,
       pagination: {
         pageIndex: pagination.page - 1,
-        pageSize: pagination.limit,
+        pageSize: pageSize,
       },
     },
-    getSortedRowModel: getCoreRowModel(),
+    onPaginationChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newState = updater({
+          pageIndex: pagination.page - 1,
+          pageSize: pageSize,
+        });
+        onPageChange(newState.pageIndex);
+      }
+    },
+    manualPagination: true,
+    getCoreRowModel: getCoreRowModel(),
   });
-
-
 
   return (
     <div className="overflow-x-auto w-full px-4">
@@ -133,11 +120,11 @@ export function DataPengguna<TData, TValue>({
         </Table>
       </div>
       <DataTablePagination 
-        table={table} 
-        pageSize={pagination.limit} 
+        table={table}
+        pageSize={pageSize}
         setPageSize={(size) => {
+          setPageSize(size);
           onPageSizeChange(size);
-          sorting("", "asc");
         }}
       />
     </div>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { Gender, PrismaClient, UserType } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { uploadFile } from "@/lib/imagekit";
+// import { revalidatePath } from "next/cache";
 
 const prisma = new PrismaClient();
 
@@ -11,8 +12,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const page = Number(searchParams.get("page") || "1");
+    const limit = Number(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "Semua";
     const sortBy = searchParams.get("sortBy") || "created_at";
@@ -85,8 +86,8 @@ export async function GET(request: Request) {
       orderBy: {
         [sortBy]: sortOrder,
       },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: Number((page - 1) * limit),
+      take: Number(limit),
     });
 
     // Hitung statistik
@@ -211,7 +212,6 @@ export async function DELETE(request: Request) {
     await prisma.user.delete({
       where: { id: parseInt(id) },
     });
-
     return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

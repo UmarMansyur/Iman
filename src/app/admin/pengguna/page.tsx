@@ -12,6 +12,7 @@ import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
+import toast from "react-hot-toast";
 
 export default function PenggunaPage() {
   const router = useRouter();
@@ -98,6 +99,24 @@ export default function PenggunaPage() {
     debouncedSearch(value);
   };
 
+  const deleteUser = async (id: number) => {
+    // await deleteUser(id);
+    const response = await fetch(`/api/user?id=${id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      toast.error(data.message);
+    } else {
+      toast.success(data.message);
+    }
+    await fetchUsers();
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  };
+
   return (
     <MainPage>
       {loading ? (
@@ -146,15 +165,15 @@ export default function PenggunaPage() {
             </div>
           ) : (
             <DataPengguna
-              columns={columns}
+              columns={columns(deleteUser)}
               data={data}
               pagination={pagination}
+              onPageChange={handlePageChange}
               sorting={(sortBy, sortOrder) => {
-                console.log(sortBy, sortOrder);
                 setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
               }}
               onPageSizeChange={(size) => {
-                setPagination((prev) => ({ ...prev, limit: size }));
+                setPagination((prev) => ({ ...prev, limit: size, page: 1 }));
               }}
             />
           )}

@@ -30,6 +30,7 @@ interface DataTableProps<TData, TValue> {
     totalPages: number;
   };
   sorting: (sortBy: string, sortOrder: SortOrder) => void;
+  onPageChange: (newPage: number) => void;
   onPageSizeChange: (newSize: number) => void;
   onSortingStateChange?: (length: number) => void;
 }
@@ -40,6 +41,7 @@ export function DataPengguna<TData, TValue>({
   pagination,
   sorting,
   onPageSizeChange,
+  onPageChange,
   // onSortingStateChange
 }: DataTableProps<TData, TValue>) {
   const { sorting: sortingState, setSorting } = useTableStore();
@@ -66,6 +68,10 @@ export function DataPengguna<TData, TValue>({
       }
     },
     enableSorting: true,
+    onPaginationChange: (updater) => {
+      const newState = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
+      onPageChange(newState.pageIndex);
+    },
     state: {
       sorting: sortingState,
       pagination: {

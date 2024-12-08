@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
+
 export type User = {
   id: number;
   email: string;
@@ -36,8 +37,7 @@ export type User = {
   is_active: boolean;
   is_verified: boolean;
 };
-
-export const columns: ColumnDef<User>[] = [
+export const columns = (deleteUser: (id: number) => Promise<void>): ColumnDef<User>[] => [
   {
     accessorKey: "thumbnail",
     header: "Foto Profil",
@@ -118,18 +118,6 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const handleDelete = async (id: number) => {
-        try {
-          const response = await fetch(`/api/user?id=${id}`, {
-            method: "DELETE",
-          });
-          if (!response.ok) throw new Error("Gagal menghapus data");
-          window.location.reload();
-        } catch (error) {
-          console.error(error);
-        }
-      };
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -164,11 +152,11 @@ export const columns: ColumnDef<User>[] = [
                 <AlertDialogFooter>
                   <AlertDialogAction
                     className="bg-red-500 hover:bg-red-600"
-                    onClick={() => handleDelete(row.original.id)}
-                    >
+                    onClick={() => deleteUser(row.original.id)}
+                  >
                     Ya, Hapus
                   </AlertDialogAction>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>

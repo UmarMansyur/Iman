@@ -131,7 +131,3 @@ export async function updateUser(
 export async function getUser(id: number) {
   return await prisma.user.findUnique({ where: { id } });
 }
-
-export async function deleteUser(id: number) {
-  await prisma.user.delete({ where: { id } });
-}

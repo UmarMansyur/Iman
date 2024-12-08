@@ -10,9 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { FactoryTable } from "@/lib/definitions";
+import { FactoryTable, FactoryFormState } from "@/lib/definitions";
 import { Pencil } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
 import {
@@ -25,47 +25,43 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { updateFactory } from "@/app/actions/factory";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function Form({ factory }: { factory?: FactoryTable }) {
-  const [formData, setFormData] = useState({
-    id: factory?.id,
-    user_id: factory?.user_id,
-    nickname: factory?.nickname,
-    name: factory?.name,
-    address: factory?.address,
-    logo: factory?.logo || "",
-  });
+export default function Form({ factory, fetchData, users }: { 
+  factory?: FactoryTable,
+  fetchData: () => Promise<void>,
+  users: { value: string; label: string }[]
+}) {
+  const [state, setState] = useState<FactoryFormState>();
+  const [selectedUser, setSelectedUser] = useState<{ value: string; label: string }>();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Add your submit logic here
+    const formData = new FormData(e.currentTarget);
+    if(selectedUser?.value) {
+      formData.append("user_id", selectedUser?.value);
+    } else {
+      formData.append("user_id", factory?.user_id?.toString() || '');
+    }
+    formData.append('id', factory?.id?.toString() || '');
+    const response = await updateFactory(undefined, formData);
+    if (response?.errors) {
+      setState(response.errors as FactoryFormState);
+      toast.error(response?.errors.nickname?.join(", ") || response?.errors.name?.join(", ") || response?.errors.address?.join(", ") || response?.errors.user_id?.join(", ") || "Gagal memperbarui pabrik");
+    } else {
+      toast.success(response?.message || "Pabrik berhasil diperbarui");
+    }
+    await fetchData();
   };
 
-  const frameworks = [
-    {
-      value: "next.js",
-      label: "Next.js",
-    },
-    {
-      value: "sveltekit",
-      label: "SvelteKit",
-    },
-    {
-      value: "nuxt.js",
-      label: "Nuxt.js",
-    },
-    {
-      value: "remix",
-      label: "Remix",
-    },
-    {
-      value: "astro",
-      label: "Astro",
-    },
-  ]
+  useEffect(() => {
+    setSelectedUser(users.find((user) => user.value === factory?.user_id?.toString()) || { value: "", label: "" });
+  }, [users, factory]);
 
   const [open, setOpen] = useState(false);
-  
 
   return (
     <Dialog>
@@ -89,64 +85,63 @@ export default function Form({ factory }: { factory?: FactoryTable }) {
               <Label htmlFor="name">Nama</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                name="name"
+                defaultValue={factory?.name}
                 className="col-span-3"
               />
+              {state?.errors?.name && (
+                <p className="text-red-500 col-span-3 col-start-2">
+                  {state.errors.name.join(", ")}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="nickname">Nama Singkat</Label>
               <Input
                 id="nickname"
-                value={formData.nickname}
-                onChange={(e) =>
-                  setFormData({ ...formData, nickname: e.target.value })
-                }
+                name="nickname"
+                defaultValue={factory?.nickname}
                 className="col-span-3"
               />
+              {state?.errors?.nickname && (
+                <p className="text-red-500 col-span-3 col-start-2">
+                  {state.errors.nickname.join(", ")}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="creator">Pembuat</Label>
               <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild className="col-span-3">
+                <PopoverTrigger asChild className="col-span-3" name="user_id">
                   <Button
                     variant="ghost"
                     role="combobox"
                     className="justify-between col-span-3 bg-white border border-gray-300 text-black"
                   >
-                    {frameworks.find(
-                      (framework) => framework.value === formData.user_id
-                    )?.label || "Pilih Pembuat..."}
+                    {selectedUser?.label || factory?.user?.username || "Pilih Pembuat..."}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 justify-between">
                   <Command>
-                    <CommandInput placeholder="Search framework..." />
+                    <CommandInput placeholder="Cari pembuat..." />
                     <CommandList>
-                      <CommandEmpty>No framework found.</CommandEmpty>
+                      <CommandEmpty>Tidak ada pembuat ditemukan.</CommandEmpty>
                       <CommandGroup>
-                        {frameworks.map((framework) => (
+                        {users.map((user) => (
                           <CommandItem
-                            key={framework.value}
-                            value={framework.value}
-                            onSelect={(currentValue) => {
-                              setFormData({
-                                ...formData,
-                                user_id: currentValue,
-                              });
+                            key={user.value}
+                            value={user.value}
+                            onSelect={() => {
+                              setSelectedUser(user);
                               setOpen(false);
                             }}
                           >
-                            {framework.label}
+                            {user.label}
                             <Check
                               className={cn(
                                 "ml-auto",
-                                formData.user_id === framework.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
+                                selectedUser?.value === user.value ? "opacity-100" : "opacity-0"
                               )}
                             />
                           </CommandItem>
@@ -158,24 +153,34 @@ export default function Form({ factory }: { factory?: FactoryTable }) {
               </Popover>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status">Status</Label>
+              <Select defaultValue={factory?.status} name="status">
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Pilih Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Aktif</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Inactive">Tidak Aktif</SelectItem>
+                  <SelectItem value="Suspended">Ditangguhkan</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="logo">Logo</Label>
               <Input
                 id="logo"
-                value={formData.logo}
-                onChange={(e) =>
-                  setFormData({ ...formData, logo: e.target.value })
-                }
+                type="file"
+                name="logo"
                 className="col-span-3"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="address">Alamat</Label>
-              <Input
+              <Textarea
                 id="address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
+                name="address"
+                defaultValue={factory?.address}
                 className="col-span-3"
               />
             </div>

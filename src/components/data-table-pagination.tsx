@@ -36,7 +36,7 @@ export function DataTablePagination<TData>({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {[5, 10, 15, 25, 50, 100].map((size) => (
+            {[1, 5, 10, 15, 25, 50, 100].map((size) => (
               <DropdownMenuItem
                 key={size}
                 onClick={() => {
@@ -117,7 +117,7 @@ export function DataTablePagination<TData>({
                       onClick={() => table.setPageIndex(pageIndex)}
                       className={`${
                         currentPage === pageIndex
-                          ? "bg-primary2 text-white hover:bg-primary2/90"
+                          ? "bg-primary2 text-white hover:bg-primary2/90 hover:text-white"
                           : ""
                       }`}
                     >

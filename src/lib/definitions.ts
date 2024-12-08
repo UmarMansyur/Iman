@@ -162,8 +162,52 @@ export type FactoryTable = {
   logo: string | null;
   address: string;
   user_id: string;
+  user: User;
   status: FactoryStatus;
   members: MemberFactory[];
   created_at: string;
   updated_at: string;
 };
+
+
+export const FactorySchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+  nickname: z.string().min(3, "Nama Singkat minimal 3 karakter"),
+  user_id: z.string().optional(),
+  logo: z.any().optional(),
+  status: z.enum(["Active", "Pending", "Inactive", "Suspended"]),
+  address: z.string().min(10, "Alamat minimal 10 karakter"),
+});
+
+export type FactoryFormState =
+  | {
+      errors?: {
+        name?: string[];
+        nickname?: string[];
+        user_id?: string[];
+        logo?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+export type Unit = {
+  id: number;
+  name: string;
+}
+
+export const UnitSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+});
+
+export type UnitFormState =
+  | {
+      errors?: {
+        name?: string[];
+      };
+      message?: string;
+    }
+  | undefined;

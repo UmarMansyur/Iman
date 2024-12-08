@@ -2,40 +2,19 @@
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreHorizontal, Trash } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { MoreHorizontal } from "lucide-react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FactoryTable } from "@/lib/definitions";
 import { Badge } from "@/components/ui/badge";
 import Form from "./form-edit";
+import DeleteButton from "@/components/delete-button";
 
-export const columns: ColumnDef<FactoryTable>[] = [
-  // {
-  //   accessorKey: "user",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Owner"/>
-  //   ),
-  //   cell: ({ row }) => {
-  //     return (
-  //       <div>{row.original.user?.username}</div>
-  //     );
-  //   },
-  // },
+export const columns = (fetchData: () => Promise<void>, users: { value: string; label: string }[]): ColumnDef<FactoryTable>[] => [
   {
     accessorKey: "logo",
     header: "Logo",
@@ -108,18 +87,7 @@ export const columns: ColumnDef<FactoryTable>[] = [
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const handleDelete = async (id: number) => {
-        try {
-          const response = await fetch(`/api/factory?id=${id}`, {
-            method: "DELETE",
-          });
-          if (!response.ok) throw new Error("Gagal menghapus data");
-          window.location.reload();
-        } catch (error) {
-          console.error(error);
-        }
-      };
-
+      const factory = row.original as FactoryTable;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -128,35 +96,9 @@ export const columns: ColumnDef<FactoryTable>[] = [
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <Form factory={row.original as FactoryTable} />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  <Trash className="w-4 h-4" />
-                  Hapus
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Apakah anda yakin?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tindakan ini tidak dapat dibatalkan. Data akan dihapus
-                    secara permanen.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogAction
-                    className="bg-red-500 hover:bg-red-600"
-                    onClick={() => handleDelete(row.original.id)}
-                    >
-                    Ya, Hapus
-                  </AlertDialogAction>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Form factory={factory} fetchData={fetchData} users={users}/>
+            {/* <FormMember factory={row.original as FactoryTable} /> */}
+            <DeleteButton fetchData={fetchData} endpoint="factory" id={factory.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );
