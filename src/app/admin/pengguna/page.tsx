@@ -1,57 +1,101 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { columns, User } from "./column";
 import { DataPengguna } from "./data-table";
 import StatusFilter from "./StatusFilter";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
+import debounce from "lodash/debounce";
 
 export default function PenggunaPage() {
   const router = useRouter();
+
   const [data, setData] = useState<User[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [filteredData, setFilteredData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(`${process.env.BASE_URL}/api/user`);
-        const users = await response.json();
-        if (users) {
-          setData(users.users);
-          setFilteredData(users.users);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      } finally {
-        setLoading(false);
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "Semua",
+    sortBy: "created_at",
+    sortOrder: "desc",
+  });
+
+  // Tambahkan state baru untuk nilai input search
+  const [searchInput, setSearchInput] = useState("");
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        search: filters.search,
+        status: filters.status,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      });
+
+      if (filters.sortBy === "status") {
+        queryParams.set("sortBy", "is_active");
       }
-    };
 
-    fetchUsers();
-  }, []);
+      const response = await fetch(`/api/user?${queryParams}`);
+      const data = await response.json();
 
-  const handleFilter = (status: string) => {
-    setSelectedStatus(status);
-    setFilteredData(data.filter((user) => {
-      if (status === "Semua") return true;
-      if (status === "Belum Verifikasi") return !user.is_verified;
-      if (status === "Aktif") return user.is_verified && user.is_active;
-      if (status === "Tidak Aktif") return user.is_verified && !user.is_active;
-      return true;
-    }));
+      setData(data.users);
+      setPagination((prev) => ({
+        ...prev,
+        total: data.pagination.total,
+        totalPages: data.pagination.totalPages,
+      }));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+      setLoadingSearch(false);
+    }
   };
 
-  const searchData = (value: string) => {
-    setFilteredData(data.filter((user) =>
-      user.username.toLowerCase().includes(value.toLowerCase())
-    ));
+  useEffect(() => {
+    fetchUsers();
+  }, [
+    pagination.page,
+    pagination.limit,
+    filters.search,
+    filters.status,
+    filters.sortBy,
+    filters.sortOrder,
+  ]);
+
+  const handleFilter = (status: string) => {
+    setFilters((prev) => ({ ...prev, status }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setFilters((prev) => ({ ...prev, search: value }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }, 500),
+    []
+  );
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const handleSearch = (value: string) => {
+    setSearchInput(value);
+    setLoadingSearch(true);
+    debouncedSearch(value);
   };
 
   return (
@@ -72,7 +116,7 @@ export default function PenggunaPage() {
           <div className="flex justify-between items-center p-4">
             <div className="flex items-center gap-2">
               <StatusFilter
-                selectedStatus={selectedStatus}
+                selectedStatus={filters.status}
                 onStatusChange={handleFilter}
               />
               <div className="relative">
@@ -81,7 +125,8 @@ export default function PenggunaPage() {
                   type="text"
                   placeholder="Cari pengguna"
                   className="ps-8"
-                  onChange={(e) => searchData(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  value={searchInput}
                 />
               </div>
             </div>
@@ -94,7 +139,25 @@ export default function PenggunaPage() {
               Tambah Pengguna
             </Button>
           </div>
-          <DataPengguna columns={columns} data={filteredData} />
+          {loadingSearch ? (
+            // buatkan loading pada tabel
+            <div className="flex justify-center items-center h-24">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : (
+            <DataPengguna
+              columns={columns}
+              data={data}
+              pagination={pagination}
+              sorting={(sortBy, sortOrder) => {
+                console.log(sortBy, sortOrder);
+                setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+              }}
+              onPageSizeChange={(size) => {
+                setPagination((prev) => ({ ...prev, limit: size }));
+              }}
+            />
+          )}
         </Card>
       )}
     </MainPage>

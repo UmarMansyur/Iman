@@ -11,6 +11,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "Semua";
+    const sortBy = searchParams.get("sortBy") || "created_at";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
 
     if (id) {
       // Get single user
@@ -31,7 +37,37 @@ export async function GET(request: Request) {
       return NextResponse.json({ user }, { status: 200 });
     }
 
+    // Buat where clause berdasarkan filter
+    const where: any = {
+      OR: [
+        { username: { contains: search } },
+        { email: { contains: search } },
+      ],
+    };
+
+    // Filter berdasarkan status
+    if (status !== "Semua") {
+      switch (status) {
+        case "Aktif":
+          where.is_verified = true;
+          where.is_active = true;
+          break;
+        case "Tidak Aktif":
+          where.is_verified = true;
+          where.is_active = false;
+          break;
+        case "Belum Verifikasi":
+          where.is_verified = false;
+          break;
+      }
+    }
+
+    // Hitung total records
+    const total = await prisma.user.count({ where });
+
+    // Ambil data dengan pagination
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         email: true,
@@ -46,20 +82,31 @@ export async function GET(request: Request) {
         created_at: true,
         updated_at: true,
       },
-    });
-    const total = await prisma.user.count();
-    const active = await prisma.user.count({
-      where: {
-        is_active: true,
+      orderBy: {
+        [sortBy]: sortOrder,
       },
-    });
-    const verified = await prisma.user.count({
-      where: {
-        is_verified: true,
-      },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json({ users, total, active, verified }, { status: 200 });
+    // Hitung statistik
+    const active = await prisma.user.count({
+      where: { ...where, is_active: true },
+    });
+    const verified = await prisma.user.count({
+      where: { ...where, is_verified: true },
+    });
+
+    return NextResponse.json({
+      users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      stats: { total, active, verified }
+    }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -14,6 +14,7 @@ import {
 interface PaginationProps<TData> {
   table: Table<TData>;
   pageSize: number;
+  totalRows: number;
   setPageSize: (size: number) => void;
 }
 

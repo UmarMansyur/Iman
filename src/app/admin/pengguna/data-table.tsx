@@ -1,13 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // "use client";
 import * as React from "react";
 import {
   ColumnDef,
   flexRender,
-  SortingState,
   getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
+  SortingState,
 } from "@tanstack/react-table";
 
 import {
@@ -19,38 +18,62 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
-import { useState } from "react";
-
+import { SortOrder } from "@/lib/context";
+// import { SortOrder } from "@/lib/context";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  sorting: (sortBy: string, sortOrder: SortOrder) => void;
+  onPageSizeChange: (newSize: number) => void;
+  onSortingStateChange?: (length: number) => void;
 }
 
 export function DataPengguna<TData, TValue>({
   columns,
   data,
+  pagination,
+  sorting,
+  onPageSizeChange,
+  // onSortingStateChange
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [{ pageIndex, pageSize }, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 5,
-  });
+  const [sortingState, setSortingState] = React.useState<SortingState>([]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
+    manualPagination: true,
+    manualSorting: true,
+    pageCount: pagination.totalPages,
+    onSortingChange: (updater) => {
+      // Handle sorting state update
+      const newState = typeof updater === 'function' ? updater(sortingState) : updater;
+      setSortingState(newState);
+      
+      // Trigger sorting callback
+      if (newState.length > 0) {
+        const sort = newState[0];
+        sorting(sort.id, sort.desc ? "desc" : "asc");
+      } else {
+        // Jika tidak ada sorting yang aktif
+        sorting("", "asc");
+      }
+    },
+    enableSorting: true,
     state: {
-      sorting,
+      sorting: sortingState,
       pagination: {
-        pageSize,
-        pageIndex,
+        pageIndex: pagination.page - 1,
+        pageSize: pagination.limit,
       },
     },
+    getSortedRowModel: getCoreRowModel(),
   });
 
   return (
@@ -62,7 +85,7 @@ export function DataPengguna<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-black text-[13px] font-bold uppercase">
+                      <TableHead key={header.id} className="text-black text-[13px] font-bold uppercase">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -107,9 +130,14 @@ export function DataPengguna<TData, TValue>({
       </div>
       <DataTablePagination 
         table={table} 
-        pageSize={pageSize} 
-        setPageSize={(size) => setPagination(prev => ({ ...prev, pageSize: size, pageIndex: 0 }))} 
+        pageSize={pagination.limit}
+        totalRows={pagination.total} 
+        setPageSize={(size) => {
+          onPageSizeChange(size);
+          sorting("", "asc");
+        }}
       />
     </div>
   );
 }
+

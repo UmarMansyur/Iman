@@ -42,6 +42,7 @@
     "jose": "^5.9.6",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.464.0",
     "next": "15.0.3",
     "next-auth": "^4.24.10",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
+    "@types/lodash": "^4.17.13",
     "@types/node": "^20.17.9",
     "@types/react": "^18",
     "@types/react-dom": "^18",

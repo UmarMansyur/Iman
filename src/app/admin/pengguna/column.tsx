@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { ColumnDef } from "@tanstack/react-table";
@@ -23,15 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-// email         String    @unique
-// username      String    @unique
-// password      String
-// gender        Gender
-// tanggal_lahir DateTime
-// thumbnail     String?
-// address       String
+
 export type User = {
   id: number;
   email: string;
@@ -53,7 +45,7 @@ export const columns: ColumnDef<User>[] = [
       const username: string = row.getValue("username");
       const initial = username.charAt(0).toUpperCase();
       return (
-        <Avatar>
+        <Avatar className="w-8 h-8">
           {row.original.thumbnail && (
             <AvatarImage src={row.original.thumbnail} />
           )}
@@ -65,19 +57,21 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "email",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Email" />
+      <DataTableColumnHeader column={column} title="Email"/>
     ),
+
   },
   {
     accessorKey: "username",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Username" />
+      <DataTableColumnHeader column={column} title="Username"/>
     ),
+
   },
   {
     accessorKey: "gender",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jenis Kelamin" />
+      <DataTableColumnHeader column={column} title="Jenis Kelamin"/>
     ),
     cell: ({ row }) => {
       return row.original.gender === "Male" ? "Laki-laki" : "Perempuan";
@@ -86,7 +80,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "date_of_birth",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tanggal Lahir" />
+      <DataTableColumnHeader column={column} title="Tanggal Lahir"/>
     ),
     cell: ({ row }) => {
       return new Date(row.getValue("date_of_birth")).toLocaleDateString(
@@ -97,13 +91,13 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "address",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Alamat" />
+      <DataTableColumnHeader column={column} title="Alamat"/>
     ),
   },
   {
     accessorKey: "status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Status"/>
     ),
     cell: ({ row }) => {
       const isActive = row.original.is_active;
@@ -184,3 +178,4 @@ export const columns: ColumnDef<User>[] = [
     },
   },
 ];
+
