@@ -100,7 +100,6 @@ export default function PenggunaPage() {
   };
 
   const deleteUser = async (id: number) => {
-    // await deleteUser(id);
     const response = await fetch(`/api/user?id=${id}`, {
       method: "DELETE",
     });

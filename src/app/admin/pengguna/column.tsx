@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
