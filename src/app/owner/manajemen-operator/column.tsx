@@ -7,12 +7,30 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Form from "./form";
 import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { PaymentSetting, Product } from "@/lib/definitions";
+import { DropdownOptions, Operator} from "@/lib/definitions";
+import Form from "./form";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<PaymentSetting>[] => [
+interface ColumnProps {
+  fetchData: () => Promise<void>;
+  page: number;
+  limit: number;
+  searchData: (query: string) => Promise<void>;
+  choiced: (value: DropdownOptions) => void;
+  keyword: string;
+  options: DropdownOptions[];
+}
+
+export const columns = ({
+  fetchData,
+  page,
+  limit,
+  searchData,
+  choiced,
+  keyword,
+  options,
+}: ColumnProps): ColumnDef<Operator>[] => [
   {
     id: "index",
     header: "No",
@@ -21,19 +39,20 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Produk"/>
+      <DataTableColumnHeader column={column} title="Nama Operator"/>
     ),
   },
   {
-    accessorKey: "type",
+    accessorKey: "role",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jenis Produk"/>
+      <DataTableColumnHeader column={column} title="Role"/>
     ),
   },
   {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
+      const operator = row.original as Operator;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -42,8 +61,15 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form product={row.original as Product} fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="product" id={row.original.id.toString()} />
+            <Form operator={
+              {
+                searchData: searchData,
+                keyword: keyword,
+                choiced: choiced,
+                options: options,
+              }
+            } fetchData={fetchData} />
+            <DeleteButton fetchData={fetchData} endpoint="operator" id={operator.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

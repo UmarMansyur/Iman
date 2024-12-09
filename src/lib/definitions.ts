@@ -1,4 +1,4 @@
-import { FactoryStatus, ProductType, User } from "@prisma/client";
+import { FactoryStatus, MemberFactoryStatus, ProductType, User } from "@prisma/client";
 import { z } from "zod";
 
 export const SingupFromSchema = z.object({
@@ -178,7 +178,9 @@ export const FactorySchema = z.object({
   nickname: z.string().min(3, "Nama Singkat minimal 3 karakter"),
   user_id: z.string().optional(),
   logo: z.any().optional(),
-  status: z.enum(["Active", "Pending", "Inactive", "Suspended"]).default("Pending"),
+  status: z
+    .enum(["Active", "Pending", "Inactive", "Suspended"])
+    .default("Pending"),
   address: z.string().min(10, "Alamat minimal 10 karakter"),
 });
 
@@ -214,18 +216,15 @@ export type UnitFormState =
     }
   | undefined;
 
-
 export type Material = {
   id: number;
   name: string;
 };
 
-
 export const MaterialSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, "Nama minimal 3 karakter"),
 });
-
 
 export type MaterialFormState =
   | {
@@ -235,7 +234,6 @@ export type MaterialFormState =
       message?: string;
     }
   | undefined;
-
 
 export type RoleUser = {
   id: number;
@@ -323,3 +321,40 @@ export type MaterialUnitFormState =
       message?: string;
     }
   | undefined;
+
+export const MemberFactorySchema = z.object({
+  id: z.string().optional(),
+  factory_id: z.string(),
+  user_id: z.string(),
+  role_id: z.string(),
+  status: z
+    .enum(["Active", "Pending", "Inactive", "Suspended"])
+    .default("Pending"),
+});
+
+export type Operator = {
+  id: number;
+  factory_id: number;
+  user_id: number;
+  role: RoleUser;
+  status: MemberFactoryStatus;
+};
+
+export type MemberFactoryFormState =
+  | {
+      errors?: {
+        id?: string[];
+        factory_id?: string[];
+        user_id?: string[];
+        role_id?: string[];
+        status?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+  export type DropdownOptions = {
+    label: string;
+    value: string;
+  }

@@ -1,24 +1,27 @@
+'use server'
+
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from './lib/token';
+import { getSession } from './lib/session';
  
 // 1. Specify protected and public routes
-const protectedRoutes = ['/admin/dashboard', '/']
+const protectedRoutes = ['/owner/dashboard', '/owner/produk', '/owner/bahan-baku', '/owner/manajemen-operator', '/owner/laporan-bahan-baku', '/owner/laporan-produksi', '/owner/data-pembelian', '/owner/data-penjualan', '/owner/data-stok', '/owner/data-pengeluaran', '/owner/data-keuangan']
 const publicRoutes = ['/login', '/signup', '/']
  
-export default async function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest): Promise<NextResponse> {
   const path = req.nextUrl.pathname
   const isProtectedRoute = protectedRoutes.includes(path)
   const isPublicRoute = publicRoutes.includes(path)
  
   const session = await getSession();
 
-  if (isProtectedRoute && !session?.id) {
+
+  if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL('/login', req.nextUrl))
   }
 
   if (
     isPublicRoute &&
-    session?.id &&
+    session &&
     !req.nextUrl.pathname.startsWith('/dashboard')
   ) {
     // isi nilai

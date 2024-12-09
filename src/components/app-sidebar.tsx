@@ -111,7 +111,7 @@ const data = {
     },
     {
       title: "Manajemen Operator",
-      url: "#",
+      url: "/owner/manajemen-operator",
       icon: Users,
     },
     {
