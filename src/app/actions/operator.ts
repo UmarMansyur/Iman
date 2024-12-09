@@ -21,8 +21,9 @@ export async function createOperator(state: MemberFactoryFormState, formData: Fo
   const { id, factory_id, user_id, role_id, status } = validatedFields.data;
 
   try {
+    let memberFactory;
     if(id) {
-      await prisma.memberFactory.update({
+      memberFactory = await prisma.memberFactory.update({
         where: { id: parseInt(id) },
         data: {
           factory_id: parseInt(factory_id),
@@ -32,7 +33,7 @@ export async function createOperator(state: MemberFactoryFormState, formData: Fo
         },
       });
     } else {
-      await prisma.memberFactory.create({
+      memberFactory = await prisma.memberFactory.create({
         data: {
           factory_id: parseInt(factory_id),
           user_id: parseInt(user_id),
@@ -43,6 +44,7 @@ export async function createOperator(state: MemberFactoryFormState, formData: Fo
     }
     return {
       message: "Operator created successfully",
+      data: memberFactory,
     };
   } catch (error: any) {
     return {

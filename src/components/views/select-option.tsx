@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DropdownOptions } from "@/lib/definitions";
 import * as _ from "lodash";
 import { Button } from "../ui/button";
@@ -22,8 +22,8 @@ export type SelectDebounceProps = {
   options: DropdownOptions[];
   keyword: string;
   searchData: (query: string) => Promise<void>;
-  // choiced is state to set selected value
   choiced: React.Dispatch<React.SetStateAction<DropdownOptions | null>>;
+  onSearch?: (value: string) => void;
 };
 
 export default function SelectOption({
@@ -34,22 +34,43 @@ export default function SelectOption({
   keyword,
   searchData,
   choiced,
+  onSearch,
 }: SelectDebounceProps) {
   const [selectedUser, setSelectedUser] = useState<DropdownOptions | null>(
     null
   );
   const [open, setOpen] = useState(false);
-  const debouncedSearchData = _.debounce(searchData, 500);
+  const [inputValue, setInputValue] = useState("");
+  const [localOptions, setLocalOptions] = useState<DropdownOptions[]>(options);
+
+  const debouncedSearchData = useMemo(
+    () => _.debounce((query: string) => {
+      searchData(query);
+      onSearch?.(query);
+    }, 500),
+    [searchData, onSearch]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearchData.cancel();
+    };
+  }, [debouncedSearchData]);
+
   const handleSelect = (value: DropdownOptions) => {
     setSelectedUser(value);
     choiced(value);
     setOpen(false);
-    return value;
+  };
+
+  const handleSearch = (value: string) => {
+    setInputValue(value);
+    debouncedSearchData(value);
   };
 
   useEffect(() => {
-    debouncedSearchData(keyword);
-  }, [keyword]);
+    setLocalOptions(options);
+  }, [options]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -63,23 +84,31 @@ export default function SelectOption({
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0 justify-between">
-        <Command>
+      <PopoverContent className="w-[300px] p-0 justify-between">
+        <Command filter={(value, search) => {
+          if (!search) return 1;
+          const itemValue = value.toLowerCase();
+          const searchValue = search.toLowerCase();
+          return itemValue.includes(searchValue) ? 1 : 0;
+        }}>
           <CommandInput
+            value={inputValue}
             placeholder={placeholder}
-            onValueChange={(value) => {
-              debouncedSearchData(value);
-            }}
+            onValueChange={handleSearch}
+            autoFocus
           />
           <CommandList>
-            <CommandEmpty>{notFound}</CommandEmpty>
+            <CommandEmpty className="p-2 text-xs">
+              {notFound}
+            </CommandEmpty>
             <CommandGroup>
               <ScrollArea className="h-[200px]">
-                {options.map((option: DropdownOptions) => (
+                {localOptions.map((option: DropdownOptions) => (
                   <CommandItem
                     key={option.value}
-                    value={option.value}
+                    value={option.label}
                     onSelect={() => handleSelect(option)}
+                    className="cursor-pointer w-full"
                   >
                     {option.label}
                     <Check

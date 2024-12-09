@@ -139,8 +139,8 @@ export default function Form({
                         <ScrollArea className="h-[200px]">
                           {options.materials.map((material: Material) => (
                             <CommandItem
-                              key={material.id}
-                              value={material.id.toString()}
+                              key={material.name}
+                              value={material.name}
                               onSelect={() => {
                                 setSelectedMaterial(material);
                                 setMaterialOpen(false);
@@ -189,8 +189,8 @@ export default function Form({
                         <ScrollArea className="h-[200px]">
                           {options.units.map((unit: Unit) => (
                             <CommandItem
-                              key={unit.id}
-                              value={unit.id.toString()}
+                              key={unit.name}
+                              value={unit.name}
                               onSelect={() => {
                                 setSelectedUnit(unit);
                                 setUnitOpen(false);

@@ -358,3 +358,45 @@ export type MemberFactoryFormState =
     label: string;
     value: string;
   }
+
+  export type DropdownUser = {
+    label: string;
+    value: string;
+    thumbnail: string;
+    email: string;
+  }
+
+
+  export type ProductUnit = {
+    id: number,
+    product_id: number,
+    unit_id: number,
+    amount: number,
+    parent_id?: number,
+    convert_from_parent?: number,
+    factory_id: number,
+  }
+
+  export const ProductUnitSchema = z.object({
+    id: z.string().optional(),
+    product_id: z.string(),
+    unit_id: z.string(),
+    amount: z.string(),
+    parent_id: z.string().optional(),
+    convert_from_parent: z.string().optional(),
+    factory_id: z.string(),
+  });
+
+export type ProductUnitFormState =
+  | {
+      errors?: {
+        product_id?: string[];
+        unit_id?: string[];
+        amount?: string[];
+        parent_id?: string[];
+        convert_from_parent?: string[];
+        factory_id?: string[];
+      };
+      message?: string;
+    }
+  | undefined;

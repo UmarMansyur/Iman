@@ -9,17 +9,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { DropdownOptions, Operator} from "@/lib/definitions";
+import { DropdownUser, Operator } from "@/lib/definitions";
 import Form from "./form";
+import { Role } from "@prisma/client";
+import { Badge } from "@/components/ui/badge";
 
 interface ColumnProps {
   fetchData: () => Promise<void>;
   page: number;
   limit: number;
   searchData: (query: string) => Promise<void>;
-  choiced: (value: DropdownOptions) => void;
+  choiced: (value: DropdownUser) => void;
   keyword: string;
-  options: DropdownOptions[];
+  options: DropdownUser[];
+  roleData: Role[];
 }
 
 export const columns = ({
@@ -30,23 +33,50 @@ export const columns = ({
   choiced,
   keyword,
   options,
+  roleData,
 }: ColumnProps): ColumnDef<Operator>[] => [
   {
     id: "index",
     header: "No",
-    cell: ({ row }) => (page - 1) * limit + row.index + 1,
+    cell: ({ row }) => (page - 1) * limit + row.index + 1 + ".",
   },
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Operator"/>
+      <DataTableColumnHeader column={column} title="Nama Operator" />
     ),
   },
   {
     accessorKey: "role",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Role"/>
+      <DataTableColumnHeader column={column} title="Role" />
     ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const operator = row.original as Operator;
+      if (operator.status === "Active") {
+        return (
+          <Badge className="bg-blue-500 text-white hover:bg-blue-600">
+            Aktif
+          </Badge>
+        );
+      }
+      if (operator.status === "Inactive") {
+        return (
+          <Badge className="bg-red-500 text-white hover:bg-red-600">
+            Tidak Aktif
+          </Badge>
+        );
+      }
+      return (
+        <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">
+          Pending
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "action",
@@ -61,19 +91,29 @@ export const columns = ({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form operator={
-              {
+            <Form
+              operator={{
                 searchData: searchData,
                 keyword: keyword,
                 choiced: choiced,
                 options: options,
-              }
-            } fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="operator" id={operator.id.toString()} />
+              }}
+              fetchData={fetchData}
+              data={{
+                id: operator.id.toString(),
+                user_id: operator.user_id.toString(),
+                role_id: `${operator.role}`,
+              }}
+              roleData={roleData}
+            />
+            <DeleteButton
+              fetchData={fetchData}
+              endpoint="operator"
+              id={operator.id.toString()}
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       );
     },
   },
 ];
-

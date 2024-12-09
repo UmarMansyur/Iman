@@ -40,11 +40,12 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  memberFactories MemberFactory[]
-  invoices        Invoice[]
-  reportProducts  ReportProduct[]
-  reportCosts     ReportCost[]
-  factories       Factory[]
+  memberFactories    MemberFactory[]
+  invoices           Invoice[]
+  reportProducts     ReportProduct[]
+  reportCosts        ReportCost[]
+  factories          Factory[]
+  MemberPriceProduct MemberPriceProduct[]
 
   @@map("users")
 }
@@ -82,16 +83,18 @@ enum FactoryStatus {
 }
 
 model MemberFactory {
-  id         Int                 @id @default(autoincrement())
-  factory    Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id Int
-  role       Role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  role_id    Int
-  user       User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id    Int
-  status     MemberFactoryStatus @default(Pending)
-  created_at DateTime            @default(now())
-  updated_at DateTime            @updatedAt
+  id                 Int                  @id @default(autoincrement())
+  factory            Factory              @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id         Int
+  role               Role                 @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  role_id            Int
+  user               User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id            Int
+  parent_id          Int?
+  status             MemberFactoryStatus  @default(Pending)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  MemberPriceProduct MemberPriceProduct[]
 
   @@unique([factory_id, user_id])
   @@map("member_factories")
@@ -202,20 +205,38 @@ enum ProductType {
 }
 
 model ProductUnit {
-  id                  Int                @id @default(autoincrement())
-  product             Product            @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                  Int                  @id @default(autoincrement())
+  product             Product              @relation(fields: [product_id], references: [id], onDelete: Cascade)
   product_id          Int
-  unit                Unit               @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit                Unit                 @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id             Int
   amount              Float
   parent_id           Int?
   convert_from_parent Float?
   StockProduct        StockProduct[]
-  Factory             Factory?           @relation(fields: [factoryId], references: [id], onDelete: Cascade)
+  Factory             Factory?             @relation(fields: [factoryId], references: [id], onDelete: Cascade)
   factoryId           Int?
   PriceProductUnit    PriceProductUnit[]
+  MemberPriceProduct  MemberPriceProduct[]
 
   @@map("product_units")
+}
+
+model MemberPriceProduct {
+  id                Int                    @id @default(autoincrement())
+  productUnit       ProductUnit            @relation(fields: [product_unit_id], references: [id], onDelete: Cascade)
+  product_unit_id   Int
+  user              User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id           Int
+  memberFactory     MemberFactory          @relation(fields: [member_factory_id], references: [id], onDelete: Cascade)
+  member_factory_id Int
+  price             Float
+  sale_price        Float
+  status            PriceProductUnitStatus @default(Active)
+  created_at        DateTime               @default(now())
+  updated_at        DateTime               @updatedAt
+
+  @@map("member_price_products")
 }
 
 model PriceProductUnit {

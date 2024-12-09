@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { MaterialUnit} from "@/lib/definitions";
-import { Material, Unit } from "@prisma/client";
+import { MaterialUnit, ProductUnit} from "@/lib/definitions";
+import { Material, Product, Unit } from "@prisma/client";
 import Form from "./form";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number, options: { materials: Material[], units: Unit[] }): ColumnDef<MaterialUnit>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number, options: { products: Product[], units: Unit[] }): ColumnDef<ProductUnit>[] => [
   {
     id: "index",
     header: "No",
@@ -32,16 +32,10 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
   },
   {
-    accessorKey: "amount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jumlah"/>
-    ),
-  },
-  {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const materialUnit = row.original as MaterialUnit;
+      const productUnit = row.original as ProductUnit;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -50,8 +44,8 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form materialUnit={materialUnit} fetchData={fetchData} options={options} />
-            <DeleteButton fetchData={fetchData} endpoint="material-unit" id={materialUnit.id.toString()} />
+            <Form productUnit={productUnit} fetchData={fetchData} options={options} />
+            <DeleteButton fetchData={fetchData} endpoint="product-unit" id={productUnit.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

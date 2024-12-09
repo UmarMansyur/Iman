@@ -11,11 +11,11 @@ import debounce from "lodash/debounce";
 import Form from "./form";
 import { useUserStore } from "@/store/user-store";
 import { DataTable } from "./data-table";
-import { Role, User } from "@prisma/client";
-import { DropdownOptions } from "@/lib/definitions";
+import { Product, Unit } from "@prisma/client";
+import { ProductUnit } from "@/lib/definitions";
 
-export default function ManajemenOperatorPage() {
-  const [data, setData] = useState<[]>([]);
+export default function PabrikPage() {
+  const [data, setData] = useState<ProductUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -31,24 +31,14 @@ export default function ManajemenOperatorPage() {
   });
 
   const [searchInput, setSearchInput] = useState("");
-
+  const [options, setOptions] = useState<{ products: Product[], units: Unit[] }>({ products: [], units: [] });
   const { user } = useUserStore()
-  const [searchUser] = useState("");
-  const [userData, setUserData] = useState<User[]>([]);
-  const [roleData, setRoleData] = useState<Role[]>([]);
 
-  const fetchRole = async () => {
-    const response = await fetch('/api/role?limit=100');
-    const data = await response.json();
-    setRoleData(data.roles);
-  }
-
-  const fetchMember = async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
       if(!user) return;
       const factoryId = user?.factory_selected?.id;
-      // console.log(filters.sortBy)
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -61,9 +51,21 @@ export default function ManajemenOperatorPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/operator?${queryParams}`);
+      const response = await fetch(`/api/product-unit?${queryParams}`);
       const data = await response.json();
-      setData(data.data);
+
+      
+      if(data.options && 
+         Array.isArray(data.options.products) && 
+         Array.isArray(data.options.units)) {
+        setOptions({
+          products: data.options.products,
+          units: data.options.units
+        });
+      }
+
+      setData(data.productUnits);
+
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -77,16 +79,8 @@ export default function ManajemenOperatorPage() {
     }
   };
 
-  const fetchUser = async (query?: string) => {
-    const response = await fetch(`/api/user?limit=100&search=${query}`);
-    const data = await response.json();
-    setUserData(data.users);
-  };
-
   useEffect(() => {
-    fetchMember();
-    fetchUser(searchUser);
-    fetchRole();
+    fetchProducts();
   }, [
     pagination.page,
     pagination.limit,
@@ -109,6 +103,7 @@ export default function ManajemenOperatorPage() {
 
   const handleSearch = (value: string) => {
     setSearchInput(value);
+    setLoadingSearch(true);
     debouncedSearch(value);
   };
 
@@ -119,21 +114,6 @@ export default function ManajemenOperatorPage() {
     }));
   };
 
-  const debouncedFetchUser = useCallback(
-    debounce((query: string) => {
-      fetchUser(query);
-    }, 500),
-    []
-  );
-
-  const searchUserOperator = async (query: string) => {
-    debouncedFetchUser(query);
-  };
-
-  const choiced = (value: DropdownOptions) => {
-    console.log(value);
-  };
-
   return (
     <MainPage>
       {loading ? (
@@ -141,9 +121,9 @@ export default function ManajemenOperatorPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Operator</h4>
+            <h4 className="text-base font-semibold mb-0">Daftar Bahan Baku</h4>
             <p className="text-xs text-muted-foreground">
-              Daftar operator yang terdaftar di pabrik anda.
+              Bahan baku berikut ini merupakan bahan baku yang diinputkan di pabrik anda. Perhatikan bahwa bahan baku yang diinputkan di pabrik anda tidak akan tampil di pabrik lain.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -152,28 +132,14 @@ export default function ManajemenOperatorPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari operator"
+                  placeholder="Cari produk"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}
-                  autoFocus
                 />
               </div>
             </div>
-            <Form fetchData={fetchMember} operator={{
-              searchData: async (query: string) => {
-                searchUserOperator(query);
-                return Promise.resolve();
-              },
-              choiced: choiced,
-              keyword: filters.search,
-              options: userData.map((user) => ({
-                label: user.username,
-                value: user.id.toString(),
-                thumbnail: user.thumbnail || "",
-                email: user.email,
-              })),
-            }} roleData={roleData} />
+            <Form fetchData={fetchProducts} options={options} />
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">
@@ -181,24 +147,7 @@ export default function ManajemenOperatorPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns({
-                fetchData: fetchMember,
-                page: pagination.page,
-                limit: pagination.limit,
-                searchData: async (query: string) => {
-                  searchUserOperator(query);
-                  return Promise.resolve();
-                },
-                roleData: roleData,
-                choiced: choiced,
-                keyword: filters.search,
-                options: userData.map((user) => ({
-                  label: user.username,
-                  value: user.id.toString(),
-                  thumbnail: user.thumbnail || "",
-                  email: user.email,
-                })),
-              })}
+              columns={columns(fetchProducts, pagination.page, pagination.limit, options)}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {

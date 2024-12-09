@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -59,9 +60,10 @@ export async function GET(request: Request) {
         totalPages: Math.ceil(total / limit),
       },
     }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({
       message: "Gagal mengambil data satuan material",
+      error: error.message,
     }, { status: 500 });
   }
 }

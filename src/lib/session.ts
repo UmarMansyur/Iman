@@ -14,6 +14,18 @@ export async function encrypt(payload: SessionPayload) {
     .setExpirationTime('7d')
     .sign(encodedKey)
 }
+
+export async function generateToken(payload: any) {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(encodedKey)
+}
+
+export async function verifyToken(token: string): Promise<any> {
+  return jwtVerify(token, encodedKey, { algorithms: ['HS256'] });
+}
  
 export async function decrypt(session: string | undefined = '') {
   try {

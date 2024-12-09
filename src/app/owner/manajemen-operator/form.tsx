@@ -13,16 +13,13 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import {
   DropdownOptions,
-  MaterialUnit,
-  MaterialUnitFormState,
-  Operator,
+  DropdownUser,
 } from "@/lib/definitions";
 import { Check, ChevronsUpDown, Pencil, PlusCircle } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
 import toast from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
-import createMaterialUnit from "@/app/actions/material-unit";
-import { Material, MemberFactoryStatus, Unit } from "@prisma/client";
+import { Role } from "@prisma/client";
 import {
   Popover,
   PopoverContent,
@@ -38,41 +35,88 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SelectOption, {
-  SelectDebounceProps,
-} from "@/components/views/select-option";
+import SelectUser from "@/components/views/select-user";
 
 // firut invite member itu ada no, nama pengguna -> kembalikan email foto dan nama pengguna , role, status
 // data ini berarti user_email, role_id
 type FormProps = {
   operator?: { 
-    options: DropdownOptions[];
-    choiced: (value: DropdownOptions) => void;
+    options: DropdownUser[];
+    choiced: (value: DropdownUser) => void;
     searchData: (query: string) => Promise<void>;
     keyword: string;
   };
   fetchData: () => Promise<void>;
+  roleData?: Role[];
   data?: {
-    user_email: string;
-    role_id: MemberFactoryStatus
+    id: string;
+    user_id: string;
+    role_id: string;
   };
 };
 
-export default function Form({ operator, fetchData, data }: FormProps) {
-  const [user, setUser] = useState<DropdownOptions | null>(null);
-  const [role, setRole] = useState<DropdownOptions | null>(null);
+export default function Form({ operator, fetchData, data, roleData }: FormProps) {
+  const [user, setUser] = useState<DropdownUser | null>(null);
+  const [role, setRole] = useState<DropdownOptions | null>(
+    data?.role_id ? {
+      value: operator?.options.find(option => option.value === data.user_id)?.value || "",
+      label:  data.role_id || "Pilih Role...",
+    } : null
+  );
 
   const [roleOpen, setRoleOpen] = useState(false);
   
-  const roles = [
-    { id: 1, label: "Owner" },
-    { id: 2, label: "Operator" },
-  ];
-
+  const { user: sessionUser } = useUserStore();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    formData.set('id', data?.id || '');
+    formData.set('user_id', user?.value || '');
+    formData.set('role_id', role?.value || '');
+    formData.set('factory_id', sessionUser?.factory_selected?.id || '');
+
+    const response:any = await fetch('/api/operator', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+
+    if(!data) {
+      const formData2 = new FormData();
+      formData2.set('senderName', sessionUser?.username || '');
+      formData2.set('email', user?.email || '');
+      formData2.set('name', user?.label || '');
+      formData2.set('id', result.data.id || '');
+      await fetch('/api/send', {
+        method: 'POST',
+        body: formData2
+      });
+    }
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+
+     
+
+      toast.success(result.message);
+    }
+
     await fetchData();
   };
+
+  useEffect(() => {
+    if (data && operator) {
+      const user_id = operator?.options.find(option => option.value === data.user_id)?.value;
+      setUser({
+        value: user_id || "",
+        label: operator?.options.find(option => option.value === data.user_id)?.label || "",
+        thumbnail: operator?.options.find(option => option.value === data.user_id)?.thumbnail || "",
+        email: operator?.options.find(option => option.value === data.user_id)?.email || "",
+      });
+    }
+  }, [data]);
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -109,14 +153,17 @@ export default function Form({ operator, fetchData, data }: FormProps) {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="material">Nama Operator</Label>
-              <SelectOption
-                keyword={operator?.keyword || ""}
+              <SelectUser
                 title="Nama Operator"
                 placeholder="Pilih Nama Operator"
                 notFound="Tidak ada data yang ditemukan..."
                 options={operator?.options || []}
                 searchData={operator?.searchData || (async () => {})}
                 choiced={setUser}
+                onSearch={(value) => {
+                  operator?.searchData(value);
+                }}
+                defaultValue={user}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -128,36 +175,37 @@ export default function Form({ operator, fetchData, data }: FormProps) {
                     role="combobox"
                     className="justify-between col-span-3 bg-white border border-gray-300 text-black"
                   >
-                    {role?.label|| "Pilih Role..."}
+                    {role?.label || operator?.options.find(option => option.value === data?.user_id)?.label || "Pilih Role..."}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0 justify-between">
                   <Command>
-                    <CommandInput placeholder="Search bahan baku..." />
+                    <CommandInput placeholder="Search role..." />
                     <CommandList>
                       <CommandEmpty>
-                        Tidak ada bahan baku yang ditemukan.
+                        Tidak ada role yang ditemukan.
                       </CommandEmpty>
                       <CommandGroup>
                         <ScrollArea className="h-[200px]">
-                          {roles.map((role: { id: number; label: string }) => (
+                          {roleData?.map((item: Role) => (
                             <CommandItem
-                              key={role.id}
-                              value={role.id.toString()}
+                              key={item.id}
+                              value={item.role.toString()}
                               onSelect={() => {
+                                console.log(item, "selected role");
                                 setRole({
-                                  value: role.id.toString(),
-                                  label: role.label,
+                                  value: item.id.toString(),
+                                  label: item.role,
                                 });
                                 setRoleOpen(false);
                               }}
                             >
-                              {role.label}
+                              {item.role}
                               <Check
                                 className={cn(
                                   "ml-auto",
-                                  role?.id === role.id
+                                  role?.value === item.id.toString()
                                     ? "opacity-100"
                                     : "opacity-0"
                                 )}

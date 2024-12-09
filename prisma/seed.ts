@@ -42,8 +42,13 @@ async function main(): Promise<void> {
     },
   });
 
-  const roles = await prisma.role.createMany({
-    data: [{ role: "Owner" }, { role: "Operator" }],
+  await prisma.role.createMany({
+    data: [
+      { role: "Owner" },
+      { role: "Operator" },
+      { role: "Member" },
+      { role: "Downline" },
+    ],
   });
 
   const djavaMember = await prisma.memberFactory.createMany({

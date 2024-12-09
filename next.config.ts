@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
     NEXTAUTH_URL: "http://localhost:3000",
     NEXTAUTH_SECRET: "secret",
     BASE_URL: "http://localhost:3000",
+    RESEND_API_KEY: "re_N4GHPZJz_M5rw3Mg27BYfdtvY6xrxLYwz",
   },
 };
 

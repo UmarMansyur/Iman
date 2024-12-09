@@ -5,6 +5,7 @@ import {
   ChartColumnBigIcon,
   Combine,
   Database,
+  DollarSign,
   FileChartLine,
   Home,
   List,
@@ -103,6 +104,11 @@ const data = {
       title: "Data Produk",
       url: "/owner/produk",
       icon: PackageSearch,
+    },
+    {
+      title: "Harga Produk",
+      url: "/owner/harga-produk",
+      icon: DollarSign,
     },
     {
       title: "Bahan Baku",
