@@ -44,7 +44,6 @@ export async function GET(request: Request) {
       unit_id: item.unit.id,
       unit: item.unit.name,
     }));
-    console.log(data);
 
     const options = {
       materials: await prisma.material.findMany(),

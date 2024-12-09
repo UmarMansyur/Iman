@@ -52,8 +52,7 @@ export default function PabrikPage() {
   
       const response = await fetch(`/api/material-unit?${queryParams}`);
       const data = await response.json();
-      
-      console.log('Response data:', data);
+
       
       if(data.options && 
          Array.isArray(data.options.materials) && 
@@ -123,7 +122,7 @@ export default function PabrikPage() {
           <CardHeader className="border-b p-4 mb-2">
             <h4 className="text-base font-semibold mb-0">Daftar Bahan Baku</h4>
             <p className="text-xs text-muted-foreground">
-              Daftar bahan baku yang terdaftar.
+              Bahan baku berikut ini merupakan bahan baku yang diinputkan di pabrik anda. Perhatikan bahwa bahan baku yang diinputkan di pabrik anda tidak akan tampil di pabrik lain.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">

@@ -37,35 +37,6 @@ export default function EditUserPage() {
     if (id) fetchUser();
   }, []);
 
-  // const fetchUser = async () => {
-  //   try {
-  //     if (id) {
-  //       const response = await fetch(`/api/user?id=${id}`);
-  //       if (!response.ok) throw new Error("Failed to fetch user");
-  //       const userData = await response.json();
-  //       setUser(userData);
-        
-  //       const birthDate = new Date(userData.user.date_of_birth);
-  //       setDate(birthDate);
-        
-  //       if (userData.user) {
-  //         form.reset({
-  //           email: userData.user.email,
-  //           username: userData.user.username,
-  //           gender: userData.user.gender as "Male" | "Female",
-  //           date_of_birth: birthDate,
-  //           address: userData.user.address,
-  //           user_type: userData.user.user_type as "Operator" | "Administrator",
-  //         });
-  //       }
-  //     }
-  //     setIsInitialized(true);
-  //   } catch (error) {
-  //     console.error(error);
-  //     setIsInitialized(true);
-  //   }
-  // };
-
   const fetchUser = async () => {
     const user = await getUser(parseInt(id as string));
     if (user) {

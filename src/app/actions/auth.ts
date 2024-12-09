@@ -5,7 +5,6 @@ import prisma from '@/lib/db';
 import { SigninFromSchema, SigninFormState, SessionPayload, Role, Position } from '@/lib/definitions'
 import bcrypt from 'bcrypt';
 import { redirect } from 'next/navigation';
-import { User } from '@prisma/client';
 
 export async function login(state: SigninFormState, formData: FormData) {
   const validatedFields = SigninFromSchema.safeParse({

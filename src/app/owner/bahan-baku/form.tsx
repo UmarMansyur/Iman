@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Dialog,
   DialogContent,
@@ -162,6 +163,7 @@ export default function Form({
                   </Command>
                 </PopoverContent>
               </Popover>
+              {state?.errors?.material_id && <p className="text-red-500 text-sm">{state.errors.material_id.join(", ")}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="unit">Satuan</Label>
@@ -211,6 +213,7 @@ export default function Form({
                   </Command>
                 </PopoverContent>
               </Popover>
+              {state?.errors?.unit_id && <p className="text-red-500 text-sm">{state.errors.unit_id.join(", ")}</p>}
             </div>
           </div>
           <DialogFooter>

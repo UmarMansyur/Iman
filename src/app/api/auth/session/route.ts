@@ -1,5 +1,6 @@
 // app/api/auth/session/route.ts
-import { getSession, decrypt } from '@/lib/session'
+
+import { getSession } from '@/lib/token';
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -8,9 +9,7 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ session: null })
     }
-
-    const decodedSession = await decrypt(session)
-    return NextResponse.json({ session: decodedSession })
+    return NextResponse.json({ session: session })
   } catch (error) {
     console.error('Session error:', error)
     return NextResponse.json({ session: null })

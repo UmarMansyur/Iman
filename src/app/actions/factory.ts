@@ -6,8 +6,6 @@ import { FactorySchema } from "@/lib/definitions";
 import { deleteFile, uploadFile } from "@/lib/imagekit";
 import { getSession } from "@/lib/token";
 import { FactoryStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 export const createFactory = async (state: FactoryFormState, formData: FormData) => {
   const validatedFields = FactorySchema.safeParse({
@@ -56,6 +54,19 @@ export const createFactory = async (state: FactoryFormState, formData: FormData)
     const session: SessionPayload | null = await getSession();
     if(session?.typeUser === "Administrator") {
       status = "Active";
+    } else {
+      const factoryCount = await prisma.factory.count({
+        where: {
+          user_id: parseInt(user_id as string)
+        }
+      });
+      if(factoryCount > 2) {
+        return {
+          errors: {
+            user_id: ["Tingkatkan layanan untuk membuat lebih dari 2 pabrik"]
+          }
+        }
+      }
     }
   
     await prisma.factory.create({

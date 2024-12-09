@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  Building2,
+  ChartColumnBigIcon,
   Combine,
   Database,
   FileChartLine,
@@ -26,6 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
+import { useUserStore } from "@/store/user-store";
 
 // This is sample data.
 const data = {
@@ -114,6 +115,11 @@ const data = {
       icon: Users,
     },
     {
+      title: "Laporan Bahan Baku",
+      url: "#",
+      icon: ChartColumnBigIcon,
+    },
+    {
       title: "Laporan Produksi",
       url: "#",
       icon: FileChartLine,
@@ -167,6 +173,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { user } = useUserStore();
   const addActiveState = (items: typeof data.navAdmin) => {
     return items.map((item) => ({
       ...item,
@@ -178,7 +185,7 @@ export function AppSidebar({
   };
 
   const getNavItems = () => {
-    if (pathname?.startsWith("/admin")) {
+    if (pathname?.startsWith("/admin") && user?.typeUser === "Administrator") {
       return (
         <NavMain title="Administrator" items={addActiveState(data.navAdmin)} />
       );

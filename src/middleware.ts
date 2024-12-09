@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { decrypt } from '@/lib/session'
-import { cookies } from 'next/headers'
 import { getSession } from './lib/token';
-import { useContext } from 'react';
-import { SessionContext } from './lib/context';
  
 // 1. Specify protected and public routes
 const protectedRoutes = ['/admin/dashboard', '/']
@@ -22,7 +18,7 @@ export default async function middleware(req: NextRequest) {
 
   if (
     isPublicRoute &&
-    session?.userId &&
+    session?.id &&
     !req.nextUrl.pathname.startsWith('/dashboard')
   ) {
     // isi nilai

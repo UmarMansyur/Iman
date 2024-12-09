@@ -178,7 +178,7 @@ export const FactorySchema = z.object({
   nickname: z.string().min(3, "Nama Singkat minimal 3 karakter"),
   user_id: z.string().optional(),
   logo: z.any().optional(),
-  status: z.enum(["Active", "Pending", "Inactive", "Suspended"]),
+  status: z.enum(["Active", "Pending", "Inactive", "Suspended"]).default("Pending"),
   address: z.string().min(10, "Alamat minimal 10 karakter"),
 });
 
@@ -189,6 +189,7 @@ export type FactoryFormState =
         nickname?: string[];
         user_id?: string[];
         logo?: string[];
+        status?: string[];
       };
       message?: string;
     }

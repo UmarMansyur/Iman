@@ -50,10 +50,8 @@ export async function getSession() {
 
 
 export async function updateSession(payload: SessionPayload) {
-  const session = await getSession();
-  if (session) {
-    await createSession(payload);
-  }
+  await deleteSession();
+  await createSession(payload);
 }
 
 
