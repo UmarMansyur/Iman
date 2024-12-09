@@ -56,7 +56,7 @@ model Factory {
   logo       String?
   address    String
   user       User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id     Int
+  user_id    Int
   status     FactoryStatus @default(Pending)
   created_at DateTime      @default(now())
   updated_at DateTime      @updatedAt
@@ -69,6 +69,7 @@ model Factory {
   reportCosts     ReportCost[]
   MaterialStock   MaterialStock[]
   ProductUnit     ProductUnit[]
+  MaterialUnit    MaterialUnit[]
 
   @@map("factories")
 }
@@ -158,6 +159,8 @@ model MaterialUnit {
   material_id   Int
   unit          Unit            @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id       Int
+  factory       Factory         @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id    Int
   MaterialStock MaterialStock[]
 
   @@map("material_units")
@@ -300,7 +303,7 @@ model Discount {
 }
 
 model PPN {
-  id         Int    @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   desc       String
   percentage Float
   status     PPNStatus @default(Active)

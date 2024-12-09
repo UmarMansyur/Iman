@@ -29,13 +29,6 @@ import { usePathname } from "next/navigation";
 
 // This is sample data.
 const data = {
-  teams: [
-    {
-      name: "PT. Segara Catur Perkasa",
-      logo: Building2,
-      plan: "Aktif",
-    },
-  ],
   navAdmin: [
     {
       title: "Dashboard",
@@ -102,17 +95,17 @@ const data = {
   navOwner: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/owner",
       icon: Home,
     },
     {
       title: "Data Produk",
-      url: "#",
+      url: "/owner/produk",
       icon: PackageSearch,
     },
     {
       title: "Bahan Baku",
-      url: "#",
+      url: "/owner/bahan-baku",
       icon: Combine,
     },
     {
@@ -206,7 +199,7 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher/>
       </SidebarHeader>
       <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>

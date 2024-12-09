@@ -86,7 +86,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="creator">Pembuat</Label>
+              <Label htmlFor="creator">Owner</Label>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild className="col-span-3" name="user_id">
                   <Button
@@ -94,7 +94,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
                     role="combobox"
                     className="justify-between col-span-3 bg-white border border-gray-300 text-black"
                   >
-                    {selectedUser?.label || "Pilih Pembuat..."}
+                    {selectedUser?.label || "Pilih Owner..."}
                    <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -103,7 +103,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
                     <CommandInput placeholder="Search framework..." />
                     <CommandList>
                       <CommandEmpty>
-                        Tidak ada pembuat ditemukan.
+                        Tidak ada owner yang ditemukan.
                       </CommandEmpty>
                       <CommandGroup>
                         {users.map((user) => (

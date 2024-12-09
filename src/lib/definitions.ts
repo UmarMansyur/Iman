@@ -1,4 +1,4 @@
-import { FactoryStatus, User } from "@prisma/client";
+import { FactoryStatus, ProductType, User } from "@prisma/client";
 import { z } from "zod";
 
 export const SingupFromSchema = z.object({
@@ -57,6 +57,8 @@ export type Factory = {
   id: string;
   name: string;
   address: string;
+  logo: string | null;
+  status: FactoryStatus;
   position: Position[];
 };
 
@@ -69,6 +71,7 @@ export type SessionPayload = {
   statusUser: StatusUser;
   factory: Factory[];
   thumbnail: string | "";
+  factory_selected: Factory | null;
 };
 
 export const UserSchema = z.object({
@@ -271,3 +274,51 @@ export type PaymentSetting = {
   name: string;
 };
 
+export type Product = {
+  id: number;
+  name: string;
+  type: ProductType;
+};
+
+export const ProductSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, "Nama minimal 3 karakter"),
+  type: z.enum(["Kretek", "Gabus"]),
+  factory_id: z.string(),
+});
+
+export type ProductFormState =
+  | {
+      errors?: {
+        name?: string[];
+        type?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+export type MaterialUnit = {
+  id: number;
+  material_id: number;
+  unit_id: number;
+  factory_id: number;
+};
+
+export const MaterialUnitSchema = z.object({
+  id: z.string().optional(),
+  material_id: z.string(),
+  unit_id: z.string(),
+  factory_id: z.string(),
+});
+
+export type MaterialUnitFormState =
+  | {
+      errors?: {
+        id?: string[];
+        material_id?: string[];
+        unit_id?: string[];
+        factory_id?: string[];
+      };
+      message?: string;
+    }
+  | undefined;

@@ -2,7 +2,7 @@ import { ChartArea } from "lucide-react";
 
 export default function CardDashboard({ icon, title, value, percentage, startDate, endDate }: { icon: React.ReactNode, title: string, value: number, percentage: number, startDate: string, endDate: string }) {
   return (
-    <div className="rounded-xl shadow-sm border overflow-hidden relative">
+    <div className="rounded-xl shadow-lg border overflow-hidden relative bg-white">
     <div className="flex items-center gap-4 px-6 py-6">
       <div className="p-3 rounded-lg">
         {icon}

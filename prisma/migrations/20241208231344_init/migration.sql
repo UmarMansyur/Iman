@@ -98,6 +98,7 @@ CREATE TABLE `material_units` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `material_id` INTEGER NOT NULL,
     `unit_id` INTEGER NOT NULL,
+    `factory_id` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -210,6 +211,7 @@ CREATE TABLE `ppns` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `desc` VARCHAR(191) NOT NULL,
     `percentage` DOUBLE NOT NULL,
+    `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -291,6 +293,9 @@ ALTER TABLE `material_units` ADD CONSTRAINT `material_units_material_id_fkey` FO
 
 -- AddForeignKey
 ALTER TABLE `material_units` ADD CONSTRAINT `material_units_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `material_units` ADD CONSTRAINT `material_units_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `material_stocks` ADD CONSTRAINT `material_stocks_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

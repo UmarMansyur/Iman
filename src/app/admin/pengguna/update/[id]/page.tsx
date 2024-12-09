@@ -75,53 +75,6 @@ export default function EditUserPage() {
     }
   }
 
-  // const onSubmit = async (data: UserSchema) => {
-  //   try {
-  //     setIsLoading(true);
-  //     const formData = new FormData();
-  //     formData.append('id', id as string);
-  //     formData.append('email', data.email);
-  //     formData.append('username', data.username);
-  //     formData.append('gender', data.gender);
-  //     formData.append('date_of_birth', data.date_of_birth.toISOString());
-  //     formData.append('address', data.address);
-  //     formData.append('user_type', data.user_type);
-      
-  //     if (data.thumbnail instanceof FileList && data.thumbnail.length > 0) {
-  //       formData.append('thumbnail', data.thumbnail[0]);
-  //     }
-
-  //     const response = await fetch('/api/user', {
-  //       method: 'PUT',
-  //       body: formData,
-  //     });
-
-  //     if (!response.ok) {
-  //       const error = await response.json();
-  //       throw new Error(error.message || 'Gagal mengupdate data');
-  //     }
-      
-  //     router.push('/admin/pengguna');
-  //   } catch (error: any) {
-  //     console.log(error);
-  //     // Tambahkan toast notification di sini jika ada
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // if (!isInitialized) {
-  //   return (
-  //     <MainPage>
-  //       <Card>
-  //         <CardContent className="flex items-center justify-center min-h-[200px]">
-  //           <p>Loading...</p>
-  //         </CardContent>
-  //       </Card>
-  //     </MainPage>
-  //   );
-  // }
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
