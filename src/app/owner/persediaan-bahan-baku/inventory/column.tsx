@@ -1,18 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Form from "./form";
-import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { PaymentSetting, Product } from "@/lib/definitions";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<PaymentSetting>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
     header: "No",
@@ -21,45 +12,26 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Produk"/>
+      <DataTableColumnHeader column={column} title="Bahan Baku"/>
+    ),
+    cell: ({ row }) => row.original.material_unit,
+  },
+  {
+    accessorKey: "unit",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Satuan"/>
     ),
   },
   {
-    accessorKey: "type",
+    accessorKey: "stock",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jenis Produk"/>
-    ),
-  },
-  {
-    accessorKey: "price",
-
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Harga"/>
+      <DataTableColumnHeader column={column} title="Stok"/>
     ),
     cell: ({ row }) => (
       <div className="text-start">
-        {row.original.price.toLocaleString("id-ID", { style: "currency", currency: "IDR" }).slice(0, -3)}
+        {row.original.amount} {row.original.unit}
       </div>
     ),
-  },
-  {
-    accessorKey: "action",
-    header: "Aksi",
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="rounded-md p-2 cursor-pointer">
-              <MoreHorizontal className="w-4 h-4" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <Form product={row.original as Product} fetchData={fetchData} />
-            <DeleteButton fetchData={fetchData} endpoint="product" id={row.original.id.toString()} />
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
   },
 ];
 

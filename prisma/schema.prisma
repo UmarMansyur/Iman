@@ -40,12 +40,14 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  memberFactories    MemberFactory[]
-  invoices           Invoice[]
-  reportProducts     ReportProduct[]
-  reportCosts        ReportCost[]
-  factories          Factory[]
-  MemberPriceProduct MemberPriceProduct[]
+  memberFactories     MemberFactory[]
+  invoices            Invoice[]
+  reportProducts      ReportProduct[]
+  reportCosts         ReportCost[]
+  factories           Factory[]
+  MemberPriceProduct  MemberPriceProduct[]
+  ReportMaterialStock ReportMaterialStock[]
+  OrderMaterialUnit   OrderMaterialUnit[]
 
   @@map("users")
 }
@@ -62,14 +64,15 @@ model Factory {
   created_at DateTime      @default(now())
   updated_at DateTime      @updatedAt
 
-  bankAccounts      BankAccount[]
-  memberFactories   MemberFactory[]
-  products          Product[]
-  invoices          Invoice[]
-  reportProducts    ReportProduct[]
-  reportCosts       ReportCost[]
-  MaterialStock     MaterialStock[]
-  OrderMaterialUnit OrderMaterialUnit[]
+  bankAccounts        BankAccount[]
+  memberFactories     MemberFactory[]
+  products            Product[]
+  invoices            Invoice[]
+  reportProducts      ReportProduct[]
+  reportCosts         ReportCost[]
+  MaterialStock       MaterialStock[]
+  OrderMaterialUnit   OrderMaterialUnit[]
+  ReportMaterialStock ReportMaterialStock[]
 
   @@map("factories")
 }
@@ -155,30 +158,57 @@ model Unit {
 }
 
 model MaterialUnit {
-  id                      Int                       @id @default(autoincrement())
-  material                Material                  @relation(fields: [material_id], references: [id], onDelete: Cascade)
-  material_id             Int
-  unit                    Unit                      @relation(fields: [unit_id], references: [id], onDelete: Cascade)
-  unit_id                 Int
-  MaterialStock           MaterialStock[]
-  DetailOrderMaterialUnit DetailOrderMaterialUnit[]
+  id                        Int                         @id @default(autoincrement())
+  material                  Material                    @relation(fields: [material_id], references: [id], onDelete: Cascade)
+  material_id               Int
+  unit                      Unit                        @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id                   Int
+  MaterialStock             MaterialStock[]
+  DetailOrderMaterialUnit   DetailOrderMaterialUnit[]
+  DetailReportMaterialStock DetailReportMaterialStock[]
 
   @@map("material_units")
 }
 
 model MaterialStock {
-  id               Int                 @id @default(autoincrement())
-  factory          Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id       Int
-  materialUnit     MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
-  material_unit_id Int
-  amount           Float
-  status           MaterialStockStatus @default(In)
-  created_at       DateTime            @default(now())
-  updated_at       DateTime            @updatedAt
-  reason           String?
+  id                       Int                 @id @default(autoincrement())
+  factory                  Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
+  materialUnit             MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  material_unit_id         Int
+  amount                   Float
+  report_material_stock_id Int?
+  status                   MaterialStockStatus @default(In)
+  created_at               DateTime            @default(now())
+  updated_at               DateTime            @updatedAt
 
   @@map("material_stocks")
+}
+
+model ReportMaterialStock {
+  id                        Int                         @id @default(autoincrement())
+  factory                   Factory                     @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id                Int
+  total_amount              Float
+  desc                      String
+  user                      User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                   Int
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  DetailReportMaterialStock DetailReportMaterialStock[]
+
+  @@map("report_material_stocks")
+}
+
+model DetailReportMaterialStock {
+  id                       Int                 @id @default(autoincrement())
+  reportMaterialStock      ReportMaterialStock @relation(fields: [report_material_stock_id], references: [id], onDelete: Cascade)
+  report_material_stock_id Int
+  materialUnit             MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  material_unit_id         Int
+  amount                   Float
+
+  @@map("detail_report_material_stocks")
 }
 
 model OrderMaterialUnit {
@@ -191,6 +221,8 @@ model OrderMaterialUnit {
   total_item_received     Float?
   status                  OrderMaterialUnitStatus   @default(Pending)
   desc                    String?                   @db.Text
+  user                    User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                 Int
   created_at              DateTime                  @default(now())
   updated_at              DateTime                  @updatedAt
   DetailOrderMaterialUnit DetailOrderMaterialUnit[]

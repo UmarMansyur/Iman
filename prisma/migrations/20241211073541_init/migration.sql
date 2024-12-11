@@ -109,10 +109,33 @@ CREATE TABLE `material_stocks` (
     `factory_id` INTEGER NOT NULL,
     `material_unit_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
+    `report_material_stock_id` INTEGER NULL,
     `status` ENUM('In', 'Out') NOT NULL DEFAULT 'In',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `reason` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `report_material_stocks` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `factory_id` INTEGER NOT NULL,
+    `total_amount` DOUBLE NOT NULL,
+    `desc` VARCHAR(191) NOT NULL,
+    `user_id` INTEGER NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `detail_report_material_stocks` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `report_material_stock_id` INTEGER NOT NULL,
+    `material_unit_id` INTEGER NOT NULL,
+    `amount` DOUBLE NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -127,6 +150,7 @@ CREATE TABLE `order_material_units` (
     `total_item_received` DOUBLE NULL,
     `status` ENUM('Pending', 'Approved', 'Rejected') NOT NULL DEFAULT 'Pending',
     `desc` TEXT NULL,
+    `user_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -323,7 +347,22 @@ ALTER TABLE `material_stocks` ADD CONSTRAINT `material_stocks_factory_id_fkey` F
 ALTER TABLE `material_stocks` ADD CONSTRAINT `material_stocks_material_unit_id_fkey` FOREIGN KEY (`material_unit_id`) REFERENCES `material_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `report_material_stocks` ADD CONSTRAINT `report_material_stocks_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `report_material_stocks` ADD CONSTRAINT `report_material_stocks_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_report_material_stocks` ADD CONSTRAINT `detail_report_material_stocks_report_material_stock_id_fkey` FOREIGN KEY (`report_material_stock_id`) REFERENCES `report_material_stocks`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_report_material_stocks` ADD CONSTRAINT `detail_report_material_stocks_material_unit_id_fkey` FOREIGN KEY (`material_unit_id`) REFERENCES `material_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `order_material_units` ADD CONSTRAINT `order_material_units_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `order_material_units` ADD CONSTRAINT `order_material_units_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `detail_order_material_units` ADD CONSTRAINT `detail_order_material_units_order_material_unit_id_fkey` FOREIGN KEY (`order_material_unit_id`) REFERENCES `order_material_units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

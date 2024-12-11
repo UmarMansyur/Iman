@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { OrderMaterialUnitStatus } from "@prisma/client";
+import { OrderMaterialUnitStatus, MaterialStockStatus } from "@prisma/client";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+
 
 // PUT - Update order
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(request: Request, { params }: any) {
   try {
-    const { id } = params;
+    const paramsId = await params;
+    const id = paramsId.id;
     const body = await request.json();
     const { status, total_item_received, desc, details } = body;
 
@@ -27,6 +24,20 @@ export async function PUT(request: Request, { params }: RouteParams) {
           desc,
         },
       });
+
+      // Jika status Approved, create material stock entries
+      if (status === "Approved") {
+        const detailsToCreate = details.map((detail: any) => ({
+          factory_id: body.factory_id,
+          material_unit_id: parseInt(detail.material_unit_id),
+          amount: detail.amount,
+          status: "In" as MaterialStockStatus,
+        }));
+
+        await tx.materialStock.createMany({
+          data: detailsToCreate,
+        });
+      }
 
       // Update details if provided
       if (details && details.length > 0) {
@@ -66,6 +77,18 @@ export async function PUT(request: Request, { params }: RouteParams) {
         }
       }
 
+      const totalItem = await tx.detailOrderMaterialUnit.aggregate({
+        where: { order_material_unit_id: parseInt(id) },
+        _sum: { amount: true },
+      });
+
+      await tx.orderMaterialUnit.update({
+        where: { id: parseInt(id) },
+        data: {
+          total_item: totalItem._sum.amount || 0,
+        },
+      });
+
       // Fetch updated order with details
       return await tx.orderMaterialUnit.findUnique({
         where: { id: parseInt(id) },
@@ -90,30 +113,34 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 // GET single order
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+  request: Request,
+  { params }: { params: any }
+) {
   try {
-    const { id } = params;
-
+    const paramId = await params;
+    const id = paramId.id;
+    
     const order = await prisma.orderMaterialUnit.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        factory: true,
-        DetailOrderMaterialUnit: {
-          include: {
-            materialUnit: true,
-          },
-        },
+      where: {
+        id: parseInt(id)
       },
+      include: {
+        DetailOrderMaterialUnit: true
+      }
     });
 
     if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return Response.json(
+        { error: "Order tidak ditemukan" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(order);
+    return Response.json(order);
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to fetch order" },
+    return Response.json(
+      { error: error.message || "Terjadi kesalahan pada server" },
       { status: 500 }
     );
   }

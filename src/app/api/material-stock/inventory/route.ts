@@ -9,9 +9,8 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "id";
     const sortOrder = searchParams.get("sortOrder") || "desc";
-    const factoryId = parseInt(searchParams.get("factoryId") || "0");
+    const factoryId = searchParams.get("factoryId");
 
     const where: any = {
       OR: [
@@ -19,12 +18,30 @@ export async function GET(request: Request) {
         { factory: { name: { contains: search } } },
         { materialUnit: { unit: { name: { contains: search } } } },
       ],
-      factory_id: factoryId ? factoryId : undefined,
+      ...(factoryId && { factory_id: parseInt(factoryId) }),
     };
 
     const materialId = await prisma.materialStock.groupBy({
       by: ['material_unit_id'],
-    })
+      _sum: {
+        amount: true,
+      },
+      where: {
+        status: MaterialStockStatus.In,
+        ...(factoryId && { factory_id: parseInt(factoryId) }),
+      },
+    });
+
+    const outMaterialUnit = await prisma.materialStock.groupBy({
+      by: ['material_unit_id'],
+      _sum: {
+        amount: true,
+      },
+      where: {
+        status: MaterialStockStatus.Out,
+        ...(factoryId && { factory_id: parseInt(factoryId) }),
+      },
+    });
 
     const materialUnit = await prisma.materialStock.findMany({
       where: {
@@ -44,16 +61,35 @@ export async function GET(request: Request) {
       },
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { [sortBy]: sortOrder },
+      orderBy: [
+        {
+          materialUnit: {
+            material: {
+              name: sortOrder as "asc" | "desc"
+            }
+          }
+        },
+        {
+          materialUnit: {
+            unit: {
+              name: sortOrder as "asc" | "desc"
+            }
+          }
+        }
+      ],
+      distinct: ['material_unit_id'],
     });
 
-    const total = await prisma.materialStock.count({ where });
-    const data = materialUnit.map((item) => ({
+    const data = materialUnit.map((item: any) => ({
       id: item.id,
       material_unit: item.materialUnit.material.name,
-      amount: item.amount,
+      unit: item.materialUnit.unit.name,
+      amount: (materialId.find((material) => material.material_unit_id === item.material_unit_id)?._sum.amount || 0) - (outMaterialUnit.find((material) => material.material_unit_id === item.material_unit_id)?._sum.amount || 0),
       status: item.status,
     }));
+
+    const total = await prisma.materialStock.count({ where });
+
     return NextResponse.json(
       {
         data,
@@ -69,8 +105,7 @@ export async function GET(request: Request) {
   } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Gagal mengambil data satuan material",
-        error: error.message,
+        message: error.message
       },
       { status: 500 }
     );
@@ -145,14 +180,4 @@ export async function PUT(request: Request) {
       { status: 500 }
     );
   }
-}
-
-export async function DELETE(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = parseInt(searchParams.get("id") || "0");
-  await prisma.materialUnit.delete({ where: { id } });
-  return NextResponse.json(
-    { message: "Satuan bahan baku berhasil dihapus" },
-    { status: 200 }
-  );
 }

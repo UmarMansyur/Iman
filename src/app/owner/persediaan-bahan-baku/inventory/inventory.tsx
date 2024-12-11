@@ -1,20 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
-import { Card, CardHeader } from "@/components/ui/card";
 import { Loader2, Search } from "lucide-react";
-import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import Form from "./form";
-import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
 
 export default function PabrikPage() {
-  const [data, setData] = useState<PaymentSetting[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -49,10 +46,10 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/product?${queryParams}`);
+      const response = await fetch(`/api/material-stock/inventory?${queryParams}`);
       const data = await response.json();
 
-      setData(data.products);
+      setData(data.data);
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -101,31 +98,24 @@ export default function PabrikPage() {
   };
 
   return (
-    <MainPage>
+    <div>
       {loading ? (
         <LoaderScreen />
       ) : (
-        <Card>
-          <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Produk</h4>
-            <p className="text-xs text-muted-foreground">
-              Daftar produk yang terdaftar.
-            </p>
-          </CardHeader>
-          <div className="flex justify-between items-center p-4">
+        <div>
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari produk"
+                  placeholder="Cari bahan baku"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}
                 />
               </div>
             </div>
-            <Form fetchData={fetchProducts} />
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">
@@ -145,8 +135,9 @@ export default function PabrikPage() {
               }}
             />
           )}
-        </Card>
+        </div>
       )}
-    </MainPage>
+    </div>
+
   );
 }

@@ -9,14 +9,13 @@ import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-
+import MainPage from "@/components/main";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Form from './form';
 export default function PabrikPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const router = useRouter()
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -33,11 +32,11 @@ export default function PabrikPage() {
 
   // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
-  const { user } = useUserStore()
+  const { user } = useUserStore();
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      if(!user) return;
+      if (!user) return;
       const factoryId = user?.factory_selected?.id;
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -47,11 +46,11 @@ export default function PabrikPage() {
         sortOrder: filters.sortOrder,
       });
 
-      if(factoryId) {
+      if (factoryId) {
         queryParams.set("factoryId", factoryId.toString());
       }
-  
-      const response = await fetch(`/api/order?${queryParams}`);
+
+      const response = await fetch(`/api/material-stock/production?${queryParams}`);
       const data = await response.json();
 
       setData(data.data);
@@ -78,7 +77,6 @@ export default function PabrikPage() {
     filters.sortOrder,
     user,
   ]);
-
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
@@ -107,49 +105,68 @@ export default function PabrikPage() {
       {loading ? (
         <LoaderScreen />
       ) : (
-        <div>
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <Input
-                  type="text"
-                  placeholder="Cari bahan baku"
-                  className="ps-8"
-                  onChange={(e) => handleSearch(e.target.value)}
-                  value={searchInput}
-                />
+        <MainPage>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">
+                    Bahan Baku Produksi
+                  </h3>
+                </div>
+              </CardTitle>
+              <CardDescription> 
+                Laporan ini akan mempengaruhi stok bahan baku di gudang
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center py-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input
+                      type="text"
+                      placeholder="Cari bahan baku"
+                      className="ps-8"
+                      onChange={(e) => handleSearch(e.target.value)}
+                      value={searchInput}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Form fetchData={fetchProducts} />
+                </div>
               </div>
-            </div>
-            <div>
-              <Button 
-                onClick={() => router.push('/owner/persediaan-bahan-baku/order')}
-              >
-                Tambah Order
-              </Button>
-            </div>
-          </div>
-          {loadingSearch ? (
-            <div className="flex justify-center items-center h-24">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-          ) : (
-            <DataTable
-              columns={columns(fetchProducts, pagination.page, pagination.limit)}
-              data={data}
-              pagination={pagination}
-              sorting={(sortBy, sortOrder) => {
-                setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
-              }}
-              onPageChange={handlePageChange}
-              onPageSizeChange={(size) => {
-                setPagination((prev) => ({ ...prev, limit: size, page: 1 }));
-              }}
-            />
-          )}
-        </div>
+              {loadingSearch ? (
+                <div className="flex justify-center items-center h-24">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : (
+                <DataTable
+                  columns={columns(
+                    fetchProducts,
+                    pagination.page,
+                    pagination.limit
+                  )}
+                  data={data}
+                  pagination={pagination}
+                  sorting={(sortBy, sortOrder) => {
+                    setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+                  }}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={(size) => {
+                    setPagination((prev) => ({
+                      ...prev,
+                      limit: size,
+                      page: 1,
+                    }));
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </MainPage>
       )}
     </div>
-
   );
 }

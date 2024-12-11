@@ -9,60 +9,64 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    const sortBy = searchParams.get("sortBy") || "id";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const validSortFields = ["id", "tanggal", "Operator", "total_amount", "desc"];
+    const sortBy = validSortFields.includes(searchParams.get("sortBy") || "") 
+      ? searchParams.get("sortBy") 
+      : "tanggal";
+    const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
     const factoryId = parseInt(searchParams.get("factoryId") || "0");
 
+ 
+
     const where: any = {
-      OR: [
-        { materialUnit: { material: { name: { contains: search } } } },
-        { factory: { name: { contains: search } } },
-        { materialUnit: { unit: { name: { contains: search } } } },
-      ],
-      factory_id: factoryId ? factoryId : undefined,
+      ...(factoryId ? { factory_id: factoryId } : {}),
+      ...(search ? {
+        OR: [
+          { user: { username: { contains: search } } },
+          { user: { email: { contains: search } } },
+          { desc: { contains: search } }
+        ]
+      } : {})
     };
 
-    const materialId = await prisma.materialStock.groupBy({
-      by: ['material_unit_id'],
-    })
+    const orderBy: any = 
+    sortBy === "user" 
+      ? { user_id: sortOrder }
+      : sortBy === "tanggal"
+      ? { created_at: sortOrder }
+      : sortBy === "total_amount"
+      ? { total_amount: sortOrder }
+      : sortBy === "desc"
+      ? { desc: sortOrder }
+      : { created_at: "desc" };
 
-    const materialUnit = await prisma.materialStock.findMany({
-      where: {
-        ...where,
-        material_unit_id: {
-          in: materialId.map((item) => item.material_unit_id),
-        },
-      },
+
+    const materialStock = await prisma.reportMaterialStock.findMany({
+      where,
       include: {
-        materialUnit: {
+        user: true,
+        factory: true,
+        DetailReportMaterialStock: {
           include: {
-            material: true,
-            unit: true,
+            materialUnit: {
+              include: {
+                material: true,
+                unit: true,
+              },
+            },
           },
         },
-        factory: true,
       },
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { [sortBy]: sortOrder },
+      orderBy: orderBy,
     });
 
-    const total = await prisma.materialStock.count({ where });
+    const total = await prisma.reportMaterialStock.count({ where });
     
-    const material_unit = await prisma.materialUnit.findMany({
-      include: {
-        material: true,
-        unit: true,
-      },
-    });
-
     return NextResponse.json(
       {
-        data: materialUnit,
-        options: material_unit.map((item) => ({
-          id: item.id,
-          value: `${item.material.name} / ${item.unit.name}`,
-        })),
+        data: materialStock,
         pagination: {
           total,
           page,

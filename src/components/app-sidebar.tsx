@@ -119,6 +119,11 @@ const data = {
       icon: PackageSearch,
     },
     {
+      title: "Laporan Produksi",
+      url: "/owner/laporan-produksi",
+      icon: ScrollText,
+    },
+    {
       title: "Data Pemesanan",
       url: "#",
       icon: ScrollText,
