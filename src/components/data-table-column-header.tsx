@@ -46,7 +46,7 @@ export function DataTableColumnHeader({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="flex items-center justify-start">
+      <DropdownMenuTrigger asChild className="flex items-center">
         <Button 
           variant="ghost" 
           className="h-8 text-black bg-transparent hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-[13px] font-bold"

@@ -1,4 +1,4 @@
-import { FactoryStatus, MemberFactoryStatus, ProductType, User } from "@prisma/client";
+import { FactoryStatus, MaterialStockStatus, MemberFactoryStatus, PriceProductUnitStatus, ProductType, User } from "@prisma/client";
 import { z } from "zod";
 
 export const SingupFromSchema = z.object({
@@ -271,12 +271,14 @@ export type PaymentFormState =
 export type PaymentSetting = {
   id: number;
   name: string;
+  price: number;
 };
 
 export type Product = {
   id: number;
   name: string;
   type: ProductType;
+  price: number;
 };
 
 export const ProductSchema = z.object({
@@ -284,6 +286,7 @@ export const ProductSchema = z.object({
   name: z.string().min(3, "Nama minimal 3 karakter"),
   type: z.enum(["Kretek", "Gabus"]),
   factory_id: z.string(),
+  price: z.string(),
 });
 
 export type ProductFormState =
@@ -291,6 +294,7 @@ export type ProductFormState =
       errors?: {
         name?: string[];
         type?: string[];
+        price?: string[];
       };
       message?: string;
     }
@@ -300,14 +304,12 @@ export type MaterialUnit = {
   id: number;
   material_id: number;
   unit_id: number;
-  factory_id: number;
 };
 
 export const MaterialUnitSchema = z.object({
   id: z.string().optional(),
   material_id: z.string(),
   unit_id: z.string(),
-  factory_id: z.string(),
 });
 
 export type MaterialUnitFormState =
@@ -316,7 +318,6 @@ export type MaterialUnitFormState =
         id?: string[];
         material_id?: string[];
         unit_id?: string[];
-        factory_id?: string[];
       };
       message?: string;
     }
@@ -396,6 +397,79 @@ export type ProductUnitFormState =
         parent_id?: string[];
         convert_from_parent?: string[];
         factory_id?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+  export type PriceProductUnit = {
+    id: number,
+    product_unit_id: number,
+    price: number,
+    sale_price: number,
+    status: PriceProductUnitStatus,
+  }
+
+  export const PriceProductUnitSchema = z.object({
+    id: z.string().optional(),
+    product_unit_id: z.string(),
+    price: z.string(),
+    sale_price: z.string(),
+    status: z.enum(["Active", "Inactive"]),
+  });
+
+  export type PriceProductUnitFormState =
+  | {
+      errors?: {
+        product_unit_id?: string[];
+        price?: string[];
+        sale_price?: string[];
+        status?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
+
+
+export type MaterialStock = {
+  id: number,
+  material_unit_id: number,
+  amount: number,
+  amount_morning: number,
+  amount_afternoon: number,
+  morning_shift_time: string,
+  afternoon_shift_time: string,
+  status: MaterialStockStatus,
+  user_morning_id: number,
+  user_afternoon_id: number,
+}
+
+export const MaterialStockSchema = z.object({
+  id: z.string().optional(),
+  material_unit_id: z.string(),
+  amount: z.string(),
+  amount_morning: z.string().optional(),
+  amount_afternoon: z.string().optional(),
+  morning_shift_time: z.string().optional(),
+  afternoon_shift_time: z.string().optional(),
+  status: z.enum(["In", "Out"]),
+  user_morning_id: z.string().optional(),
+  user_afternoon_id: z.string().optional(),
+});
+
+export type MaterialStockFormState =
+  | {
+      errors?: {
+        material_unit_id?: string[];
+        amount?: string[];
+        amount_morning?: string[];
+        amount_afternoon?: string[];
+        morning_shift_time?: string[];
+        afternoon_shift_time?: string[];
+        status?: string[];
+        user_morning_id?: string[];
+        user_afternoon_id?: string[];
       };
       message?: string;
     }

@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 
 export default function Form({
   productUnit,
@@ -47,8 +48,10 @@ export default function Form({
   const { user } = useUserStore();
   const [productOpen, setProductOpen] = useState(false);
   const [unitOpen, setUnitOpen] = useState(false);
+  const [parentOpen, setParentOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
+  const [selectedParent, setSelectedParent] = useState<Unit | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,9 +61,8 @@ export default function Form({
     formData.append("product_id", selectedProduct?.id.toString() || "");
     formData.append("unit_id", selectedUnit?.id.toString() || "");
     formData.append("amount", formData.get("amount")?.toString() || "0");
-    formData.append("parent_id", formData.get("parent_id")?.toString() || "");
+    formData.append("parent_id", selectedParent?.id.toString() || "");
     formData.append("convert_from_parent", formData.get("convert_from_parent")?.toString() || "0");
-    
     const response = await createProductUnit(undefined, formData);
     if (response?.errors) {
       setState(response.errors as ProductUnitFormState);
@@ -227,26 +229,26 @@ export default function Form({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount">Jumlah</Label>
-              <input
+              <Input
                 type="number"
                 id="amount"
                 name="amount"
                 defaultValue={productUnit?.amount || 0}
-                className="col-span-3 px-2 py-1 border border-gray-300 rounded-md"
+                className="col-span-3"
               />
               {state?.errors?.amount && <p className="text-red-500 text-sm">{state.errors.amount.join(", ")}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="unit">Satuan Pokok</Label>
-              <Popover open={unitOpen} onOpenChange={setUnitOpen}>
+              <Popover open={parentOpen} onOpenChange={setParentOpen}>
                 <PopoverTrigger asChild className="col-span-3" name="parent_id">
                   <Button
                     variant="ghost"
                     role="combobox"
                     className="justify-between col-span-3 bg-white border border-gray-300 text-black"
                   >
-                    {selectedUnit?.name ||
-                      options.units.find((unit: Unit) => unit.id === productUnit?.unit_id)?.name ||
+                    {selectedParent?.name ||
+                      options.units.find((unit: Unit) => unit.id === productUnit?.parent_id)?.name ||
                       "Pilih Satuan..."}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
@@ -260,37 +262,39 @@ export default function Form({
                       </CommandEmpty>
                       <CommandGroup>
                         <ScrollArea className="h-[200px]">
-                          {options.units.map((unit: Unit) => (
-                            <CommandItem
-                              key={unit.name}
-                              value={unit.name}
-                              onSelect={() => {
-                                setSelectedUnit(unit);
-                                setUnitOpen(false);
-                              }}
-                            >
-                              {unit.name}
-                              <Check
-                                className={cn(
-                                  "ml-auto",
-                                  selectedUnit?.id === unit.id
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                            </CommandItem>
-                          ))}
+                          {options.units
+                            .filter((unit: Unit) => unit.id !== selectedUnit?.id)
+                            .map((unit: Unit) => (
+                              <CommandItem
+                                key={unit.name}
+                                value={unit.name}
+                                onSelect={() => {
+                                  setSelectedParent(unit);
+                                  setParentOpen(false);
+                                }}
+                              >
+                                {unit.name}
+                                <Check
+                                  className={cn(
+                                    "ml-auto",
+                                    selectedParent?.id === unit.id
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                              </CommandItem>
+                            ))}
                         </ScrollArea>
                       </CommandGroup>
                     </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
-              {state?.errors?.unit_id && <p className="text-red-500 text-sm">{state.errors.unit_id.join(", ")}</p>}
+              {state?.errors?.parent_id && <p className="text-red-500 text-sm">{state.errors.parent_id.join(", ")}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount">Jumlah Konversi Sub Satuan</Label>
-              <input
+              <Input
                 type="number"
                 id="convert_from_parent"
                 name="convert_from_parent"

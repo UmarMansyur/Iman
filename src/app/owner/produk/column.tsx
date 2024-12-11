@@ -31,6 +31,18 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
   },
   {
+    accessorKey: "price",
+
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Harga"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.price.toLocaleString("id-ID", { style: "currency", currency: "IDR" }).slice(0, -3)}
+      </div>
+    ),
+  },
+  {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {

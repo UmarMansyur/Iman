@@ -7,35 +7,45 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Form from "./form";
 import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { MaterialUnit, ProductUnit} from "@/lib/definitions";
-import { Material, Product, Unit } from "@prisma/client";
-import Form from "./form";
+import { PaymentSetting, Product } from "@/lib/definitions";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number, options: { products: Product[], units: Unit[] }): ColumnDef<ProductUnit>[] => [
+export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<PaymentSetting>[] => [
   {
     id: "index",
     header: "No",
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "product",
+    accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nama Produk"/>
     ),
   },
   {
-    accessorKey: "unit",
+    accessorKey: "type",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Satuan"/>
+      <DataTableColumnHeader column={column} title="Jenis Produk"/>
+    ),
+  },
+  {
+    accessorKey: "price",
+
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Harga"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.price.toLocaleString("id-ID", { style: "currency", currency: "IDR" }).slice(0, -3)}
+      </div>
     ),
   },
   {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
-      const productUnit = row.original as ProductUnit;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -44,8 +54,8 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <Form productUnit={productUnit} fetchData={fetchData} options={options} />
-            <DeleteButton fetchData={fetchData} endpoint="product-unit" id={productUnit.id.toString()} />
+            <Form product={row.original as Product} fetchData={fetchData} />
+            <DeleteButton fetchData={fetchData} endpoint="product" id={row.original.id.toString()} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

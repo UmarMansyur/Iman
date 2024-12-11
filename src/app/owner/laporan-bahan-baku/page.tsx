@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import { useEffect, useState, useCallback } from "react";
@@ -11,11 +12,9 @@ import debounce from "lodash/debounce";
 import Form from "./form";
 import { useUserStore } from "@/store/user-store";
 import { DataTable } from "./data-table";
-import { Product, Unit } from "@prisma/client";
-import { ProductUnit } from "@/lib/definitions";
 
 export default function PabrikPage() {
-  const [data, setData] = useState<ProductUnit[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -31,7 +30,7 @@ export default function PabrikPage() {
   });
 
   const [searchInput, setSearchInput] = useState("");
-  const [options, setOptions] = useState<{ products: Product[], units: Unit[] }>({ products: [], units: [] });
+  const [options, setOptions] = useState<any>({ materials: [] });
   const { user } = useUserStore()
 
   const fetchProducts = async () => {
@@ -51,20 +50,18 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/product-unit?${queryParams}`);
+      const response = await fetch(`/api/material-stock?${queryParams}`);
       const data = await response.json();
 
       
       if(data.options && 
-         Array.isArray(data.options.products) && 
-         Array.isArray(data.options.units)) {
+         Array.isArray(data.options.materials)) {
         setOptions({
-          products: data.options.products,
-          units: data.options.units
+          materials: data.options.materials,
         });
       }
 
-      setData(data.productUnits);
+      setData(data.data);
 
       setPagination((prev) => ({
         ...prev,
@@ -121,9 +118,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Bahan Baku</h4>
-            <p className="text-xs text-muted-foreground">
-              Bahan baku berikut ini merupakan bahan baku yang diinputkan di pabrik anda. Perhatikan bahwa bahan baku yang diinputkan di pabrik anda tidak akan tampil di pabrik lain.
+            <h4 className="text-base font-semibold mb-0">Daftar Harga Produk</h4>
+            <p className="text-sm text-muted-foreground">
+              Jika sudah ada pembelian produk dengan harga yang sudah diinputkan, jangan mengubah harga produk yang sudah diinputkan. Tambah produk baru dan non aktifkan harga produk yang sudah ada sebelumnya. Hal tersebut dikarenakan anda tidak dapat memiliki riwayat harga produk yang sudah diinputkan.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -133,9 +130,10 @@ export default function PabrikPage() {
                 <Input
                   type="text"
                   placeholder="Cari produk"
-                  className="ps-8"
+                  className="ps-8 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}
+                  autoFocus
                 />
               </div>
             </div>
@@ -147,7 +145,7 @@ export default function PabrikPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns(fetchProducts, pagination.page, pagination.limit, options)}
+              columns={columns(fetchProducts, pagination.page, pagination.limit)}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {

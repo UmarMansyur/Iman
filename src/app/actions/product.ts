@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 import prisma from "@/lib/db";
 import { ProductFormState, ProductSchema } from "@/lib/definitions";
@@ -11,6 +12,7 @@ export default async function createProduct(
     name: formData.get("name"),
     type: formData.get("type"),
     factory_id: formData.get("factory_id"),
+    price: formData.get("price"),
   });
   if (!validatedFields.success) {
     return {
@@ -18,25 +20,25 @@ export default async function createProduct(
     };
   }
 
-  const { id, name, type, factory_id } = validatedFields.data;
+  const { id, name, type, factory_id, price } = validatedFields.data;
 
   try {
     if (id) {
       await prisma.product.update({
         where: { id: parseInt(id) },
-        data: { name, type },
+        data: { name, type, price: parseInt(price) },
       });
     } else {
       await prisma.product.create({
-        data: { name, type, factory_id: parseInt(factory_id) },
+        data: { name, type, factory_id: parseInt(factory_id), price: parseInt(price) },
       });
     }
     return {
       message: "Produk berhasil dibuat",
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
-      message: "Gagal membuat produk",
+      message: error.message || "Gagal membuat produk",
     };
   }
 }

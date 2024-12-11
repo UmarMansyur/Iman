@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar"
 import { logout } from "@/app/actions/auth";
 import { useUserStore } from "@/store/user-store";
+import Link from "next/link";
 
 
 export function NavUser() {
@@ -83,10 +84,16 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
+              {
+                user?.typeUser === "Administrator" && (
+                  <Link href="/admin/dashboard">
+                    <DropdownMenuItem>
+                      <BadgeCheck />
+                      Halaman Admin
+                    </DropdownMenuItem>
+                  </Link>
+                )
+              }
               <DropdownMenuItem>
                 <CreditCard />
                 Billing

@@ -20,6 +20,7 @@ export async function login(state: SigninFormState, formData: FormData) {
 
   const { email, password } = validatedFields.data;
   let user: any = null;
+  let sessionUser: any = null;
   try {
     user = await prisma.user.findFirst({
       where: {
@@ -66,6 +67,7 @@ export async function login(state: SigninFormState, formData: FormData) {
       factory_selected: user?.memberFactories.length > 0 ? user?.memberFactories[0].factory : null,
       thumbnail: user.thumbnail ?? "",
     };
+    sessionUser = payload;
 
     await createSession(payload);
   } catch (error: any) {
@@ -73,11 +75,11 @@ export async function login(state: SigninFormState, formData: FormData) {
       message: error.message || 'Terjadi kesalahan saat login'
     }
   }
-  if(user?.user_type === 'Administrator') {
+  if(sessionUser?.typeUser === 'Administrator') {
     redirect('/admin/dashboard');
-  } else if(user?.user_type === 'Operator') {
+  } else if(sessionUser?.typeUser ==='Operator') {
     // jika memiliki user.factory.position.includes('Owner')
-    if(user?.factory.some((factory: any) => factory.position.includes('Owner'))) {
+    if(sessionUser?.factory.find((factory: any) => factory.position.includes('Owner'))) {
       redirect('/owner');
     } else {
       redirect('/operator');

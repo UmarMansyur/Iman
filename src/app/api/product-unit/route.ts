@@ -43,16 +43,18 @@ export async function GET(request: Request) {
       take: limit,
       include: {
         product: true, // Include data relasi product
-        unit: true,    // Include data relasi unit
+        unit: true,   // Include data relasi unit
       },
     });
 
     const products = await prisma.product.findMany();
     const units = await prisma.unit.findMany();
-
-    const result = productUnits.map((productUnit) => ({
+    const result = await Promise.all(productUnits.map(async(productUnit) => ({
       ...productUnit,
-    }));
+      product: productUnit.product.name,
+      unit: productUnit.unit.name,
+      parent: productUnit.parent_id ? await prisma.unit.findUnique({ where: { id: productUnit.parent_id } }) : null,
+    })));
     
     return NextResponse.json({
       productUnits: result,

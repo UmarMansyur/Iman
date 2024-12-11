@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
+import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Loader2, Search } from "lucide-react";
 import MainPage from "@/components/main";
@@ -9,12 +10,11 @@ import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import Form from "./form";
+import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
-import { DataTable } from "./data-table";
-import { Material, MaterialUnit, Unit } from "@prisma/client";
 
 export default function PabrikPage() {
-  const [data, setData] = useState<MaterialUnit[]>([]);
+  const [data, setData] = useState<PaymentSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -29,10 +29,9 @@ export default function PabrikPage() {
     sortOrder: "asc",
   });
 
+  // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
-  const [options, setOptions] = useState<{ materials: Material[], units: Unit[] }>({ materials: [], units: [] });
   const { user } = useUserStore()
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -50,21 +49,10 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/material-unit?${queryParams}`);
+      const response = await fetch(`/api/product?${queryParams}`);
       const data = await response.json();
 
-      
-      if(data.options && 
-         Array.isArray(data.options.materials) && 
-         Array.isArray(data.options.units)) {
-        setOptions({
-          materials: data.options.materials,
-          units: data.options.units
-        });
-      }
-
-      setData(data.data);
-
+      setData(data.products);
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -97,19 +85,18 @@ export default function PabrikPage() {
     }, 500),
     []
   );
-
   const [loadingSearch, setLoadingSearch] = useState(false);
-
   const handleSearch = (value: string) => {
     setSearchInput(value);
     setLoadingSearch(true);
     debouncedSearch(value);
   };
 
+  // Tambahkan handler untuk pagination
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({
       ...prev,
-      page: newPage + 1,
+      page: newPage + 1, // Tambah 1 karena table menggunakan zero-based index
     }));
   };
 
@@ -120,9 +107,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Bahan Baku</h4>
+            <h4 className="text-base font-semibold mb-0">Daftar Produk</h4>
             <p className="text-xs text-muted-foreground">
-              Bahan baku berikut ini merupakan bahan baku yang diinputkan di pabrik anda. Perhatikan bahwa bahan baku yang diinputkan di pabrik anda tidak akan tampil di pabrik lain.
+              Daftar produk yang terdaftar.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -138,7 +125,7 @@ export default function PabrikPage() {
                 />
               </div>
             </div>
-            <Form fetchData={fetchProducts} options={options} />
+            <Form fetchData={fetchProducts} />
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">
@@ -146,7 +133,7 @@ export default function PabrikPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns(fetchProducts, pagination.page, pagination.limit, options)}
+              columns={columns(fetchProducts, pagination.page, pagination.limit)}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {

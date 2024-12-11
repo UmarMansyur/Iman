@@ -20,21 +20,15 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "product",
+    accessorKey: "material",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Produk"/>
+      <DataTableColumnHeader column={column} title="Bahan Baku"/>
     ),
   },
   {
     accessorKey: "unit",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Satuan"/>
-    ),
-  },
-  {
-    accessorKey: "amount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jumlah"/>
     ),
   },
   {

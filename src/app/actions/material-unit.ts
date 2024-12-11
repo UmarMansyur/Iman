@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 import prisma from "@/lib/db";
 import { MaterialUnitFormState, MaterialUnitSchema } from "@/lib/definitions";
@@ -10,7 +11,6 @@ export default async function createMaterialUnit(
     id: formData.get("id"),
     material_id: formData.get("material_id"),
     unit_id: formData.get("unit_id"),
-    factory_id: formData.get("factory_id"),
   });
 
   if (!validatedFields.success) {
@@ -19,7 +19,7 @@ export default async function createMaterialUnit(
     };
   }
 
-  const { id, material_id, unit_id, factory_id } = validatedFields.data;
+  const { id, material_id, unit_id } = validatedFields.data;
   try {
     if (id) {
       await prisma.materialUnit.update({
@@ -27,7 +27,6 @@ export default async function createMaterialUnit(
         data: {
           material_id: parseInt(material_id),
           unit_id: parseInt(unit_id),
-          factory_id: parseInt(factory_id),
         },
       });
       return {
@@ -38,7 +37,6 @@ export default async function createMaterialUnit(
       data: {
         material_id: parseInt(material_id),
         unit_id: parseInt(unit_id),
-        factory_id: parseInt(factory_id),
       },
     });
     return {

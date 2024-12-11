@@ -127,89 +127,55 @@ async function main(): Promise<void> {
     ],
   });
 
+//   -	Tsg : Kg
+// -	Filter : try
+// -	Bobin : rool
+// -	Etiket : pcs
+// -	Foil god : roll
+// -	Foil silver : roll
+// -	Inner gold: roll 
+// -	Inner silver :roll
+// -	Lem CTP : kg
+// -	Lem AMBRI: kg
+// -	CPT : roll
+
+  await prisma.materialUnit.createMany({
+    data: [
+      { material_id: 1, unit_id: 1 },
+      { material_id: 2, unit_id: 2 },
+      { material_id: 3, unit_id: 6 },
+      { material_id: 4, unit_id: 12 },
+      { material_id: 5, unit_id: 6 },
+      { material_id: 6, unit_id: 6 },
+      { material_id: 7, unit_id: 6 },
+      { material_id: 8, unit_id: 1 },
+      { material_id: 9, unit_id: 1 },
+      { material_id: 10, unit_id: 3 },
+    ],
+  });
+
+
   const product = await prisma.product.createMany({
     data: [
       {
         factory_id: djava.id,
         name: "ST Premium",
         type: "Kretek",
+        price: 10000,
       },
       {
         factory_id: djava.id,
         name: "ST Gold",
         type: "Kretek",
+        price: 10000,
       },
       {
         factory_id: djava.id,
         name: "ST Silver",
         type: "Kretek",
+        price: 10000,
       },
     ],
-  });
-
-  const kartonProdukUnit = await prisma.productUnit.create({
-    // 1 press = 10 pack
-    // 1 ball 20 stop/press
-    // 1 karton 4 ball
-    data: {
-      product_id: 1,
-      unit_id: 9,
-      amount: 1,
-    },
-  });
-
-  const ballProductUnit = await prisma.productUnit.create({
-    data: {
-      product_id: 1,
-      unit_id: 14,
-      amount: 1,
-      convert_from_parent: 4,
-      parent_id: kartonProdukUnit.id,
-    },
-  });
-
-  const pressProductUnit = await prisma.productUnit.create({
-    data: {
-      product_id: 1,
-      unit_id: 5,
-      amount: 1,
-      convert_from_parent: 10,
-      parent_id: ballProductUnit.id,
-    },
-  });
-
-  await prisma.priceProductUnit.create({
-    data: {
-      product_unit_id: ballProductUnit.id,
-      price: 1000,
-      sale_price: 1000,
-      status: "Active",
-    },
-  });
-
-  await prisma.priceProductUnit.create({
-    data: {
-      product_unit_id: pressProductUnit.id,
-      price: 1000,
-      sale_price: 1000,
-      status: "Active",
-    },
-  });
-
-  await prisma.priceProductUnit.create({
-    data: {
-      product_unit_id: kartonProdukUnit.id,
-      price: 1000,
-      sale_price: 1000,
-      status: "Active",
-    },
-  });
-
-  await prisma.stockProduct.create({
-    data: {
-      product_unit_id: ballProductUnit.id,
-      amount: 100,
-    },
   });
 
   await prisma.reportProduct.create({

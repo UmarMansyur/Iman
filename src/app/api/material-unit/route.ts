@@ -10,22 +10,18 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || "";
     const sortBy = searchParams.get("sortBy") || "id";
     const sortOrder = searchParams.get("sortOrder") || "desc";
-    const factoryId = parseInt(searchParams.get("factoryId") || "0");
 
     const where: any = {
       OR: [
         { material: { name: { contains: search } } },
-        { factory: { name: { contains: search } } },
         { unit: { name: { contains: search } } },
       ],
-      factory_id: factoryId,
     };
 
     const materialUnit = await prisma.materialUnit.findMany({
       where,
       include: {
         material: true,
-        factory: true,
         unit: true,
       },
       skip: (page - 1) * limit,
@@ -40,10 +36,9 @@ export async function GET(request: Request) {
       id: item.id,
       material_id: item.material.id,
       material: item.material.name,
-      factory_id: item.factory.id,
-      factory: item.factory.name,
       unit_id: item.unit.id,
       unit: item.unit.name,
+      
     }));
 
     const options = {

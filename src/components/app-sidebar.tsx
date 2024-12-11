@@ -2,10 +2,8 @@
 
 import * as React from "react";
 import {
-  ChartColumnBigIcon,
   Combine,
   Database,
-  DollarSign,
   FileChartLine,
   Home,
   List,
@@ -55,8 +53,12 @@ const data = {
           url: "/admin/satuan",
         },
         {
-          title: "Material",
+          title: "Bahan Baku",
           url: "/admin/bahan-baku",
+        },
+        {
+          title: "Satuan Bahan Baku",
+          url: "/admin/satuan-bahan-baku",
         },
         {
           title: "Hak Akses",
@@ -84,10 +86,6 @@ const data = {
           url: "/admin/setting/payment",
         },
         {
-          title: "PPN",
-          url: "/admin/setting/ppn",
-        },
-        {
           title: "Pengaturan Akun",
           url: "/admin/setting/account",
         },
@@ -101,37 +99,27 @@ const data = {
       icon: Home,
     },
     {
+      title: "Bahan Baku",
+      url: "/owner/bahan-baku",
+      icon: Combine,
+      items: [
+        {
+          title: "Persediaan Bahan Baku",
+          url: "/owner/persediaan-bahan-baku",
+        },
+        {
+          title: "Bahan Baku Produksi",
+          url: "/owner/bahan-baku-produksi",
+        },
+      ],
+    },
+    {
       title: "Data Produk",
       url: "/owner/produk",
       icon: PackageSearch,
     },
     {
-      title: "Harga Produk",
-      url: "/owner/harga-produk",
-      icon: DollarSign,
-    },
-    {
-      title: "Bahan Baku",
-      url: "/owner/bahan-baku",
-      icon: Combine,
-    },
-    {
-      title: "Manajemen Operator",
-      url: "/owner/manajemen-operator",
-      icon: Users,
-    },
-    {
-      title: "Laporan Bahan Baku",
-      url: "#",
-      icon: ChartColumnBigIcon,
-    },
-    {
-      title: "Laporan Produksi",
-      url: "#",
-      icon: FileChartLine,
-    },
-    {
-      title: "Data Pembelian",
+      title: "Data Pemesanan",
       url: "#",
       icon: ScrollText,
     },
@@ -139,6 +127,11 @@ const data = {
       title: "Data Penjualan",
       url: "#",
       icon: FileChartLine,
+    },
+    {
+      title: "Manajemen Operator",
+      url: "/owner/manajemen-operator",
+      icon: Users,
     },
   ],
   navOperator: [
