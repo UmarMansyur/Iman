@@ -48,7 +48,6 @@ model User {
   MemberPriceProduct           MemberPriceProduct[]
   ReportMaterialStock          ReportMaterialStock[]
   OrderMaterialUnit            OrderMaterialUnit[]
-  ReportProduct                ReportProduct[]       @relation("report_product_user")
   morningShiftReportProducts   ReportProduct[]       @relation("report_product_morning_shift_user")
   afternoonShiftReportProducts ReportProduct[]       @relation("report_product_afternoon_shift_user")
 
@@ -314,8 +313,6 @@ model ReportProduct {
   id                      Int               @id @default(autoincrement())
   product                 Product           @relation(fields: [product_id], references: [id], onDelete: Cascade)
   product_id              Int
-  user                    User              @relation("report_product_user", fields: [user_id], references: [id], onDelete: Cascade)
-  user_id                 Int
   factory                 Factory           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id              Int
   amount                  Float

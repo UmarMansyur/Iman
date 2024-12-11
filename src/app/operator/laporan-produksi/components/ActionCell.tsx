@@ -49,31 +49,15 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
 
   // Form states
   const [morningAmount, setMorningAmount] = useState(row.original.morning_shift_amount?.toString() || "");
+  const [morningTime, setMorningTime] = useState(
+    row.original.morning_shift_time ? 
+    new Date(row.original.morning_shift_time).toTimeString().slice(0,5) : 
+    ""
+  );
   const [afternoonAmount, setAfternoonAmount] = useState(row.original.afternoon_shift_amount?.toString() || "");
-
-  // Tambahkan array untuk opsi jam dan menit
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
-
-  // Pisahkan waktu menjadi jam dan menit
-  const [morningHour, setMorningHour] = useState(
-    row.original.morning_shift_time ? 
-    new Date(row.original.morning_shift_time).getHours().toString().padStart(2, '0') : 
-    ""
-  );
-  const [morningMinute, setMorningMinute] = useState(
-    row.original.morning_shift_time ? 
-    new Date(row.original.morning_shift_time).getMinutes().toString().padStart(2, '0') : 
-    ""
-  );
-  const [afternoonHour, setAfternoonHour] = useState(
+  const [afternoonTime, setAfternoonTime] = useState(
     row.original.afternoon_shift_time ? 
-    new Date(row.original.afternoon_shift_time).getHours().toString().padStart(2, '0') : 
-    ""
-  );
-  const [afternoonMinute, setAfternoonMinute] = useState(
-    row.original.afternoon_shift_time ? 
-    new Date(row.original.afternoon_shift_time).getMinutes().toString().padStart(2, '0') : 
+    new Date(row.original.afternoon_shift_time).toTimeString().slice(0,5) : 
     ""
   );
 
@@ -87,14 +71,11 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     setIsSubmitting(true);
 
     try {
-      const morningTime = morningHour && morningMinute ? `${morningHour}:${morningMinute}` : null;
-      const afternoonTime = afternoonHour && afternoonMinute ? `${afternoonHour}:${afternoonMinute}` : null;
-
       const payload: any = {
         morning_shift_amount: morningAmount ? parseFloat(morningAmount.replace(/,/g, "")) : null,
-        morning_shift_time: morningTime,
+        morning_shift_time: morningTime || null,
         afternoon_shift_amount: afternoonAmount ? parseFloat(afternoonAmount.replace(/,/g, "")) : null,
-        afternoon_shift_time: afternoonTime,
+        afternoon_shift_time: afternoonTime || null,
       };
 
       // check apakah morning_shift_user_id atau afternoon_shift_user_id ada
@@ -213,41 +194,11 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   }}
                   placeholder="Jumlah shift pagi"
                 />
-                <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">Waktu Shift Pagi</Label>
-                  <div className="flex gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select value={morningHour} onValueChange={setMorningHour}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Jam" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hours.map((hour) => (
-                            <SelectItem key={hour} value={hour}>
-                              {hour}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select value={morningMinute} onValueChange={setMorningMinute}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Menit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {minutes.map((minute) => (
-                            <SelectItem key={minute} value={minute}>
-                              {minute}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
+                <Input
+                  type="time"
+                  value={morningTime}
+                  onChange={(e) => setMorningTime(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -263,41 +214,11 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   }}
                   placeholder="Jumlah shift siang"
                 />
-                <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">Waktu Shift Siang</Label>
-                  <div className="flex gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select value={afternoonHour} onValueChange={setAfternoonHour}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Jam" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hours.map((hour) => (
-                            <SelectItem key={hour} value={hour}>
-                              {hour}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select value={afternoonMinute} onValueChange={setAfternoonMinute}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Menit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {minutes.map((minute) => (
-                            <SelectItem key={minute} value={minute}>
-                              {minute}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
+                <Input
+                  type="time"
+                  value={afternoonTime}
+                  onChange={(e) => setAfternoonTime(e.target.value)}
+                />
               </div>
             </div>
 

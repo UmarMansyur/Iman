@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -12,14 +13,8 @@ export async function GET(
       where: { id },
       include: {
         product: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            thumbnail: true,
-          },
-        },
+        afternoon_shift_user: true,
+        morning_shift_user: true,
         factory: true,
       },
     });
@@ -50,52 +45,51 @@ export async function PUT(
     const id = parseInt(params.id);
     const body = await request.json();
     const {
-      amount,
       morning_shift_amount,
       morning_shift_time,
+      morning_shift_user_id,
       afternoon_shift_amount,
+      afternoon_shift_user_id,
       afternoon_shift_time,
-      type,
     } = body;
 
-    // Validate required field
-    if (!amount) {
-      return NextResponse.json(
-        { message: "Amount is required" },
-        { status: 400 }
-      );
-    }
+
+    // amount adalah jumlah produk dari morning_shift_amount dan afternoon_shift_amount
+    const amount = Number(morning_shift_amount) + Number(afternoon_shift_amount);
 
     const updatedReport = await prisma.reportProduct.update({
-      where: { id },
+      where: { id: Number(id) },
       data: {
         amount,
         morning_shift_amount,
-        morning_shift_time: morning_shift_time ? new Date(morning_shift_time) : null,
+        morning_shift_time: morning_shift_time ? new Date("1970-01-01T" + morning_shift_time) : null,
+        morning_shift_user_id: morning_shift_user_id ? parseInt(morning_shift_user_id, 10) : undefined,
         afternoon_shift_amount,
-        afternoon_shift_time: afternoon_shift_time ? new Date(afternoon_shift_time) : null,
-        type: type || undefined,
+        afternoon_shift_time: afternoon_shift_time ? new Date("1970-01-01T" + afternoon_shift_time) : null,
+        afternoon_shift_user_id: afternoon_shift_user_id ? parseInt(afternoon_shift_user_id, 10) : undefined,
       },
       include: {
         product: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            thumbnail: true,
-          },
-        },
         factory: true,
       },
     });
 
     return NextResponse.json(updatedReport);
-  } catch (error) {
-    console.error("Error updating report:", error);
+  } catch (error: any) {
+    console.error("Error updating report:", error.message);
     return NextResponse.json(
-      { message: "Internal Server Error" },
+      { message: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
+}
+
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = parseInt(params.id);
+  await prisma.reportProduct.delete({ where: { id } });
+  return NextResponse.json({ message: "Report deleted successfully" });
 }

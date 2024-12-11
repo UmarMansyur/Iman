@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
@@ -9,8 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import DeleteButton from "@/components/delete-button";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { MaterialUnit, ProductUnit} from "@/lib/definitions";
-import { Material, Product, Unit } from "@prisma/client";
+import { ProductUnit} from "@/lib/definitions";
+import { Product, Unit } from "@prisma/client";
 import Form from "./form";
 
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number, options: { products: Product[], units: Unit[] }): ColumnDef<ProductUnit>[] => [

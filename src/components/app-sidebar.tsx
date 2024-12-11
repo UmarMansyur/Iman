@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import {
+  Calculator,
   Combine,
   Database,
   FileChartLine,
   Home,
-  List,
+  PackageCheckIcon,
   PackageSearch,
   ScrollText,
+  SendToBack,
   Settings,
-  Truck,
+  SquareKanban,
   Users,
 } from "lucide-react";
 
@@ -119,6 +121,11 @@ const data = {
       icon: PackageSearch,
     },
     {
+      title: "Stok Produk",
+      url: "/owner/stok-produk",
+      icon: PackageCheckIcon,
+    },
+    {
       title: "Laporan Produksi",
       url: "/owner/laporan-produksi",
       icon: ScrollText,
@@ -142,34 +149,50 @@ const data = {
   navOperator: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/operator/dashboard",
       icon: Home,
     },
     {
-      title: "Produksi",
-      url: "#",
-      icon: PackageSearch,
-    },
-    {
-      title: "Manajemen Bahan Baku",
+      title: "Bahan Baku",
       url: "#",
       icon: Combine,
+      items: [
+        {
+          title: "Persediaan Bahan Baku",
+          url: "/operator/persediaan-bahan-baku",
+        },
+        {
+          title: "Bahan Baku Produksi",
+          url: "/operator/bahan-baku-produksi",
+        },
+      ],
     },
     {
-      title: "Data Pesanan",
+      title: "Data Produk",
       url: "#",
-      icon: List,
+      icon: SquareKanban,
+      items: [
+        {
+          title: "Stok Produk",
+          url: "/operator/stok-produk",
+        },
+        {
+          title: "Input Produksi Harian",
+          url: "/operator/laporan-produksi",
+        },
+      ],
     },
     {
-      title: "Faktur dan Pengiriman",
-      url: "#",
-      icon: Truck,
+      title: "Data Order",
+      url: "/operator/data-order",
+      icon: SendToBack,
     },
     {
-      title: "Report Penjualan",
-      url: "#",
-      icon: FileChartLine,
+      title: "Transaksi Produk",
+      url: "/operator/transaksi-produk",
+      icon: Calculator,
     },
+
   ],
 };
 
@@ -197,7 +220,7 @@ export function AppSidebar({
     if (pathname?.startsWith("/owner")) {
       return <NavMain title="Owner" items={addActiveState(data.navOwner)} />;
     }
-    if (pathname?.startsWith("/")) {
+    if (pathname?.startsWith("/operator")) {
       return (
         <NavMain title="Operator" items={addActiveState(data.navOperator)} />
       );

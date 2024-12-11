@@ -182,12 +182,13 @@ async function main(): Promise<void> {
     data: {
       product_id: 1,
       amount: 100,
-      user_id: operator.id,
       factory_id: djava.id,
       morning_shift_amount: 10,
-      afternoon_shift_amount: 10,
       morning_shift_time: new Date("2024-01-01 08:00:00"),
+      morning_shift_user_id: operator.id,
+      afternoon_shift_amount: 10,
       afternoon_shift_time: new Date("2024-01-01 15:00:00"),
+      afternoon_shift_user_id: operator.id,
     },
   });
 
