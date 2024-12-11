@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+// app/(dashboard)/laporan-produksi/columns.tsx
 import { ColumnDef } from "@tanstack/react-table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { ActionCell } from "./components/ActionCell";
 
 export const columns = (
@@ -19,117 +18,81 @@ export const columns = (
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "tanggal",
+    accessorKey: "product",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tanggal" />
+      <DataTableColumnHeader column={column} title="Produk" />
     ),
+    cell: ({ row }) => {
+      const product = row.original.product;
+      return (
+        <div>
+          <p className="font-medium">{product.name}</p>
+          <p className="text-sm text-muted-foreground">{product.type}</p>
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "Operator",
+    accessorKey: "user",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Operator" />
     ),
     cell: ({ row }) => {
-      const operator = row.original as any;
+      const user = row.original.user;
       return (
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={operator.user?.thumbnail} />
-            <AvatarFallback>{operator.user?.username?.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user?.thumbnail} />
+            <AvatarFallback>{user?.username?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
-            <p>{operator.user?.username}</p>
-            <p className="text-sm text-muted-foreground">
-              {operator.user?.email}
-            </p>
+            <p className="font-medium">{user?.username}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </div>
-      )
+      );
     },
   },
   {
-    accessorKey: "total_amount",
+    accessorKey: "amount",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Bahan Baku" />
+      <DataTableColumnHeader column={column} title="Total Produksi" />
     ),
     cell: ({ row }) => {
-      const totalAmount = row.original as any;
-      return totalAmount.total_amount ? totalAmount.total_amount.toLocaleString("id-ID") : "-";
+      return row.original.amount.toLocaleString("id-ID");
     },
   },
   {
-    accessorKey: "desc",
+    accessorKey: "shift",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Keterangan" />
+      <DataTableColumnHeader column={column} title="Detail Shift" />
     ),
-    cell: ({ row }) => (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            Lihat
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Detail Laporan Stock</DialogTitle>
-            <DialogDescription>
-              Detail informasi laporan stock bahan baku
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid gap-4">
-              <div>
-                <Label>Operator Pelapor</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Avatar>
-                    <AvatarImage src={row.original.user?.thumbnail} />
-                    <AvatarFallback>
-                      {row.original.user?.username?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{row.original.user?.username}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {row.original.user?.email}
-                    </p>
-                  </div>
+    cell: ({ row }) => {
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              Lihat Detail
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Detail Shift Produksi</DialogTitle>
+              <DialogDescription>
+                Informasi detail produksi per shift
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid gap-4">
+                <div>
+                  <h3 className="font-medium">Shift Pagi</h3>
+                  <p>Jumlah: {row.original.morning_shift_amount?.toLocaleString("id-ID") || "-"}</p>
+                  <p>Waktu: {row.original.morning_shift_time ? new Date(row.original.morning_shift_time).toLocaleTimeString("id-ID") : "-"}</p>
                 </div>
-              </div>
-
-              <div>
-                <Label>Keterangan</Label>
-                <p className="mt-1">{row.original.desc}</p>
-              </div>
-
-              <div>
-                <Label>Daftar Bahan</Label>
-                <div className="border rounded-lg mt-2">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left">Material</th>
-                        <th className="px-4 py-2 text-left">Unit</th>
-                        <th className="px-4 py-2 text-left">Jumlah</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {row.original.DetailReportMaterialStock?.map(
-                        (detail: any, index: number) => (
-                          <tr key={index} className="border-t">
-                            <td className="px-4 py-2">
-                              {detail.materialUnit?.material?.name}
-                            </td>
-                            <td className="px-4 py-2">
-                              {detail.materialUnit?.unit?.name}
-                            </td>
-                            <td className="px-4 py-2">
-                              {detail.amount.toLocaleString("id-ID")}
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
+                <div>
+                  <h3 className="font-medium">Shift Siang</h3>
+                  <p>Jumlah: {row.original.afternoon_shift_amount?.toLocaleString("id-ID") || "-"}</p>
+                  <p>Waktu: {row.original.afternoon_shift_time ? new Date(row.original.afternoon_shift_time).toLocaleTimeString("id-ID") : "-"}</p>
                 </div>
               </div>
             </div>
@@ -138,15 +101,28 @@ export const columns = (
                 <Button variant="outline">Tutup</Button>
               </DialogClose>
             </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-    ),
+          </DialogContent>
+        </Dialog>
+      );
+    },
   },
   {
-    accessorKey: "action",
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tanggal" />
+    ),
+    cell: ({ row }) => {
+      return new Date(row.original.created_at).toLocaleDateString("id-ID", {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
+  },
+  {
+    id: "actions",
     header: "Aksi",
     cell: ({ row }) => <ActionCell row={row} fetchData={fetchData} />,
   },
-
 ];

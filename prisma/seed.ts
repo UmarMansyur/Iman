@@ -184,7 +184,6 @@ async function main(): Promise<void> {
       amount: 100,
       user_id: operator.id,
       factory_id: djava.id,
-      unit_id: 14,
       morning_shift_amount: 10,
       afternoon_shift_amount: 10,
       morning_shift_time: new Date("2024-01-01 08:00:00"),

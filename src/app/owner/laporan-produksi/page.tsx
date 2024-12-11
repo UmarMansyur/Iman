@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { columns } from "./column";
+import { columns } from "./column"
 import { DataTable } from "./data-table";
 import { Loader2, Search } from "lucide-react";
 import LoaderScreen from "@/components/views/loader";
@@ -12,10 +12,11 @@ import { useUserStore } from "@/store/user-store";
 import MainPage from "@/components/main";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Form from './form';
-export default function PabrikPage() {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
+export default function LaporanProduksiPage() {
+  const [data, setData] = useState<any>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -26,14 +27,14 @@ export default function PabrikPage() {
 
   const [filters, setFilters] = useState({
     search: "",
-    sortBy: "id",
-    sortOrder: "asc",
+    sortBy: "created_at",
+    sortOrder: "desc",
   });
 
-  // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
   const { user } = useUserStore();
-  const fetchProducts = async () => {
+
+  const fetchReports = async () => {
     try {
       setLoading(true);
       if (!user) return;
@@ -50,17 +51,21 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
 
-      const response = await fetch(`/api/material-stock/production?${queryParams}`);
-      const data = await response.json();
+      const response = await fetch(`/api/laporan-produksi?${queryParams}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch reports');
+      }
+      
+      const result = await response.json();
 
-      setData(data.data);
+      setData(result.data);
       setPagination((prev) => ({
         ...prev,
-        total: data.pagination.total,
-        totalPages: data.pagination.totalPages,
+        total: result.pagination.total,
+        totalPages: result.pagination.totalPages,
       }));
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching reports:", error);
     } finally {
       setLoading(false);
       setLoadingSearch(false);
@@ -68,7 +73,7 @@ export default function PabrikPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchReports();
   }, [
     pagination.page,
     pagination.limit,
@@ -85,18 +90,17 @@ export default function PabrikPage() {
     }, 500),
     []
   );
-  const [loadingSearch, setLoadingSearch] = useState(false);
+
   const handleSearch = (value: string) => {
     setSearchInput(value);
     setLoadingSearch(true);
     debouncedSearch(value);
   };
 
-  // Tambahkan handler untuk pagination
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({
       ...prev,
-      page: newPage + 1, // Tambah 1 karena table menggunakan zero-based index
+      page: newPage + 1,
     }));
   };
 
@@ -111,12 +115,12 @@ export default function PabrikPage() {
               <CardTitle>
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">
-                    Bahan Baku Produksi
+                    Laporan Produksi
                   </h3>
                 </div>
               </CardTitle>
-              <CardDescription> 
-                Laporan ini akan mempengaruhi stok bahan baku di gudang
+              <CardDescription>
+                Laporan ini menampilkan data produksi per shift
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -126,15 +130,15 @@ export default function PabrikPage() {
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       type="text"
-                      placeholder="Cari bahan baku"
-                      className="ps-8"
+                      placeholder="Cari laporan..."
+                      className="pl-8"
                       onChange={(e) => handleSearch(e.target.value)}
                       value={searchInput}
                     />
                   </div>
                 </div>
                 <div>
-                  <Form fetchData={fetchProducts} />
+                  <Form fetchData={fetchReports} />
                 </div>
               </div>
               {loadingSearch ? (
@@ -144,7 +148,7 @@ export default function PabrikPage() {
               ) : (
                 <DataTable
                   columns={columns(
-                    fetchProducts,
+                    fetchReports,
                     pagination.page,
                     pagination.limit
                   )}

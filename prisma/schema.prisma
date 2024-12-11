@@ -40,14 +40,17 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  memberFactories     MemberFactory[]
-  invoices            Invoice[]
-  reportProducts      ReportProduct[]
-  reportCosts         ReportCost[]
-  factories           Factory[]
-  MemberPriceProduct  MemberPriceProduct[]
-  ReportMaterialStock ReportMaterialStock[]
-  OrderMaterialUnit   OrderMaterialUnit[]
+  memberFactories              MemberFactory[]
+  invoices                     Invoice[]
+  reportProducts               ReportProduct[]
+  reportCosts                  ReportCost[]
+  factories                    Factory[]
+  MemberPriceProduct           MemberPriceProduct[]
+  ReportMaterialStock          ReportMaterialStock[]
+  OrderMaterialUnit            OrderMaterialUnit[]
+  ReportProduct                ReportProduct[]       @relation("report_product_user")
+  morningShiftReportProducts   ReportProduct[]       @relation("report_product_morning_shift_user")
+  afternoonShiftReportProducts ReportProduct[]       @relation("report_product_afternoon_shift_user")
 
   @@map("users")
 }
@@ -149,7 +152,6 @@ model Material {
 model Unit {
   id             Int             @id @default(autoincrement())
   name           String
-  reportProducts ReportProduct[]
   reportCosts    ReportCost[]
   detailInvoices DetailInvoice[]
   MaterialUnit   MaterialUnit[]
@@ -309,23 +311,27 @@ model StockProduct {
 }
 
 model ReportProduct {
-  id                     Int               @id @default(autoincrement())
-  product                Product           @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  product_id             Int
-  user                   User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id                Int
-  factory                Factory           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id             Int
-  unit                   Unit              @relation(fields: [unit_id], references: [id], onDelete: Cascade)
-  unit_id                Int
-  amount                 Float
-  morning_shift_amount   Float?
-  morning_shift_time     DateTime?         @db.Time
-  afternoon_shift_amount Float?
-  afternoon_shift_time   DateTime?         @db.Time
-  type                   ReportProductType @default(In)
-  created_at             DateTime          @default(now())
-  updated_at             DateTime          @updatedAt
+  id                      Int               @id @default(autoincrement())
+  product                 Product           @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id              Int
+  user                    User              @relation("report_product_user", fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                 Int
+  factory                 Factory           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id              Int
+  amount                  Float
+  morning_shift_amount    Float?
+  morning_shift_time      DateTime?         @db.Time
+  morning_shift_user      User?             @relation("report_product_morning_shift_user", fields: [morning_shift_user_id], references: [id], onDelete: Cascade)
+  morning_shift_user_id   Int?
+  afternoon_shift_amount  Float?
+  afternoon_shift_time    DateTime?         @db.Time
+  afternoon_shift_user    User?             @relation("report_product_afternoon_shift_user", fields: [afternoon_shift_user_id], references: [id], onDelete: Cascade)
+  afternoon_shift_user_id Int?
+  type                    ReportProductType @default(In)
+  created_at              DateTime          @default(now())
+  updated_at              DateTime          @updatedAt
+  User                    User?             @relation(fields: [userId], references: [id])
+  userId                  Int?
 
   @@map("report_products")
 }

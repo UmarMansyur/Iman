@@ -1,9 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -11,30 +8,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, RotateCcw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
-import { Dialog, DialogContent, DialogTrigger, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-interface Material {
+interface Product {
   id: string;
-  material: string;
-  unit: string;
+  name: string;
+  type: string;
 }
+// Generate minutes (00-59)
+const minutes = Array.from({ length: 60 }, (_, i) => 
+  i.toString().padStart(2, '0')
+);
 
-interface DetailMaterial {
-  material_unit_id: string;
-  amount: number;
-}
+// Update the hours generation with shift-specific ranges
+const morningHours = Array.from({ length: 13 }, (_, i) => 
+  (i + 1).toString().padStart(2, '0')
+);
 
-export default function CreateMaterialStockReport({ fetchData }: { fetchData: () => Promise<void> }) {
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [details, setDetails] = useState<DetailMaterial[]>([]);
-  const [description, setDescription] = useState("");
-  const [currentMaterial, setCurrentMaterial] = useState("");
-  const [currentAmount, setCurrentAmount] = useState("");
+const afternoonHours = Array.from({ length: 11 }, (_, i) => 
+  (i + 14).toString().padStart(2, '0')
+);
+
+export default function CreateProductionReport({ fetchData }: { fetchData: () => Promise<void> }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [isMorningShift, setIsMorningShift] = useState(true);
+  const [shiftAmount, setShiftAmount] = useState("");
+  const [selectedHour, setSelectedHour] = useState("");
+  const [selectedMinute, setSelectedMinute] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
@@ -46,78 +54,58 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
   };
 
   useEffect(() => {
-    const fetchMaterials = async () => {
+    const fetchProducts = async () => {
       try {
         const factory_id = user?.factory_selected?.id || "";
-        const response = await fetch(`/api/material-unit?limit=1000&factory_id=${factory_id}`);
+        const response = await fetch(`/api/product?factory_id=${factory_id}`);
         const data = await response.json();
-        setMaterials(data.data);
+        setProducts(data.products);
       } catch (error: any) {
         toast.error(error.message);
       }
     };
-    fetchMaterials();
-  }, []);
+    fetchProducts();
+  }, [user]);
 
-  const addDetail = () => {
-    if (!currentMaterial) {
-      toast.error("Pilih material terlebih dahulu");
-      return;
+  // Get the appropriate hours based on selected shift
+  const availableHours = isMorningShift ? morningHours : afternoonHours;
+
+  // Reset hour when shift changes if it's outside the valid range
+  useEffect(() => {
+    if (isMorningShift) {
+      if (parseInt(selectedHour) > 13) {
+        setSelectedHour("");
+      }
+    } else {
+      if (parseInt(selectedHour) <= 13) {
+        setSelectedHour("");
+      }
     }
-    if (!currentAmount || Number(currentAmount) <= 0) {
-      toast.error("Jumlah harus lebih dari 0");
-      return;
-    }
-
-    const existingDetail = details.find(
-      (detail) => detail.material_unit_id === currentMaterial
-    );
-
-    if (existingDetail) {
-      // update amount
-      const updatedDetails = details.map((detail) =>
-        detail.material_unit_id === currentMaterial
-          ? { ...detail, amount: Number(currentAmount.replace(/,/g, "")) + detail.amount }
-          : detail
-      );
-      setDetails(updatedDetails);
-    } else{
-      setDetails([
-        ...details,
-        {
-          material_unit_id: currentMaterial,
-          amount: Number(currentAmount.replace(/,/g, "")),
-        },
-      ]);
-
-    }
-
-
-    setCurrentMaterial("");
-    setCurrentAmount("");
-  };
-
-  const removeDetail = (index: number) => {
-    const newDetails = details.filter((_, i) => i !== index);
-    setDetails(newDetails);
-  };
+  }, [isMorningShift, selectedHour]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      if (!user?.factory_selected?.id) {
+        throw new Error("Pilih pabrik terlebih dahulu");
+      }
+
+      const shiftTime = selectedHour && selectedMinute ? `${selectedHour}:${selectedMinute}` : null;
+
       const payload = {
-        desc: description,
-        user_id: user?.id,
-        details: details.map((detail) => ({
-          material_unit_id: detail.material_unit_id,
-          amount: detail.amount,
-        })),
-        total_amount: details.reduce((acc, curr) => acc + curr.amount, 0),
+        product_id: parseInt(selectedProduct),
+        user_id: user.id,
+        factory_id: user.factory_selected.id,
+        morning_shift_amount: isMorningShift ? parseFloat(shiftAmount.replace(/,/g, "")) : null,
+        morning_shift_time: isMorningShift ? shiftTime : null,
+        afternoon_shift_amount: !isMorningShift ? parseFloat(shiftAmount.replace(/,/g, "")) : null,
+        afternoon_shift_time: !isMorningShift ? shiftTime : null,
+        type: "In",
       };
 
-      const response = await fetch("/api/material-stock/production", {
+      const response = await fetch("/api/laporan-produksi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,26 +117,14 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
 
       if (!response.ok) throw new Error(data.message);
 
-      setDetails([]);
       toast.success("Laporan berhasil dibuat");
-      router.push("/owner/bahan-baku-produksi");
+      router.refresh();
       fetchData();
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleReset = () => {
-    setDetails([]);
-    setDescription("");
-  };
-
-  const renderMaterialSelectValue = (materialId: string) => {
-    const material = materials.find((m) => m.id == materialId);
-    if (!material) return "";
-    return `${material.material} / ${material.unit}`;
   };
 
   return (
@@ -159,136 +135,106 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
           Tambah Laporan
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogTitle>Tambah Laporan Bahan Baku Produksi</DialogTitle>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogTitle>Tambah Laporan Produksi</DialogTitle>
         <DialogDescription>
-          Laporan ini akan mempengaruhi stok bahan baku di gudang
+          Buat laporan produksi baru
         </DialogDescription>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid gap-2">
-            <label>Deskripsi</label>
-            <Textarea
-              placeholder="Masukkan deskripsi laporan"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label>Produk</Label>
+            <Select
+              value={selectedProduct}
+              onValueChange={setSelectedProduct}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Produk" />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name} - {product.type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <Label>Shift</Label>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={isMorningShift}
+                onCheckedChange={setIsMorningShift}
+              />
+              <Label>{isMorningShift ? "Pagi" : "Siang"}</Label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Jumlah Produksi</Label>
+            <Input
+              type="text"
+              value={shiftAmount}
+              onChange={(e) => {
+                const value = e.target.value.replace(/,/g, "");
+                if (/^\d*$/.test(value) || value === "") {
+                  setShiftAmount(formatNumber(value));
+                }
+              }}
+              placeholder={`Jumlah shift ${isMorningShift ? 'pagi' : 'siang'}`}
               required
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4 items-end">
-            <div className="grid gap-2">
-              <label>Material</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Jam</Label>
               <Select
-                value={currentMaterial}
-                onValueChange={setCurrentMaterial}
+                value={selectedHour}
+                onValueChange={setSelectedHour}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih Material">
-                    {renderMaterialSelectValue(currentMaterial)}
-                  </SelectValue>
+                  <SelectValue placeholder="Pilih jam" />
                 </SelectTrigger>
                 <SelectContent>
-                  {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id}>
-                      {material.material} / {material.unit}
+                  {availableHours.map((hour) => (
+                    <SelectItem key={hour} value={hour}>
+                      {hour}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-2">
-              <label>Jumlah</label>
-              <Input
-                type="text"
-                value={currentAmount}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/,/g, "");
-                  if (/^\d*$/.test(value) || value === "") {
-                    setCurrentAmount(formatNumber(value));
-                  }
-                }}
-                placeholder="Jumlah"
-              />
-            </div>
-            <Button
-              type="button"
-              onClick={addDetail}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Tambah
-            </Button>
-          </div>
 
-          <div className="border rounded-lg">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left">Material</th>
-                  <th className="px-4 py-2 text-left">Jumlah</th>
-                  <th className="px-4 py-2 text-left">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {details.map((detail, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2">
-                      {
-                        materials.find((m) => m.id == detail.material_unit_id)
-                          ?.material
-                      }{" "}
-                      /
-                      {
-                        materials.find((m) => m.id == detail.material_unit_id)
-                          ?.unit
-                      }
-                    </td>
-                    <td className="px-4 py-2">
-                      {formatNumber(detail.amount.toString())}
-                    </td>
-                    <td className="px-4 py-2">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => removeDetail(index)}
-                        size="sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {!details.length && (
-                  <tr>
-                    <td colSpan={3} className="text-center py-10">
-                      Tidak ada data
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex justify-between">
-            <div className="space-x-2">
-              <Button
-                type="button"
-                className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
-                onClick={handleReset}
+            <div className="space-y-2">
+              <Label>Menit</Label>
+              <Select
+                value={selectedMinute}
+                onValueChange={setSelectedMinute}
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset
-              </Button>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih menit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {minutes.map((minute) => (
+                    <SelectItem key={minute} value={minute}>
+                      {minute}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Button
-              type="submit"
-              className="bg-blue-500 hover:bg-blue-600"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Menyimpan..." : "Simpan Laporan"}
-            </Button>
           </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Menyimpan..." : "Simpan Laporan"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
