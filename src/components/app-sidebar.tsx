@@ -189,7 +189,7 @@ const data = {
     },
     {
       title: "Transaksi Produk",
-      url: "/operator/transaksi-produk",
+      url: "/operator/transaksi",
       icon: Calculator,
     },
 
