@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Calculator,
+  CheckCheckIcon,
   Combine,
   Database,
   FileChartLine,
@@ -201,25 +202,31 @@ const data = {
       icon: Home,
     },
     {
+      title: "Pre Order",
+      url: "/distributor/pre-order",
+      icon: SendToBack,
+    },
+    {
       title: "Data Order",
       url: "/distributor/data-order",
-      icon: ScrollText,
+      icon: PackageCheckIcon,
     },
     {
-      title: "Data Produk",
-      url: "/distributor/data-produk",
-      icon: ScrollText,
-    },
-    {
-      title: "Stok Produk",
-      url: "/distributor/stok-produk",
-      icon: ScrollText,
-    },
-    {
-      title: "Data Penjualan",
-      url: "/distributor/data-penjualan",
-      icon: ScrollText,
-    },
+      title: "Konfirmasi Penerimaan",
+      url: "/distributor/konfirmasi-penerimaan",
+      icon: CheckCheckIcon,
+    }
+
+    // {
+    //   title: "Data Produk",
+    //   url: "/distributor/data-produk",
+    //   icon: ScrollText,
+    // },
+    // {
+    //   title: "Stok Produk",
+    //   url: "/distributor/stok-produk",
+    //   icon: ScrollText,
+    // },
   ],
 };
 
@@ -259,6 +266,9 @@ export function AppSidebar({
       } else {
         return null;
       }
+    }
+    if(pathname?.startsWith("/distributor")) {
+      return <NavMain title="Distributor" items={addActiveState(data.navDistributor)} />;
     }
     return null;
   };

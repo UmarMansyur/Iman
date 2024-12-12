@@ -397,7 +397,7 @@ model Invoice {
   maturity_date       DateTime
   item_amount         Float
   discon_member       Float?
-  buyer_address       String
+  buyer_address       String?
   down_payment        Float
   total               Float
   sub_total           Float
@@ -412,6 +412,7 @@ model Invoice {
   created_at          DateTime              @default(now())
   updated_at          DateTime              @updatedAt
   LogOrderDistributor LogOrderDistributor[]
+  reject_reason       String?
 
   @@map("invoices")
 }
@@ -453,7 +454,7 @@ model DeliveryTracking {
   cost       Float?                 @default(0)
   created_at DateTime               @default(now())
   updated_at DateTime               @updatedAt
-  status     DeliveryTrackingStatus @default(Process)
+  status     DeliveryTrackingStatus @default(Pending)
 
   @@map("delivery_trackings")
 }

@@ -116,7 +116,7 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "10");
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
-
+    const user_id = searchParams.get("user_id") || "";
     const skip = (page - 1) * limit;
 
     const invoices = await prisma.invoice.findMany({
@@ -125,6 +125,7 @@ export async function GET(req: Request) {
           { buyer: { contains: search } },
           { recipient: { contains: search } },
         ],
+        user_id: user_id ? parseInt(user_id) : undefined,
       },
       include: {
         factory: true,
