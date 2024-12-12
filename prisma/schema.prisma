@@ -380,35 +380,36 @@ enum PPNStatus {
 }
 
 model Invoice {
-  id                Int                @id @default(autoincrement())
-  factory           Factory            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id        Int
-  user              User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id           Int
-  invoice_code      String             @unique
-  amount            Float
-  discount          Float?
-  ppn               Float?
-  buyer             String
-  sales_man         String
-  recipient         String
-  maturity_date     DateTime
-  item_amount       Float
-  discon_member     Float?
-  buyer_address     String
-  down_payment      Float
-  total             Float
-  sub_total         Float
-  remaining_balance Float
-  payment_status    PaymentStatus
-  payment_method    PaymentMethod      @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
-  payment_method_id Int
-  proof_of_payment  String?
-  detailInvoices    DetailInvoice[]
-  deliveryTracking  DeliveryTracking[]
-  notes             String?
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
+  id                  Int                   @id @default(autoincrement())
+  factory             Factory               @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id          Int
+  user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id             Int
+  invoice_code        String                @unique
+  amount              Float
+  discount            Float?
+  ppn                 Float?
+  buyer               String
+  sales_man           String
+  recipient           String
+  maturity_date       DateTime
+  item_amount         Float
+  discon_member       Float?
+  buyer_address       String
+  down_payment        Float
+  total               Float
+  sub_total           Float
+  remaining_balance   Float
+  payment_status      PaymentStatus
+  payment_method      PaymentMethod         @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id   Int
+  proof_of_payment    String?
+  detailInvoices      DetailInvoice[]
+  deliveryTracking    DeliveryTracking[]
+  notes               String?
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @updatedAt
+  LogOrderDistributor LogOrderDistributor[]
 
   @@map("invoices")
 }
@@ -426,6 +427,17 @@ model DetailInvoice {
   invoice_id Int
 
   @@map("detail_invoices")
+}
+
+model LogOrderDistributor {
+  id         Int      @id @default(autoincrement())
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id Int
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("log_order_distributors")
 }
 
 model DeliveryTracking {

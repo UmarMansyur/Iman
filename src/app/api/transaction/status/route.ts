@@ -38,18 +38,60 @@ export async function GET(req: Request) {
   // });
   try {
     const invoices = await prisma.invoice.findFirst({
+      include: {
+        detailInvoices: true,
+      },
       where: { id: parseInt(id) },
     });
+
     if (!invoices) {
       return NextResponse.json(
         { status: "error", message: "Invoice tidak ditemukan" },
         { status: 404 }
       );
     }
+
     await prisma.invoice.update({
       where: { id: parseInt(id) },
       data: { payment_status: status as PaymentStatus },
     });
+
+    if(status === "Paid_Off") {
+      await prisma.logOrderDistributor.create({
+        data: {
+          invoice_id: parseInt(id),
+          desc: "Operator telah mengubah status pembayaran menjadi lunas",
+        },
+      });
+    }
+
+    if(status === "Paid") {
+      await prisma.logOrderDistributor.create({
+        data: {
+          invoice_id: parseInt(id),
+          desc: "Operator telah mengubah status pembayaran menjadi dibayar",
+        },
+      });
+    }
+
+    if(status === "Failed") {
+      await prisma.logOrderDistributor.create({
+        data: {
+          invoice_id: parseInt(id),
+          desc: "Operator telah mengubah status pembayaran menjadi gagal",
+        },
+      });
+    }
+
+    if(status === "Cancelled") {
+      await prisma.logOrderDistributor.create({
+        data: {
+          invoice_id: parseInt(id),
+          desc: "Operator telah mengubah status pembayaran menjadi dibatalkan",
+        },
+      });
+    }
+
     return NextResponse.json({
       status: "success",
       message: "Transaksi berhasil dibuat",
