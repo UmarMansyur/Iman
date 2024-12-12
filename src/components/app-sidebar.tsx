@@ -13,6 +13,7 @@ import {
   SendToBack,
   Settings,
   SquareKanban,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -131,14 +132,9 @@ const data = {
       icon: ScrollText,
     },
     {
-      title: "Data Pemesanan",
-      url: "#",
+      title: "Data Order",
+      url: "/owner/data-order",
       icon: ScrollText,
-    },
-    {
-      title: "Data Penjualan",
-      url: "#",
-      icon: FileChartLine,
     },
     {
       title: "Manajemen Operator",
@@ -188,11 +184,42 @@ const data = {
       icon: SendToBack,
     },
     {
-      title: "Data Transaksi",
+      title: "Manajemen Transaksi",
       url: "/operator/transaksi",
       icon: Calculator,
     },
-
+    {
+      title: "Pengiriman",
+      url: "/operator/pengiriman",
+      icon: Truck,
+    },
+  ],
+  navDistributor: [
+    {
+      title: "Dashboard",
+      url: "/distributor/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Data Order",
+      url: "/distributor/data-order",
+      icon: ScrollText,
+    },
+    {
+      title: "Data Produk",
+      url: "/distributor/data-produk",
+      icon: ScrollText,
+    },
+    {
+      title: "Stok Produk",
+      url: "/distributor/stok-produk",
+      icon: ScrollText,
+    },
+    {
+      title: "Data Penjualan",
+      url: "/distributor/data-penjualan",
+      icon: ScrollText,
+    },
   ],
 };
 
@@ -219,11 +246,19 @@ export function AppSidebar({
     }
     if (pathname?.startsWith("/owner")) {
       return <NavMain title="Owner" items={addActiveState(data.navOwner)} />;
+      if (user?.factory_selected?.position.includes("Owner")) {
+      } else {
+        return null;
+      }
     }
     if (pathname?.startsWith("/operator")) {
       return (
         <NavMain title="Operator" items={addActiveState(data.navOperator)} />
       );
+      if (user?.factory_selected?.position.includes("Operator")) {
+      } else {
+        return null;
+      }
     }
     return null;
   };
@@ -233,7 +268,11 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher/>
+        {
+          user?.factory_selected && (
+            <TeamSwitcher />
+          )
+        }
       </SidebarHeader>
       <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>

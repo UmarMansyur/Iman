@@ -33,7 +33,12 @@ export async function POST(req: Request) {
 
     // inv tahun-bulan-id
     const invoice_code =
-      "INV-" + new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + Math.floor(100000 + Math.random() * 900000).toString();
+      "INV-" +
+      new Date().getFullYear() +
+      "-" +
+      (new Date().getMonth() + 1) +
+      "-" +
+      Math.floor(100000 + Math.random() * 900000).toString();
     let amount_total = 0;
     detailInvoices.forEach((detail: any) => {
       amount_total += detail.sub_total;
@@ -164,6 +169,34 @@ export async function GET(req: Request) {
         status: "error",
         message: error.message || "Failed to fetch invoices",
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json(
+      { message: "ID tidak ditemukan" },
+      { status: 400 }
+    );
+  }
+  try {
+    await prisma.invoice.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return NextResponse.json(
+      { message: "Invoice berhasil dihapus" },
+      { status: 200 }
+    );
+
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: error.message || "Invoice gagal dihapus" },
       { status: 500 }
     );
   }

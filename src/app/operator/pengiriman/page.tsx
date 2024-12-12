@@ -2,20 +2,18 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
+import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Loader2, Search } from "lucide-react";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import Form from "./form";
+import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
-import { DataTable } from "./data-table";
-import { Role, User } from "@prisma/client";
-import { DropdownOptions } from "@/lib/definitions";
 
-export default function ManajemenOperatorPage() {
-  const [data, setData] = useState<[]>([]);
+export default function PabrikPage() {
+  const [data, setData] = useState<PaymentSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -30,20 +28,10 @@ export default function ManajemenOperatorPage() {
     sortOrder: "asc",
   });
 
+  // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
-
   const { user } = useUserStore()
-  const [searchUser] = useState("");
-  const [userData, setUserData] = useState<User[]>([]);
-  const [roleData, setRoleData] = useState<Role[]>([]);
-
-  const fetchRole = async () => {
-    const response = await fetch('/api/role?limit=100');
-    const data = await response.json();
-    setRoleData(data.roles);
-  }
-
-  const fetchMember = async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
       if(!user) return;
@@ -57,11 +45,12 @@ export default function ManajemenOperatorPage() {
       });
 
       if(factoryId) {
-        queryParams.set("factoryId", factoryId.toString());
+        queryParams.set("factory_id", factoryId.toString());
       }
   
-      const response = await fetch(`/api/operator?${queryParams}`);
+      const response = await fetch(`/api/transaction/pengiriman?${queryParams}`);
       const data = await response.json();
+
       setData(data.data);
       setPagination((prev) => ({
         ...prev,
@@ -76,16 +65,8 @@ export default function ManajemenOperatorPage() {
     }
   };
 
-  const fetchUser = async (query?: string) => {
-    const response = await fetch(`/api/user?limit=100&search=${query}`);
-    const data = await response.json();
-    setUserData(data.users);
-  };
-
   useEffect(() => {
-    fetchMember();
-    fetchUser(searchUser);
-    fetchRole();
+    fetchProducts();
   }, [
     pagination.page,
     pagination.limit,
@@ -103,35 +84,19 @@ export default function ManajemenOperatorPage() {
     }, 500),
     []
   );
-
   const [loadingSearch, setLoadingSearch] = useState(false);
-
   const handleSearch = (value: string) => {
     setSearchInput(value);
+    setLoadingSearch(true);
     debouncedSearch(value);
   };
 
+  // Tambahkan handler untuk pagination
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({
       ...prev,
-      page: newPage + 1,
+      page: newPage + 1, // Tambah 1 karena table menggunakan zero-based index
     }));
-  };
-
-  const debouncedFetchUser = useCallback(
-    debounce((query: string) => {
-      fetchUser(query);
-    }, 500),
-    []
-  );
-
-  const searchUserOperator = async (query: string) => {
-    debouncedFetchUser(query);
-  };
-
-  const choiced = (value: DropdownOptions) => {
-    // console.log(value);
-    return value;
   };
 
   return (
@@ -141,9 +106,9 @@ export default function ManajemenOperatorPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Daftar Operator</h4>
+            <h4 className="text-base font-semibold mb-0">Transaksi Produk</h4>
             <p className="text-xs text-muted-foreground">
-              Daftar operator yang terdaftar di pabrik anda.
+              Transaksi produk yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -152,28 +117,13 @@ export default function ManajemenOperatorPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari operator"
+                  placeholder="Cari produk"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}
-                  autoFocus
                 />
               </div>
             </div>
-            <Form fetchData={fetchMember} operator={{
-              searchData: async (query: string) => {
-                searchUserOperator(query);
-                return Promise.resolve();
-              },
-              choiced: choiced,
-              keyword: filters.search,
-              options: userData.map((user) => ({
-                label: user.username,
-                value: user.id.toString(),
-                thumbnail: user.thumbnail || "",
-                email: user.email,
-              })),
-            }} roleData={roleData} />
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">
@@ -181,24 +131,7 @@ export default function ManajemenOperatorPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns({
-                fetchData: fetchMember,
-                page: pagination.page,
-                limit: pagination.limit,
-                searchData: async (query: string) => {
-                  searchUserOperator(query);
-                  return Promise.resolve();
-                },
-                roleData: roleData,
-                choiced: choiced,
-                keyword: filters.search,
-                options: userData.map((user) => ({
-                  label: user.username,
-                  value: user.id.toString(),
-                  thumbnail: user.thumbnail || "",
-                  email: user.email,
-                })),
-              })}
+              columns={columns(fetchProducts, pagination.page, pagination.limit)}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {

@@ -77,6 +77,7 @@ model Factory {
   OrderMaterialUnit   OrderMaterialUnit[]
   ReportMaterialStock ReportMaterialStock[]
   MemberPriceProduct  MemberPriceProduct[]
+  DistributorStock    DistributorStock[]
 
   @@map("factories")
 }
@@ -269,6 +270,7 @@ model Product {
   reportProducts     ReportProduct[]
   MemberPriceProduct MemberPriceProduct[]
   DetailInvoice      DetailInvoice[]
+  DistributorStock   DistributorStock[]
 
   @@map("products")
 }
@@ -457,7 +459,22 @@ model DeliveryTracking {
 }
 
 enum DeliveryTrackingStatus {
+  Pending
   Process
   Done
   Cancel
 }
+
+model DistributorStock {
+  id         Int      @id @default(autoincrement())
+  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id Int
+  amount     Float
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  @@map("distributor_stocks")
+}
+

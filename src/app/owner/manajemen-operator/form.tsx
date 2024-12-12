@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Dialog,
@@ -193,7 +194,6 @@ export default function Form({ operator, fetchData, data, roleData }: FormProps)
                               key={item.id}
                               value={item.role.toString()}
                               onSelect={() => {
-                                console.log(item, "selected role");
                                 setRole({
                                   value: item.id.toString(),
                                   label: item.role,

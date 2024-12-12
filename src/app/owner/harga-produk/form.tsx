@@ -68,7 +68,6 @@ export default function Form({
     formData.append("status", formData.get("status")?.toString() || "Active");
 
     const response = await createPriceProductUnit(undefined, formData);
-    console.log(response);
     if (response?.errors) {
       setState(response.errors as PriceProductUnitFormState);
       toast.error(

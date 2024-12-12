@@ -1,18 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import DeleteButton from "@/components/delete-button";
 import { Badge } from "@/components/ui/badge";
-import DetailDialog from "./detail-dialog";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -126,31 +116,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
         {new Date(row.original.maturity_date).toLocaleDateString("id-ID")}
       </div>
     ),
-  },
-  {
-    accessorKey: "action",
-    header: "Aksi",
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="rounded-md p-2 cursor-pointer">
-              <MoreHorizontal className="w-4 h-4" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DetailDialog invoice={row.original} />
-            <Link href={`/operator/transaksi/edit/${row.original.id}`}>
-              <Button variant="ghost" className="w-full justify-start px-2">
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Button>
-            </Link>
-            <DeleteButton fetchData={fetchData} endpoint="transaction" id={row.original.id.toString()} />
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
+  }
 ];
 

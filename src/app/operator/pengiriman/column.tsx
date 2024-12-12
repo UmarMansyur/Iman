@@ -1,18 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import DeleteButton from "@/components/delete-button";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import DeliveryStatusDialog from "./delivery-status-dialog";
 
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -98,6 +96,12 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const status = row.original.deliveryTracking[0]?.status;
 
+      if(status === 'Pending') {
+        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
+          Pending
+        </Badge>
+      }
+
       if(status === 'Process') { 
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
           Proses
@@ -140,13 +144,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DetailDialog invoice={row.original} />
-            <Link href={`/operator/transaksi/edit/${row.original.id}`}>
-              <Button variant="ghost" className="w-full justify-start px-2">
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Button>
-            </Link>
-            <DeleteButton fetchData={fetchData} endpoint="transaction" id={row.original.id.toString()} />
+            <DeliveryStatusDialog invoice={row.original} fetchData={fetchData} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

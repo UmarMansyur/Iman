@@ -61,7 +61,6 @@ export default function OrderPage() {
       (detail) => detail.material_unit_id == currentMaterial
     );
 
-    console.log(existingDetailIndex);
 
     if (existingDetailIndex !== -1) {
       // Jika material sudah ada, update jumlahnya

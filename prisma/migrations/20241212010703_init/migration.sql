@@ -284,7 +284,7 @@ CREATE TABLE `invoices` (
     `total` DOUBLE NOT NULL,
     `sub_total` DOUBLE NOT NULL,
     `remaining_balance` DOUBLE NOT NULL,
-    `payment_status` ENUM('Pending', 'Paid', 'Failed', 'Cancelled') NOT NULL,
+    `payment_status` ENUM('Pending', 'Paid', 'Paid_Off', 'Failed', 'Cancelled') NOT NULL,
     `payment_method_id` INTEGER NOT NULL,
     `proof_of_payment` VARCHAR(191) NULL,
     `notes` VARCHAR(191) NULL,
@@ -310,6 +310,17 @@ CREATE TABLE `detail_invoices` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `log_order_distributors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `invoice_id` INTEGER NOT NULL,
+    `desc` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `delivery_trackings` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `invoice_id` INTEGER NOT NULL,
@@ -320,7 +331,7 @@ CREATE TABLE `delivery_trackings` (
     `cost` DOUBLE NULL DEFAULT 0,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `status` ENUM('Process', 'Done', 'Cancel') NOT NULL DEFAULT 'Process',
+    `status` ENUM('Pending', 'Process', 'Done', 'Cancel') NOT NULL DEFAULT 'Process',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -438,6 +449,9 @@ ALTER TABLE `detail_invoices` ADD CONSTRAINT `detail_invoices_product_id_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `detail_invoices` ADD CONSTRAINT `detail_invoices_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `log_order_distributors` ADD CONSTRAINT `log_order_distributors_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

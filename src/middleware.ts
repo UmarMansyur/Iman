@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from './lib/session';
- 
+import { jwtDecode } from 'jwt-decode';
 // 1. Specify protected and public routes
 const protectedRoutes = ['/owner/dashboard', '/owner/produk', '/owner/bahan-baku', '/owner/manajemen-operator', '/owner/laporan-bahan-baku', '/owner/laporan-produksi', '/owner/data-pembelian', '/owner/data-penjualan', '/owner/data-stok', '/owner/data-pengeluaran', '/owner/data-keuangan', '/admin/dashboard', '/']
 const publicRoutes = ['/login', '/signup']
@@ -14,10 +15,11 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
  
   const session = await getSession();
 
-
   if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL('/login', req.nextUrl))
   }
+
+    
 
   if (
     isPublicRoute &&
@@ -27,6 +29,30 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
     // isi nilai
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
   }
+
+  const decoded: any= jwtDecode(session || "");
+
+  console.log(decoded)
+
+  // jika req.nextUrl.pathname.startsWith('/owner/dashboard') maka redirect ke /owner/dashboard
+  // if (req.nextUrl.pathname.startsWith('/owner')) {
+  //   if(!decoded?.user?.factory_selected?.position.includes("Owner")){
+  //     return NextResponse.redirect(new URL('/', req.nextUrl));
+  //   }
+  // }
+
+  // if(req.nextUrl.pathname.startsWith('/admin')){
+  //   if(decoded?.user?.typeUser !== "Admin"){
+  //     return NextResponse.redirect(new URL('/', req.nextUrl));
+  //   }
+  // }
+
+  // if(req.nextUrl.pathname.startsWith('/operator')){
+  //   if(!decoded?.user?.factory_selected?.position.includes("Operator")){
+  //     return NextResponse.redirect(new URL('/', req.nextUrl));
+  //   }
+  // }
+
  
   return NextResponse.next()
 }

@@ -123,7 +123,7 @@ export default function PabrikPage() {
             </div>
             <div>
               <Button 
-                onClick={() => router.push('/owner/persediaan-bahan-baku/order')}
+                onClick={() => router.push('/operator/persediaan-bahan-baku/order')}
               >
                 Tambah Order
               </Button>
