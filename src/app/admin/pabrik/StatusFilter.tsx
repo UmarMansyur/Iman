@@ -1,7 +1,6 @@
-// "use client";
+
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 interface StatusFilterProps {
   selectedStatus: string;
   onStatusChange: (status: string) => void;
