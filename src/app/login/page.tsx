@@ -82,7 +82,7 @@ const LoginPage = () => {
                   href="#"
                   className="font-medium text-blue-600 hover:underline"
                 >
-                  Daftar disini
+                  Silahkan hubungi administrator
                 </a>
               </p>
             </div>
