@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { CreditCard } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function PaymentStatusDialog({ invoice, fetchData }: any) {
   const [open, setOpen] = useState(false);
@@ -29,6 +30,11 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
   const [status, setStatus] = useState(invoice.payment_status);
   const [amount, setAmount] = useState("");
   const [isValidAmount, setIsValidAmount] = useState(true);
+  const [buyerAddress, setBuyerAddress] = useState(invoice.buyer_address || "");
+  const [discount, setDiscount] = useState(invoice.discount?.toString() || "");
+  const [memberDiscount, setMemberDiscount] = useState(invoice.member_discount?.toString() || "");
+  const [deliveryLocation, setDeliveryLocation] = useState(invoice.deliveryTracking?.location || "");
+  const [deliveryCost, setDeliveryCost] = useState(invoice.deliveryTracking?.cost?.toString() || "");
 
   const formatNumber = (value: string) => {
     const number = value.replace(/\D/g, "");
@@ -46,6 +52,19 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
     setIsValidAmount(validateAmount(formattedValue));
   };
 
+  const isDataComplete = () => {
+    if (status === "Paid" || status === "Paid_Off") {
+      return (
+        buyerAddress.trim() !== "" &&
+        discount.trim() !== "" &&
+        memberDiscount.trim() !== "" &&
+        deliveryLocation.trim() !== "" &&
+        deliveryCost.trim() !== ""
+      );
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -58,6 +77,11 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
           },
           body: JSON.stringify({
             status,
+            buyer_address: buyerAddress,
+            discount: parseFloat(discount),
+            member_discount: parseFloat(memberDiscount),
+            delivery_location: deliveryLocation,
+            delivery_cost: parseFloat(deliveryCost),
           }),
         }
       );
@@ -83,7 +107,7 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
           <CreditCard className="w-4 h-4" /> Validasi Pembayaran
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detail Invoice & Status Pembayaran</DialogTitle>
           <DialogDescription>
@@ -151,6 +175,80 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
             </Select>
           </div>
 
+          {(status === "Paid" || status === "Paid_Off") && (
+            <>
+              <div className="space-y-2">
+                <Label>Alamat Pembeli</Label>
+                <Textarea
+                  value={buyerAddress}
+                  onChange={(e) => setBuyerAddress(e.target.value)}
+                  placeholder="Masukkan alamat pembeli"
+                  className={!buyerAddress ? "border-red-500" : ""}
+                />
+                {!buyerAddress && (
+                  <p className="text-sm text-red-500">Alamat pembeli harus diisi</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Diskon</Label>
+                  <Input
+                    type="number"
+                    value={discount}
+                    onChange={(e) => setDiscount(e.target.value)}
+                    placeholder="Masukkan diskon"
+                    className={!discount ? "border-red-500" : ""}
+                  />
+                  {!discount && (
+                    <p className="text-sm text-red-500">Diskon harus diisi</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Diskon Member</Label>
+                  <Input
+                    type="number"
+                    value={memberDiscount}
+                    onChange={(e) => setMemberDiscount(e.target.value)}
+                    placeholder="Masukkan diskon member"
+                    className={!memberDiscount ? "border-red-500" : ""}
+                  />
+                  {!memberDiscount && (
+                    <p className="text-sm text-red-500">Diskon member harus diisi</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Lokasi Pengiriman</Label>
+                <Input
+                  value={deliveryLocation}
+                  onChange={(e) => setDeliveryLocation(e.target.value)}
+                  placeholder="Masukkan lokasi pengiriman"
+                  className={!deliveryLocation ? "border-red-500" : ""}
+                />
+                {!deliveryLocation && (
+                  <p className="text-sm text-red-500">Lokasi pengiriman harus diisi</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Biaya Pengiriman</Label>
+                <Input
+                  type="number"
+                  value={deliveryCost}
+                  onChange={(e) => setDeliveryCost(e.target.value)}
+                  placeholder="Masukkan biaya pengiriman"
+                  className={!deliveryCost ? "border-red-500" : ""}
+                />
+                {!deliveryCost && (
+                  <p className="text-sm text-red-500">Biaya pengiriman harus diisi</p>
+                )}
+              </div>
+            </>
+          )}
+
           {status === "Paid_Off" && (
             <div className="space-y-2">
               <Label>Jumlah Pelunasan Pembayaran</Label>
@@ -171,7 +269,11 @@ export default function PaymentStatusDialog({ invoice, fetchData }: any) {
 
           <Button 
             onClick={handleSubmit} 
-            disabled={loading || (status === "Paid" && !isValidAmount)} 
+            disabled={
+              loading || 
+              (status === "Paid_Off" && !isValidAmount) || 
+              !isDataComplete()
+            } 
             className="w-full"
           >
             {loading ? "Menyimpan..." : "Simpan Perubahan"}

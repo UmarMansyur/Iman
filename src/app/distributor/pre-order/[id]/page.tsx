@@ -80,11 +80,11 @@ export default function EditPreOrder({ params }: { params:any }) {
   const handleDetailChange = (index: number, field: string, value: any) => {
     const newDetails = [...details];
 
-    if (field === "desc") {
-      const selectedProduct: any = products.find((p: any) => p.name === value);
+    if (field === "desc" && value) {
+      const selectedProduct: any = products.find((p: any) => p.name === value.name);
       newDetails[index] = {
         ...newDetails[index],
-        desc: value,
+        desc: value.name,
         price: selectedProduct?.price || 0,
       };
     } else if (field === "amount" || field === "price" || field === "discount") {
@@ -512,9 +512,12 @@ export default function EditPreOrder({ params }: { params:any }) {
                               <div>
                                 <Select
                                   value={detail.desc}
-                                  onValueChange={(value) =>
-                                    handleDetailChange(index, "desc", value)
-                                  }
+                                  onValueChange={(value) => {
+                                    console.log(value)
+                                    const selectedProduct = products.find((product: any) => product.name === value);
+                                    console.log(selectedProduct);
+                                    handleDetailChange(index, "desc", selectedProduct)
+                                  }}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Pilih Produk" />
