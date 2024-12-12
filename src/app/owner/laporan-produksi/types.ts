@@ -20,3 +20,4 @@ export interface FormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
   formatNumber: (value: string) => string;
 } 
+

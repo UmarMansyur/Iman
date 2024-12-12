@@ -4,14 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, PlusCircle, Search } from "lucide-react";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import Form from "./form";
 import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function PabrikPage() {
   const [data, setData] = useState<PaymentSetting[]>([]);
@@ -49,10 +50,10 @@ export default function PabrikPage() {
         queryParams.set("factory_id", factoryId.toString());
       }
   
-      const response = await fetch(`/api/product?${queryParams}`);
+      const response = await fetch(`/api/transaction?${queryParams}`);
       const data = await response.json();
 
-      setData(data.products);
+      setData(data.data);
       setPagination((prev) => ({
         ...prev,
         total: data.pagination.total,
@@ -125,7 +126,12 @@ export default function PabrikPage() {
                 />
               </div>
             </div>
-            <Form fetchData={fetchProducts} />
+            <Link href="/operator/transaksi/create">
+              <Button className="flex items-center gap-2">
+                <PlusCircle className="w-4 h-4" />
+                Tambah Transaksi
+              </Button>
+            </Link>
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">

@@ -134,11 +134,11 @@ export default function CreateProductionReport({ fetchData }: { fetchData: () =>
       <DialogTrigger asChild>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
-          Tambah Laporan
+          Tambah Produksi Harian
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogTitle>Tambah Laporan Produksi</DialogTitle>
+        <DialogTitle>Tambah Produksi Harian</DialogTitle>
         <DialogDescription>
           Buat laporan produksi baru
         </DialogDescription>
@@ -187,7 +187,7 @@ export default function CreateProductionReport({ fetchData }: { fetchData: () =>
                   setShiftAmount(formatNumber(value));
                 }
               }}
-              placeholder={`Jumlah shift ${isMorningShift ? 'pagi' : 'siang'}`}
+              placeholder={`Jumlah produksi shift ${isMorningShift ? 'pagi' : 'siang'}`}
               required
             />
           </div>

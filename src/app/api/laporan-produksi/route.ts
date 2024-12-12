@@ -92,7 +92,6 @@ export async function POST(request: Request) {
       afternoon_shift_time,
       morning_shift_user_id,
       afternoon_shift_user_id,
-      type,
     } = body;
 
     // Validate required fields
@@ -103,17 +102,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Make sure `type` is either "In" or "Out"
-    const reportType = type || "In";
-    if (!["In", "Out"].includes(reportType)) {
-      return NextResponse.json(
-        { message: "Invalid type. Must be 'In' or 'Out'" },
-        { status: 400 }
-      );
-    }
-
     // amount adalah jumlah produk dari morning_shift_amount dan afternoon_shift_amount
-    const amount = morning_shift_amount ? parseFloat(morning_shift_amount) : 0 + afternoon_shift_amount ? parseFloat(afternoon_shift_amount) : 0;
+    const amount = morning_shift_amount
+      ? parseFloat(morning_shift_amount)
+      : 0 + afternoon_shift_amount
+      ? parseFloat(afternoon_shift_amount)
+      : 0;
 
     // cegah jika hari ini telah ada laporan produksi
     const existReport = await prisma.reportProduct.findFirst({
@@ -127,7 +121,7 @@ export async function POST(request: Request) {
       },
     });
 
-    if(existReport) {
+    if (existReport) {
       return NextResponse.json(
         { message: "Hari ini sudah ada laporan produksi" },
         { status: 400 }
@@ -135,38 +129,60 @@ export async function POST(request: Request) {
     }
 
     // Create the report
-    const report = await prisma.reportProduct.create({
-      data: {
-        product_id: parseInt(product_id, 10),
-        factory_id: parseInt(factory_id, 10),
-        amount: amount,
-        morning_shift_amount: morning_shift_amount ? parseFloat(morning_shift_amount) : null,
-        morning_shift_time: morning_shift_time ? new Date(`1970-01-01T${morning_shift_time}`) : null,
-        afternoon_shift_amount: afternoon_shift_amount ? parseFloat(afternoon_shift_amount) : null,
-        afternoon_shift_time: afternoon_shift_time ? new Date(`1970-01-01T${afternoon_shift_time}`) : null,
-        morning_shift_user_id: morning_shift_user_id ? parseInt(morning_shift_user_id, 10) : null,
-        afternoon_shift_user_id: afternoon_shift_user_id ? parseInt(afternoon_shift_user_id, 10) : null,
-        type: reportType,
-      },
-      include: {
-        product: true,
-        factory: true,
-        morning_shift_user: {
-          select: {
-            id: true,
-            username: true,
+    const respoonse = await prisma.$transaction(async (tx) => {
+      const report = await tx.reportProduct.create({
+        data: {
+          product_id: parseInt(product_id, 10),
+          factory_id: parseInt(factory_id, 10),
+          amount: amount,
+          morning_shift_amount: morning_shift_amount
+            ? parseFloat(morning_shift_amount)
+            : null,
+          morning_shift_time: morning_shift_time
+            ? new Date(`1970-01-01T${morning_shift_time}`)
+            : null,
+          afternoon_shift_amount: afternoon_shift_amount
+            ? parseFloat(afternoon_shift_amount)
+            : null,
+          afternoon_shift_time: afternoon_shift_time
+            ? new Date(`1970-01-01T${afternoon_shift_time}`)
+            : null,
+          morning_shift_user_id: morning_shift_user_id
+            ? parseInt(morning_shift_user_id, 10)
+            : null,
+          afternoon_shift_user_id: afternoon_shift_user_id
+            ? parseInt(afternoon_shift_user_id, 10)
+            : null,
+        },
+        include: {
+          product: true,
+          factory: true,
+          morning_shift_user: {
+            select: {
+              id: true,
+              username: true,
+            },
+          },
+          afternoon_shift_user: {
+            select: {
+              id: true,
+              username: true,
+            },
           },
         },
-        afternoon_shift_user: {
-          select: {
-            id: true,
-            username: true,
-          },
+      });
+      const stock = await tx.stockProduct.create({
+        data: {
+          product_id: parseInt(product_id, 10),
+          amount: amount,
+          type: "In",
+          report_product_id: report.id,
         },
-      },
+      });
+      return { report, stock };
     });
 
-    return NextResponse.json(report);
+    return NextResponse.json(respoonse);
   } catch (error: any) {
     console.error("Error creating report:", error.message);
     return NextResponse.json(

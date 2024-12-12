@@ -16,6 +16,7 @@ enum Gender {
 enum PaymentStatus {
   Pending
   Paid
+  Paid_Off
   Failed
   Cancelled
 }
@@ -75,6 +76,7 @@ model Factory {
   MaterialStock       MaterialStock[]
   OrderMaterialUnit   OrderMaterialUnit[]
   ReportMaterialStock ReportMaterialStock[]
+  MemberPriceProduct  MemberPriceProduct[]
 
   @@map("factories")
 }
@@ -277,65 +279,64 @@ enum ProductType {
 }
 
 model MemberPriceProduct {
-  id                Int                    @id @default(autoincrement())
-  product           Product                @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                Int           @id @default(autoincrement())
+  factory           Factory       @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id        Int
+  product           Product       @relation(fields: [product_id], references: [id], onDelete: Cascade)
   product_id        Int
-  user              User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id           Int
-  memberFactory     MemberFactory          @relation(fields: [member_factory_id], references: [id], onDelete: Cascade)
+  memberFactory     MemberFactory @relation(fields: [member_factory_id], references: [id], onDelete: Cascade)
   member_factory_id Int
   price             Float
   sale_price        Float
-  status            PriceProductUnitStatus @default(Active)
-  created_at        DateTime               @default(now())
-  updated_at        DateTime               @updatedAt
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
 
   @@map("member_price_products")
 }
 
-enum PriceProductUnitStatus {
-  Active
-  Inactive
-}
-
 model StockProduct {
-  id         Int      @id @default(autoincrement())
-  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  product_id Int
-  amount     Float
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                Int              @id @default(autoincrement())
+  product           Product          @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id        Int
+  amount            Float
+  type              StockProductType @default(In)
+  report_product    ReportProduct?   @relation(fields: [report_product_id], references: [id], onDelete: Cascade)
+  report_product_id Int?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
 
   @@map("stock_products")
 }
 
+enum StockProductType {
+  In
+  Out
+}
+
 model ReportProduct {
-  id                      Int               @id @default(autoincrement())
-  product                 Product           @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  id                      Int            @id @default(autoincrement())
+  product                 Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
   product_id              Int
-  factory                 Factory           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory                 Factory        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id              Int
   amount                  Float
   morning_shift_amount    Float?
-  morning_shift_time      DateTime?         @db.Time
-  morning_shift_user      User?             @relation("report_product_morning_shift_user", fields: [morning_shift_user_id], references: [id], onDelete: Cascade)
+  morning_shift_time      DateTime?      @db.Time
+  morning_shift_user      User?          @relation("report_product_morning_shift_user", fields: [morning_shift_user_id], references: [id], onDelete: Cascade)
   morning_shift_user_id   Int?
   afternoon_shift_amount  Float?
-  afternoon_shift_time    DateTime?         @db.Time
-  afternoon_shift_user    User?             @relation("report_product_afternoon_shift_user", fields: [afternoon_shift_user_id], references: [id], onDelete: Cascade)
+  afternoon_shift_time    DateTime?      @db.Time
+  afternoon_shift_user    User?          @relation("report_product_afternoon_shift_user", fields: [afternoon_shift_user_id], references: [id], onDelete: Cascade)
   afternoon_shift_user_id Int?
-  type                    ReportProductType @default(In)
-  created_at              DateTime          @default(now())
-  updated_at              DateTime          @updatedAt
-  User                    User?             @relation(fields: [userId], references: [id])
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @updatedAt
+  User                    User?          @relation(fields: [userId], references: [id])
   userId                  Int?
+  StockProduct            StockProduct[]
 
   @@map("report_products")
-}
-
-enum ReportProductType {
-  In
-  Out
 }
 
 model ReportCost {
@@ -402,8 +403,10 @@ model Invoice {
   payment_status    PaymentStatus
   payment_method    PaymentMethod      @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
   payment_method_id Int
+  proof_of_payment  String?
   detailInvoices    DetailInvoice[]
   deliveryTracking  DeliveryTracking[]
+  notes             String?
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
 
@@ -426,16 +429,23 @@ model DetailInvoice {
 }
 
 model DeliveryTracking {
-  id            Int      @id @default(autoincrement())
-  invoice       Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
-  invoice_id    Int
-  desc          String
-  location      String  
-  latitude      Float?
-  longitude     Float?
-  cost          Float? @default(0)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id         Int                    @id @default(autoincrement())
+  invoice    Invoice                @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id Int
+  desc       String
+  location   String
+  latitude   Float?
+  longitude  Float?
+  cost       Float?                 @default(0)
+  created_at DateTime               @default(now())
+  updated_at DateTime               @updatedAt
+  status     DeliveryTrackingStatus @default(Process)
 
   @@map("delivery_trackings")
+}
+
+enum DeliveryTrackingStatus {
+  Process
+  Done
+  Cancel
 }

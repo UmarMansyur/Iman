@@ -234,7 +234,6 @@ async function main(): Promise<void> {
   await prisma.detailInvoice.create({
     data: {
       invoice_id: invoice.id,
-      unit_id: 1,
       desc: "ST Premium",
       amount: 1,
       sub_total: 1000000,

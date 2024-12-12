@@ -37,10 +37,21 @@ export async function GET(request: Request) {
       },
       skip: (page - 1) * limit,
       take: limit,
+      include: {
+        factory: true,
+        stockProducts: true,
+      },
+    });
+
+    const result = products.map((product) => {
+      return {
+        ...product,
+        stock: product.stockProducts.reduce((acc, curr) => acc + curr.amount, 0),
+      };
     });
 
     return NextResponse.json({
-      products,
+      products: result,
       pagination: {
         total,
         page,

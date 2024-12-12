@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
 import { Package2, ShoppingCart, Receipt, DollarSign } from "lucide-react";
@@ -26,29 +27,30 @@ interface Product {
   name: string;
   type: string;
   price: number;
-  soldStock: number;
-  availableStock: number;
+  sold: number;
+  stock: number;
 }
 
 export default function Layout() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [statistics, setStatistics] = useState<any>({});
   const { user } = useUserStore();
   // Tambahkan data dashboard
   const datas = [
     {
       icon: <Package2 />,
       title: "Total Produk",
-      value: products.length,
+      value: statistics.totalProducts,
     },
     {
       icon: <ShoppingCart />,
       title: "Total Stok Tersedia",
-      value: products.reduce((acc, curr) => acc + curr.availableStock, 0),
+      value: statistics.totalAvailableStock,
     },
     {
       icon: <Receipt />,
       title: "Total Stok Terjual",
-      value: products.reduce((acc, curr) => acc + curr.soldStock, 0),
+      value: statistics.totalSoldStock,
     },
     {
       icon: <DollarSign />,
@@ -57,12 +59,7 @@ export default function Layout() {
         style: "currency",
         currency: "IDR",
       })
-        .format(
-          products.reduce(
-            (acc, curr) => acc + curr.price * curr.availableStock,
-            0
-          )
-        )
+        .format(statistics.totalProductValue)
         .slice(0, -3),
     },
   ];
@@ -75,6 +72,7 @@ export default function Layout() {
       );
         const data = await response.json();
         setProducts(data.data);
+        setStatistics(data.statistics);
       }
     }
     fetchData();
@@ -93,7 +91,7 @@ export default function Layout() {
                 key={index}
                 icon={data.icon}
                 title={data.title} 
-                value={data.value.toString()}
+                value={data.value}
               />
             ))}
           </div>
@@ -131,8 +129,8 @@ export default function Layout() {
                         currency: "IDR",
                       }).format(product.price)}
                     </TableCell>
-                    <TableCell>{product.soldStock}</TableCell>
-                    <TableCell>{product.availableStock}</TableCell>
+                    <TableCell>{product.sold}</TableCell>
+                    <TableCell>{product.stock}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -192,7 +192,7 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                       setMorningAmount(formatNumber(value));
                     }
                   }}
-                  placeholder="Jumlah shift pagi"
+                  placeholder="Jumlah produksi shift pagi"
                 />
                 <Input
                   type="time"
@@ -212,7 +212,7 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                       setAfternoonAmount(formatNumber(value));
                     }
                   }}
-                  placeholder="Jumlah shift siang"
+                  placeholder="Jumlah produksi shift siang"
                 />
                 <Input
                   type="time"

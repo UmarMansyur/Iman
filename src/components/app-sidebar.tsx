@@ -188,7 +188,7 @@ const data = {
       icon: SendToBack,
     },
     {
-      title: "Transaksi Produk",
+      title: "Data Transaksi",
       url: "/operator/transaksi",
       icon: Calculator,
     },

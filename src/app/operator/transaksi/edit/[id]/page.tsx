@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { useState, useEffect, use } from "react";
+import { Loader2, Trash2 } from "lucide-react";
 import {
   Select,
   SelectItem,
@@ -36,9 +37,12 @@ import { cn } from "@/lib/utils";
 import { id } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import React from "react";
+
 
 // Add these utility functions at the top of your file
-const formatNumber = (num: number): string => {
+const formatNumber = (num: number | null | undefined): string => {
+  if (num === null || num === undefined) return '';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
@@ -46,7 +50,18 @@ const unformatNumber = (str: string): number => {
   return parseFloat(str.replace(/,/g, "")) || 0;
 };
 
-export default function InvoiceForm() {
+// Tambahkan komponen Loader sederhana
+const Loader = () => (
+  <div className="fixed inset-0 bg-white/50 backdrop-blur-lg z-50 flex items-center justify-center">
+    <div className="flex flex-col items-center gap-2">
+      <Loader2 className="animate-spin text-blue-600" />
+      <p className="text-lg font-medium text-blue-600">Memuat...</p>
+    </div>
+  </div>
+);
+
+export default function EditInvoiceForm({ params }: { params: any }) {
+  const unwrappedParams: any = use(params);
   const router = useRouter();
   const { user: session } = useUserStore();
   const [isProduct, setIsProduct] = useState(true);
@@ -59,6 +74,88 @@ export default function InvoiceForm() {
       sub_total: number;
     }>
   >([]);
+
+  // State untuk menyimpan data invoice
+  const [invoiceData, setInvoiceData] = useState({
+    buyer: "",
+    sales_man: "",
+    recipient: "",
+    maturity_date: "",
+    buyer_address: "",
+    desc: "",
+    down_payment: 0,
+    payment_method_id: "",
+    discon_member: 0,
+    shipping_address: "",
+    shipping_cost: 0,
+    notes: "",
+    location: "",
+  });
+
+  // State untuk total
+  const [total, setTotal] = useState(0);
+
+  // State untuk produk dan metode pembayaran
+  const [products, setProducts] = useState<any>([]);
+  const [paymentMethods, setPaymentMethods] = useState<any>([]);
+
+  // State untuk loading
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch data transaksi untuk pengeditan
+  useEffect(() => {
+    const fetchTransaction = async () => {
+      try {
+        setIsLoading(true);
+        const id = unwrappedParams.id;
+        const response = await fetch(`/api/transaction/${id}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          const transaction = data.data;
+          setInvoiceData({
+            buyer: transaction.buyer,
+            sales_man: transaction.sales_man,
+            recipient: transaction.recipient,
+            maturity_date: transaction.maturity_date,
+            buyer_address: transaction.buyer_address,
+            desc: transaction.notes,
+            down_payment: transaction.down_payment,
+            payment_method_id: transaction?.payment_method?.id,
+            discon_member: Number(transaction.discon_member),
+            shipping_address: transaction.deliveryTracking[0]?.location,
+            shipping_cost: transaction.deliveryTracking[0]?.cost,
+            notes: transaction.deliveryTracking[0]?.desc,
+            location: transaction.deliveryTracking[0]?.location,
+          });
+
+          const formattedDetails = transaction.detailInvoices.map((detail: any) => ({
+            desc: detail.desc,
+            amount: detail.amount,
+            price: detail.price,
+            discount: detail.discount,
+            sub_total: detail.sub_total,
+          }));
+          setDetails(formattedDetails);
+
+          const newTotal = formattedDetails.reduce(
+            (sum: number, detail: any) => sum + detail.sub_total,
+            0
+          );
+          setTotal(newTotal);
+        }
+      } catch (error: any) {
+        console.error("Error fetching transaction:", error);
+        toast.error(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (unwrappedParams) {
+      fetchTransaction();
+    }
+  }, [unwrappedParams.id]);
 
   const handleAddDetail = () => {
     setDetails([
@@ -112,23 +209,6 @@ export default function InvoiceForm() {
     setTotal(newTotal);
   };
 
-  // Basic invoice state
-  const [invoiceData, setInvoiceData] = useState({
-    buyer: "",
-    sales_man: "",
-    recipient: "",
-    maturity_date: "",
-    buyer_address: "",
-    desc: "",
-    down_payment: 0,
-    payment_method_id: "",
-    discon_member: 0,
-    shipping_address: "",
-    shipping_cost: 0,
-    notes: "",
-    location: "",
-  });
-
   // Calculate totals
   const calculateTotals = () => {
     const itemAmount = details.reduce((sum, detail) => sum + detail.amount, 0);
@@ -152,7 +232,7 @@ export default function InvoiceForm() {
       total: total,
       remaining_balance: remainingBalance,
       detailInvoices: details,
-      payment_status: "Paid", // Default status
+      payment_status: "Paid",
       factory_id: session?.factory_selected?.id,
       user_id: user?.id,
       desc: invoiceData.notes,
@@ -160,8 +240,9 @@ export default function InvoiceForm() {
     };
 
     try {
-      const response = await fetch("/api/transaction", {
-        method: "POST",
+      const id = unwrappedParams.id;
+      const response = await fetch(`/api/transaction/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -169,26 +250,33 @@ export default function InvoiceForm() {
       });
 
       const data = await response.json();
-      if (!response.ok) {
+      if (response.ok) {
+        toast.success("Transaksi berhasil diperbarui");
+        router.push("/operator/transaksi");
+      } else {
         throw new Error(data.message);
       }
-
-      if (response.ok) {
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
-      }
     } catch (error: any) {
-      toast.error(error.message || "Terjadi kesalahan, silahkan coba lagi");
+      toast.error(error.message || "Terjadi kesalahan saat memperbarui transaksi");
     }
   };
 
-  // Add these to your existing state declarations
-  const [total, setTotal] = useState(0);
+  // Pertama, tambahkan fungsi untuk mengecek stock
+  const isExceedingStock = (productName: string, amount: number) => {
+    const product = products.find((p: any) => p.name === productName);
+    return product && amount > product.stock;
+  };
 
-  // Add new state for products
-  const [products, setProducts] = useState<any>([]);
-  const [paymentMethods, setPaymentMethods] = useState<any>([]);
+  // Tambahkan fungsi untuk mengecek apakah ada item yang melebihi stok
+  const hasExceedingStock = () => {
+    return details.some((detail) => {
+      if (isProduct && detail.desc) {
+        const product = products.find((p: any) => p.name === detail.desc);
+        return product && detail.amount > product.stock;
+      }
+      return false;
+    });
+  };
 
   // Add useEffect to fetch products and payment methods
   useEffect(() => {
@@ -214,30 +302,13 @@ export default function InvoiceForm() {
     fetchData();
   }, [session]);
 
-  // Pertama, tambahkan fungsi untuk mengecek stock
-  const isExceedingStock = (productName: string, amount: number) => {
-    const product = products.find((p: any) => p.name === productName);
-    return product && amount > product.stock;
-  };
-
-  // Tambahkan fungsi untuk mengecek apakah ada item yang melebihi stok
-  const hasExceedingStock = () => {
-    return details.some((detail) => {
-      if (isProduct && detail.desc) {
-        const product = products.find((p: any) => p.name === detail.desc);
-        return product && detail.amount > product.stock;
-      }
-      return false;
-    });
-  };
-
   return (
     <MainPage>
       <Card>
         <CardHeader>
           <CardTitle>
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Tambah Transaksi</h3>
+              <h3 className="text-lg font-semibold">Edit Transaksi</h3>
             </div>
           </CardTitle>
           <CardDescription>
@@ -245,9 +316,13 @@ export default function InvoiceForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="relative">
-          <div className="absolute top-0 right-0 text-sm text-gray-500 mr-4 mt-2">
-            <span className="text-red-500">*</span> Wajib diisi
-          </div>
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <div className="absolute top-0 right-0 text-sm text-gray-500 mr-4 mt-2">
+              <span className="text-red-500">*</span> Wajib diisi
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
               {/* Toggle Switch */}
@@ -294,6 +369,7 @@ export default function InvoiceForm() {
                     inputMode="numeric"
                     required
                     placeholder="Masukkan jumlah uang muka"
+                    value={formatNumber(invoiceData.down_payment)}
                     onChange={(e) =>
                       setInvoiceData({
                         ...invoiceData,
@@ -319,19 +395,21 @@ export default function InvoiceForm() {
                   </Label>
                   <Select
                     required
-                    value={invoiceData.payment_method_id || ""}
-                    onValueChange={(value) =>
-                      setInvoiceData((prev) => ({
-                        ...prev,
-                        payment_method_id: value,
-                      }))
-                    }
+                    value={invoiceData.payment_method_id}
+                    onValueChange={(value) => {
+                      if(value) {
+                        setInvoiceData((prev: any) => ({
+                          ...prev,
+                          payment_method_id: value,
+                        }))
+                      }
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Metode Pembayaran">
                         {paymentMethods.find(
                           (method: any) =>
-                            method.id === invoiceData.payment_method_id
+                            method.id == invoiceData.payment_method_id
                         )?.name || "Pilih Metode Pembayaran"}
                       </SelectValue>
                     </SelectTrigger>
@@ -410,6 +488,53 @@ export default function InvoiceForm() {
                 </div>
               </div>
 
+              {/* Shipping and Location Details */}
+              <div className="border-t mt-4 pt-4">
+                <h4 className="font-medium mb-4">
+                  Informasi Pengiriman & Lokasi
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="shipping_address">
+                      Alamat Pengiriman <span className="text-red-500">*</span>
+                    </Label>
+                    <Input 
+                      required 
+                      placeholder="Masukkan alamat pengiriman"
+                      value={invoiceData.shipping_address}
+                      onChange={(e) => setInvoiceData({ ...invoiceData, shipping_address: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="shipping_cost">
+                      Biaya Pengiriman <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      inputMode="numeric"
+                      required
+                      placeholder="Masukkan biaya pengiriman"
+                      onChange={(e) =>
+                        setInvoiceData({
+                          ...invoiceData,
+                          shipping_cost: unformatNumber(e.target.value),
+                        })
+                      }
+                      value={formatNumber(invoiceData.shipping_cost)}
+                    />
+                  </div>
+
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="notes">Keterangan</Label>
+                    <Textarea 
+                      placeholder="Masukkan keterangan tambahan jika ada"
+                      value={invoiceData.notes}
+                      onChange={(e) => setInvoiceData({ ...invoiceData, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Detail Items Section */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -463,6 +588,7 @@ export default function InvoiceForm() {
                           </th>
                           <th className="px-4 py-2">Diskon (%)</th>
                           <th className="px-4 py-2">Sub Total</th>
+                          <th className="px-4 py-2">Uang Muka</th>
                           <th className="px-4 py-2"></th>
                         </tr>
                       </thead>
@@ -543,7 +669,7 @@ export default function InvoiceForm() {
                             <td className="px-4 py-2">
                               <Input
                                 type="text"
-                                value={formatNumber(detail.amount)}
+                                value={formatNumber(detail.amount) || ''}
                                 onChange={(e) =>
                                   handleDetailChange(
                                     index,
@@ -563,7 +689,7 @@ export default function InvoiceForm() {
                             <td className="px-4 py-2">
                               <Input
                                 type="text"
-                                value={formatNumber(detail.price)}
+                                value={formatNumber(detail.price) || ''}
                                 onChange={(e) =>
                                   handleDetailChange(
                                     index,
@@ -579,7 +705,7 @@ export default function InvoiceForm() {
                             <td className="px-4 py-2">
                               <Input
                                 type="text"
-                                value={formatNumber(detail.discount)}
+                                value={formatNumber(detail.discount) || ''}
                                 onChange={(e) =>
                                   handleDetailChange(
                                     index,
@@ -593,7 +719,7 @@ export default function InvoiceForm() {
                             <td className="px-4 py-2">
                               <Input
                                 type="text"
-                                value={formatNumber(detail.sub_total)}
+                                value={formatNumber(detail.sub_total) || ''}
                                 disabled
                                 className="bg-gray-50"
                               />
@@ -633,13 +759,39 @@ export default function InvoiceForm() {
                         </span>
                       </div>
 
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          Biaya Pengiriman:
+                        </span>
+                        <span className="font-semibold">
+                          {new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                          }).format(invoiceData.shipping_cost)}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Uang Muka:</span>
+                        <span className="font-semibold">
+                          - {new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                          }).format(invoiceData.down_payment)}
+                        </span>
+                      </div>
+
+
                       <div className="flex justify-between items-center text-lg border-t pt-2">
                         <span className="font-medium">Total:</span>
                         <span className="font-bold text-blue-600">
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",
-                          }).format(total)}
+                          }).format(
+                            total +
+                              invoiceData.shipping_cost
+                          )}
                         </span>
                       </div>
                     </div>
@@ -648,7 +800,11 @@ export default function InvoiceForm() {
                     <Label>Sisa Pembayaran</Label>
                     <div
                       className={`p-2 rounded-md font-semibold text-right ${
-                        total - invoiceData.down_payment > 0
+                        total +
+                          invoiceData.shipping_cost +
+                     
+                          invoiceData.down_payment >
+                        0
                           ? "bg-red-50 text-red-600"
                           : "bg-green-50 text-green-600"
                       }`}
@@ -656,7 +812,10 @@ export default function InvoiceForm() {
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
-                      }).format(total - invoiceData.down_payment)}
+                      }).format(
+                        total +
+                          invoiceData.shipping_cost - invoiceData.down_payment
+                      )}
                     </div>
                   </div>
                 </div>

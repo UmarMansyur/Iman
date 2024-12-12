@@ -31,8 +31,9 @@ export async function POST(req: Request) {
       location,
     } = body;
 
+    // inv tahun-bulan-id
     const invoice_code =
-      "INV-" + Math.floor(100000 + Math.random() * 900000).toString();
+      "INV-" + new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + Math.floor(100000 + Math.random() * 900000).toString();
     let amount_total = 0;
     detailInvoices.forEach((detail: any) => {
       amount_total += detail.sub_total;
@@ -150,19 +151,18 @@ export async function GET(req: Request) {
     return NextResponse.json({
       status: "success",
       data: invoices,
-      meta: {
+      pagination: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error("Error fetching invoices:", error);
+  } catch (error: any) {
     return NextResponse.json(
       {
         status: "error",
-        message: "Failed to fetch invoices",
+        message: error.message || "Failed to fetch invoices",
       },
       { status: 500 }
     );

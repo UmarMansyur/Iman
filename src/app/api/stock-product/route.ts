@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -16,11 +17,13 @@ export async function GET(request: Request) {
         name: true,
         type: true,
         price: true,
-      }
+      },
+      distinct: ["id"],
     });
 
-    // Ambil total stok masuk (In)
-    const stockIn = await prisma.reportProduct.groupBy({
+
+
+    const stockProduct = await prisma.stockProduct.groupBy({
       by: ["product_id"],
       _sum: {
         amount: true,
@@ -33,8 +36,7 @@ export async function GET(request: Request) {
       },
     });
 
-    // Ambil total stok keluar (Out)
-    const stockOut = await prisma.reportProduct.groupBy({
+    const soldProduct = await prisma.stockProduct.groupBy({
       by: ["product_id"],
       _sum: {
         amount: true,
@@ -47,27 +49,25 @@ export async function GET(request: Request) {
       },
     });
 
-    // Gabungkan data
     const data = products.map((product) => {
-      const totalStockIn = stockIn.find((stock) => stock.product_id === product.id)?._sum.amount || 0;
-      const totalStockOut = stockOut.find((stock) => stock.product_id === product.id)?._sum.amount || 0;
-      
+      const stock = stockProduct.find((stock) => stock.product_id === product.id)?._sum.amount || 0;
+      const sold = soldProduct.find((sold) => sold.product_id === product.id)?._sum.amount || 0;
       return {
         id: product.id,
         name: product.name,
         type: product.type,
         price: product.price,
-        soldStock: totalStockOut,
-        availableStock: totalStockIn - totalStockOut,
+        stock: stock,
+        sold: sold,
       };
     });
 
     // Hitung statistik untuk dashboard
     const statistics = {
       totalProducts: data.length,
-      totalAvailableStock: data.reduce((acc, item) => acc + item.availableStock, 0),
-      totalSoldStock: data.reduce((acc, item) => acc + item.soldStock, 0),
-      totalProductValue: data.reduce((acc, item) => acc + (item.price * item.availableStock), 0),
+      totalAvailableStock: data.reduce((acc, item) => acc + item.stock, 0),
+      totalSoldStock: data.reduce((acc, item) => acc + item.sold, 0),
+      totalProductValue: data.reduce((acc, item) => acc + (item.price * item.stock), 0),
     };
 
     return NextResponse.json({
@@ -75,9 +75,9 @@ export async function GET(request: Request) {
       statistics,
     });
     
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json({ 
-      error: "Terjadi kesalahan saat mengambil data",
+      error: error.message || "Terjadi kesalahan saat mengambil data",
       details: error 
     }, { status: 500 });
   }
