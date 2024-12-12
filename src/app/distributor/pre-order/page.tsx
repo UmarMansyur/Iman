@@ -58,6 +58,7 @@ export default function InvoiceForm() {
   const [details, setDetails] = useState<
     Array<{
       desc: string;
+      product_id: number;
       amount: number;
       price: number;
       discount: number;
@@ -70,6 +71,7 @@ export default function InvoiceForm() {
       ...details,
       {
         desc: "",
+        product_id: 0,
         amount: 0,
         price: 0,
         discount: 0,
@@ -86,10 +88,11 @@ export default function InvoiceForm() {
     const newDetails = [...details];
 
     if (field === "desc") {
-      const selectedProduct: any = products.find((p: any) => p.name === value);
+      const selectedProduct: any = products.find((p: any) => p.id.toString() === value);
       newDetails[index] = {
         ...newDetails[index],
-        desc: value,
+        desc: selectedProduct?.name || "",
+        product_id: parseInt(value),
         price: selectedProduct?.price || 0,
       };
     } else if (
@@ -114,6 +117,7 @@ export default function InvoiceForm() {
       (sum, detail) => sum + detail.sub_total,
       0
     );
+    console.log(newDetails);
     setTotal(newTotal);
   };
 
@@ -474,7 +478,7 @@ export default function InvoiceForm() {
                             <td className="px-4 py-2">
                               <div>
                                 <Select
-                                  value={detail.desc}
+                                  value={detail.product_id.toString()}
                                   onValueChange={(value) =>
                                     handleDetailChange(index, "desc", value)
                                   }
@@ -487,7 +491,7 @@ export default function InvoiceForm() {
                                       {products.map((product: any) => (
                                         <SelectItem
                                           key={product.id}
-                                          value={product.name}
+                                          value={product.id.toString()}
                                         >
                                           {product.name} - {product.type}
                                         </SelectItem>
@@ -495,20 +499,6 @@ export default function InvoiceForm() {
                                     </SelectGroup>
                                   </SelectContent>
                                 </Select>
-                                {products.find(
-                                  (product: any) => product.name == detail.desc
-                                ) && (
-                                  <input
-                                    type="hidden"
-                                    name="product_id"
-                                    value={
-                                      products.find(
-                                        (product: any) =>
-                                          product.name == detail.desc
-                                      )?.id
-                                    }
-                                  />
-                                )}
                               </div>
                             </td>
                             <td className="px-4 py-2">

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { MemberFactoryFormState, MemberFactorySchema } from "@/lib/definitions";
 import { MemberFactoryStatus } from "@prisma/client";

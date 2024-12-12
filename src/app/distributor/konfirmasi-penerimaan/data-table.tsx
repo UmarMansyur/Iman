@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
+import { useTableStore } from "@/store/table-store";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -35,10 +36,12 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   pagination,
+  sorting,
   onPageChange,
   onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
   const [pageSize, setPageSize] = React.useState(pagination.limit);
+  const { sorting: sortingState, setSorting } = useTableStore();
   
   const table = useReactTable({
     data,
@@ -57,6 +60,16 @@ export function DataTable<TData, TValue>({
           pageSize: pageSize,
         });
         onPageChange(newState.pageIndex);
+      }
+    },
+    onSortingChange: (updater) => {
+      const newState = typeof updater === 'function' ? updater(sortingState) : updater;
+      setSorting(newState);
+      if (newState.length > 0) {
+        const sort = newState[0];
+        sorting(sort.id, sort.desc ? "desc" : "asc");
+      } else {
+        sorting("", "asc");
       }
     },
     manualPagination: true,
@@ -108,7 +121,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Tidak ada data
                 </TableCell>
               </TableRow>
             )}

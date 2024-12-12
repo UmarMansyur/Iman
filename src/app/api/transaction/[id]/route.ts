@@ -102,6 +102,16 @@ export async function PUT(req: Request, { params }: { params: any }) {
     });
 
 
+    await prisma.deliveryTracking.updateMany({
+      where: { invoice_id: parseInt(id) },
+      data: {
+        cost: body.shipping_cost,
+        desc: body.desc,
+        location: body.shipping_address,
+      },
+    });
+
+
     return NextResponse.json(
       {
         message: "Invoice berhasil diupdate",

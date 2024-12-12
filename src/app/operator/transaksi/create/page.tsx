@@ -78,13 +78,14 @@ export default function InvoiceForm() {
   };
 
   const handleDetailChange = (index: number, field: string, value: any) => {
-    const newDetails = [...details];
+    const newDetails: any = [...details];
 
-    if (field === "desc" && isProduct) {
+    if (field === "desc") {
       const selectedProduct: any = products.find((p: any) => p.name === value);
       newDetails[index] = {
         ...newDetails[index],
-        desc: value,
+        product_id: selectedProduct?.id,
+        desc: selectedProduct?.name,
         price: selectedProduct?.price || 0,
       };
     } else if (
@@ -93,6 +94,7 @@ export default function InvoiceForm() {
       field === "discount"
     ) {
       const numericValue = unformatNumber(value);
+      newDetails[index].product_id = products.find((p: any) => p.name == newDetails[index].desc)?.id;
       newDetails[index] = { ...newDetails[index], [field]: numericValue };
     } else {
       newDetails[index] = { ...newDetails[index], [field]: value };
@@ -106,7 +108,7 @@ export default function InvoiceForm() {
     setDetails(newDetails);
 
     const newTotal = newDetails.reduce(
-      (sum, detail) => sum + detail.sub_total,
+      (sum: any, detail: any) => sum + detail.sub_total,
       0
     );
     setTotal(newTotal);
@@ -179,6 +181,7 @@ export default function InvoiceForm() {
       } else {
         toast.error(data.message);
       }
+      router.push("/operator/transaksi");
     } catch (error: any) {
       toast.error(error.message || "Terjadi kesalahan, silahkan coba lagi");
     }

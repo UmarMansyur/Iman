@@ -88,6 +88,14 @@ export async function PUT(req: Request, { params }: { params: any }) {
         throw new Error("Pre-order tidak ditemukan");
       }
 
+      const products = await tx.product.findMany({
+        where: {
+          id: {
+            in: detail_invoices_array.map((detail: any) => detail.product_id)
+          }
+        }
+      });
+
       const preOrder = await tx.invoice.update({
         where: { id: parseInt(id.toString()) },
         data: {
@@ -114,7 +122,7 @@ export async function PUT(req: Request, { params }: { params: any }) {
             createMany: {
               data: detail_invoices_array.map((detail: any) => ({
                 product_id: detail.product_id,
-                desc: detail.desc,
+                desc: products.find((product: any) => product.id == detail.product_id)?.name,
                 amount: detail.amount,
                 price: detail.price,
                 discount: detail.discount,

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Command,
   CommandEmpty,
@@ -11,7 +12,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
-import { DropdownOptions, DropdownUser } from "@/lib/definitions";
+import { DropdownUser } from "@/lib/definitions";
 import * as _ from "lodash";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

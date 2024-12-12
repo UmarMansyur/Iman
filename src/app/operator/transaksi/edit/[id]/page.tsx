@@ -64,7 +64,7 @@ export default function EditInvoiceForm({ params }: { params: any }) {
   const unwrappedParams: any = use(params);
   const router = useRouter();
   const { user: session } = useUserStore();
-  const [isProduct, setIsProduct] = useState(true);
+  const [isProduct, setIsProduct] = useState(false);
   const [details, setDetails] = useState<
     Array<{
       desc: string;
@@ -119,13 +119,13 @@ export default function EditInvoiceForm({ params }: { params: any }) {
             recipient: transaction.recipient,
             maturity_date: transaction.maturity_date,
             buyer_address: transaction.buyer_address,
-            desc: transaction.notes,
+            desc: transaction.deliveryTracking[0]?.desc,
             down_payment: transaction.down_payment,
             payment_method_id: transaction?.payment_method?.id,
             discon_member: Number(transaction.discon_member),
             shipping_address: transaction.deliveryTracking[0]?.location,
             shipping_cost: transaction.deliveryTracking[0]?.cost,
-            notes: transaction.deliveryTracking[0]?.desc,
+            notes: transaction.notes,
             location: transaction.deliveryTracking[0]?.location,
           });
 
@@ -175,21 +175,31 @@ export default function EditInvoiceForm({ params }: { params: any }) {
   };
 
   const handleDetailChange = (index: number, field: string, value: any) => {
-    const newDetails = [...details];
+    const newDetails:any = [...details];
 
-    if (field === "desc" && isProduct) {
-      const selectedProduct: any = products.find((p: any) => p.name === value);
-      newDetails[index] = {
-        ...newDetails[index],
-        desc: value,
-        price: selectedProduct?.price || 0,
-      };
-    } else if (
-      field === "amount" ||
-      field === "price" ||
-      field === "discount"
-    ) {
+    if (field === "desc") {
+      const selectedProduct = products.find((p: any) => p.name === value);
+      if (selectedProduct) {
+        newDetails[index] = {
+          ...newDetails[index],
+          desc: value,
+          price: selectedProduct.price,
+          amount: 0,
+          discount: newDetails[index].discount || 0,
+          sub_total: 0
+        };
+      }
+    } else if (field === "amount" || field === "price" || field === "discount") {
       const numericValue = unformatNumber(value);
+      
+      if (field === "amount" && isProduct) {
+        const product = products.find((p: any) => p.name === newDetails[index].desc);
+        if (product && numericValue > product.stock) {
+          toast.error(`Stok tidak mencukupi. Stok tersedia: ${product.stock}`);
+          return;
+        }
+      }
+      
       newDetails[index] = { ...newDetails[index], [field]: numericValue };
     } else {
       newDetails[index] = { ...newDetails[index], [field]: value };
@@ -199,11 +209,12 @@ export default function EditInvoiceForm({ params }: { params: any }) {
       newDetails[index].amount *
       newDetails[index].price *
       (1 - newDetails[index].discount / 100);
-
+    newDetails[index].desc = products.find((p: any) => p.name == newDetails[index].desc)?.name;
+    newDetails[index].product_id = products.find((p: any) => p.name == newDetails[index].desc)?.id;
     setDetails(newDetails);
 
     const newTotal = newDetails.reduce(
-      (sum, detail) => sum + detail.sub_total,
+      (sum: any, detail: any) => sum + detail.sub_total,
       0
     );
     setTotal(newTotal);
@@ -225,6 +236,11 @@ export default function EditInvoiceForm({ params }: { params: any }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { itemAmount, subTotal, total, remainingBalance } = calculateTotals();
+
+    // check detailInvoices
+    details.map((detail: any) => {
+      detail.product_id = products.find((p: any) => p.name == detail.desc)?.id;
+    });
     const formData = {
       ...invoiceData,
       item_amount: itemAmount,
@@ -232,10 +248,9 @@ export default function EditInvoiceForm({ params }: { params: any }) {
       total: total,
       remaining_balance: remainingBalance,
       detailInvoices: details,
-      payment_status: "Paid",
       factory_id: session?.factory_selected?.id,
       user_id: user?.id,
-      desc: invoiceData.notes,
+      desc: invoiceData.desc,
       cost: invoiceData.shipping_cost,
     };
 
@@ -479,9 +494,9 @@ export default function EditInvoiceForm({ params }: { params: any }) {
                   <Textarea
                     id="catatan"
                     name="catatan"
-                    value={invoiceData.notes}
+                    value={invoiceData.desc}
                     onChange={(e) =>
-                      setInvoiceData({ ...invoiceData, notes: e.target.value })
+                      setInvoiceData({ ...invoiceData, desc: e.target.value })
                     }
                     placeholder="Keterangan pembelian"
                   />
@@ -600,12 +615,13 @@ export default function EditInvoiceForm({ params }: { params: any }) {
                                 <div>
                                   <Select
                                     value={detail.desc}
-                                    onValueChange={(value) =>
-                                      handleDetailChange(index, "desc", value)
-                                    }
+                                    onValueChange={(value) => handleDetailChange(index, "desc", value)}
+                                    disabled={index !== details.length - 1}
                                   >
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Pilih Produk" />
+                                      <SelectValue placeholder="Pilih Produk">
+                                        {detail.desc || "Pilih Produk"}
+                                      </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectGroup>
@@ -613,20 +629,14 @@ export default function EditInvoiceForm({ params }: { params: any }) {
                                           <SelectItem
                                             key={product.id}
                                             value={product.name}
+                                            disabled={product.stock <= 0}
                                           >
-                                            {product.name} - {product.type} -
-                                            (Stok: {product.stock})
+                                            {product.name} - {product.type} - (Stok: {product.stock})
                                           </SelectItem>
                                         ))}
                                       </SelectGroup>
                                     </SelectContent>
                                   </Select>
-                                  {/* <small className="text-gray-500">
-                                      Ketersediaan: {products.find(
-                                        (product: any) =>
-                                          product.name == detail.desc
-                                      )?.stock}
-                                    </small> */}
                                   {products.find(
                                     (product: any) => product.name == detail.desc
                                   ) && (
@@ -641,28 +651,13 @@ export default function EditInvoiceForm({ params }: { params: any }) {
                                       }
                                     />
                                   )}
-                                  {/* <input
-                                    type="hidden"
-                                    name="product_id"
-                                    value={
-                                      products.find(
-                                        (product: any) =>
-                                          product.name == detail.desc
-                                      )?.id
-                                    }
-                                  /> */}
                                 </div>
                               ) : (
                                 <Input
                                   value={detail.desc}
-                                  onChange={(e) =>
-                                    handleDetailChange(
-                                      index,
-                                      "desc",
-                                      e.target.value
-                                    )
-                                  }
+                                  onChange={(e) => handleDetailChange(index, "desc", e.target.value)}
                                   placeholder="Deskripsi item"
+                                  disabled={index !== details.length - 1}
                                 />
                               )}
                             </td>

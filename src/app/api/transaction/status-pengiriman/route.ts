@@ -75,11 +75,13 @@ export async function PUT(req: Request) {
           },
         });
   
+        const detailProductid = invoices.detailInvoices.filter((detail: any) => detail.product_id !== null).map((detail: any) => detail.product_id);
   
+
         const existingProduct = await prisma.product.findMany({
           where: {
-            name: {
-              in: invoices.detailInvoices.map((detail: any) => detail.desc),
+            id: {
+              in: detailProductid,
             },
             factory_id: parseInt(factory_id),
           },
@@ -91,12 +93,12 @@ export async function PUT(req: Request) {
         existingProduct.forEach((product: any) => {
           datas.push({
             product_id: product.id,
-            amount: invoices.detailInvoices.find((detail: any) => detail.desc === product.name)?.amount,
+            amount: invoices.detailInvoices.find((detail: any) => detail.product_id === product.id)?.amount,
           });
         });
   
         if(datas.length > 0) {
-          await tx.stockProduct.createMany({
+          await prisma.stockProduct.createMany({
             data: datas.map((data: any) => ({
               product_id: data.product_id,
               amount: data.amount,
@@ -117,7 +119,7 @@ export async function PUT(req: Request) {
       }
   
       if(status === "Cancel") {
-        await tx.logOrderDistributor.create({
+        await prisma.logOrderDistributor.create({
           data: {
             invoice_id: parseInt(id),
             desc: "Operator telah mengubah status pengiriman menjadi dibatalkan",

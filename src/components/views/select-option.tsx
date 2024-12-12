@@ -31,7 +31,6 @@ export default function SelectOption({
   placeholder,
   notFound = "Tidak ada data yang ditemukan...",
   title = "Pilih data...",
-  keyword,
   searchData,
   choiced,
   onSearch,
