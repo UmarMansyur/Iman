@@ -98,11 +98,19 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const status = row.original.deliveryTracking[0]?.status;
 
+      if(status === 'Pending') {
+        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
+          Pending
+        </Badge>
+      }
+
       if(status === 'Process') { 
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
           Proses
         </Badge>
       }
+
+
       if(status === 'Done') {
         return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
           Selesai

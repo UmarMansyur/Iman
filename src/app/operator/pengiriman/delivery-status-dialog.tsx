@@ -27,6 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Calendar, Package, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useUserStore } from "@/store/user-store";
 
 
 export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
@@ -37,8 +38,12 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
   );
   const [desc, setDesc] = useState(invoice.deliveryTracking[0]?.desc || "");
   const [location, setLocation] = useState(invoice.deliveryTracking[0]?.location || "");
-
+  const { user } = useUserStore();
   const handleSubmit = async () => {
+    if(!user?.factory_selected?.id) {
+      toast.error("Gagal mengubah status, pilih gudang terlebih dahulu");
+      return;
+    }
     try {
       setLoading(true);
       const response = await fetch(`/api/transaction/status-pengiriman?id=${invoice.id}`, {
@@ -47,7 +52,8 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status
+          status,
+          factory_id: (user?.factory_selected?.id),
         }),
       });
 
