@@ -87,8 +87,6 @@ export async function PUT(req: Request) {
           },
         });
   
-        console.log(existingProduct);
-  
         const datas: any[] = [];
         existingProduct.forEach((product: any) => {
           datas.push({

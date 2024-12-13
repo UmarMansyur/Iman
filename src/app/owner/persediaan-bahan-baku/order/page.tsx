@@ -93,7 +93,7 @@ export default function OrderPage() {
 
     try {
       const payload = {
-        factory_id: 1, // Adjust based on your needs
+        factory_id: user?.factory_selected?.id, // Adjust based on your needs
         desc: description,
         user_id: user?.id,
         details: details.map(detail => ({

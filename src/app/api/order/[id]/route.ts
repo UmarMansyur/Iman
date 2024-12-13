@@ -126,7 +126,19 @@ export async function GET(
         id: parseInt(id)
       },
       include: {
-        DetailOrderMaterialUnit: true
+        DetailOrderMaterialUnit: {
+          include: {
+            materialUnit: {
+              include: {
+                material: true,
+                unit: true,
+              }
+            },
+            orderMaterialUnit: true,
+          }
+        },
+        user: true,
+        factory: true,
       }
     });
 

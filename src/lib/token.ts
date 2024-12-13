@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { decrypt, updateSession } from './session';
 import { Position, SessionPayload, Role } from './definitions';
 import prisma from './db';
+import { MemberFactoryStatus } from '@prisma/client';
 
 const getToken = async () => {
   const cookie = (await cookies()).get('session')?.value;
@@ -43,9 +44,18 @@ const getSession = async (): Promise<SessionPayload | null> => {
       logo: member.factory.logo,
       address: member.factory.address,
       status: member.factory.status,
-      position: [member.role.role as Position]
+      position: [member.role.role as Position],
+      status_member: member.status as MemberFactoryStatus
     })),
-    factory_selected: user?.memberFactories.length > 0 ? user?.memberFactories[0].factory : null,
+    factory_selected: user?.memberFactories.length > 0 ? {
+      id: user?.memberFactories[0].factory.id.toString(),
+      name: user?.memberFactories[0].factory.name,
+      logo: user?.memberFactories[0].factory.logo,
+      address: user?.memberFactories[0].factory.address,
+      status: user?.memberFactories[0].factory.status,
+      position: [user?.memberFactories[0].role.role as Position],
+      status_member: user?.memberFactories[0].status as MemberFactoryStatus
+    } : null,
     thumbnail: user.thumbnail ?? "",
   }
 

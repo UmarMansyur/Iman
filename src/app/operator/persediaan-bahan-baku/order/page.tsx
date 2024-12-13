@@ -2,13 +2,13 @@
 "use client";
 
 import MainPage from "@/components/main";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, RotateCcw, ArrowLeft } from "lucide-react";
+import { Trash2, RotateCcw, ArrowLeft, Save, Loader2, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
@@ -51,6 +51,11 @@ export default function OrderPage() {
       return;
     }
 
+    const existingDetail = details.find(detail => detail.material_unit_id === currentMaterial);
+    if (existingDetail) {
+      toast.error('Material sudah ada dalam detail order, edit jumlah atau harga');
+      return;
+    }
     setDetails([...details, { 
       material_unit_id: currentMaterial, 
       amount: Number(currentAmount.replace(/,/g, '')), 
@@ -114,7 +119,7 @@ export default function OrderPage() {
       if (!response.ok) throw new Error(data.error);
       setDetails([]);
       toast.success('Order berhasil dibuat');
-      router.push("/owner/persediaan-bahan-baku/order");
+      router.push("/operator/persediaan-bahan-baku");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -137,7 +142,7 @@ export default function OrderPage() {
                 <h3 className="text-lg font-semibold">Tambah Data Order</h3>
                 <Button 
                   type="button" 
-                  className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
+                  className="bg-gray-500 hover:bg-gray-600 text-white shadow-sm shadow-gray-500/50"
                   onClick={() => router.back()}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -145,17 +150,24 @@ export default function OrderPage() {
                 </Button>
               </div>
             </CardTitle>
+            <CardDescription>
+              <p>
+                Tambah data order persediaan bahan baku, pastikan data yang sudah diinputkan telah benar. Form inputan tidak dapat diedit dan dihapus setelah order dibuat. Alternatifnya silahkan hubungi owner untuk mengubah data.
+              </p>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
-                <label>Deskripsi</label>
+                <label>Deskripsi:</label>
                 <Textarea 
-                  placeholder="Masukkan deskripsi order" 
+                  placeholder="Masukkan deskripsi order bahan baku" 
                   rows={4} 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
+                  // error jika tidak diisi
+                  aria-invalid={!description}
                 />
               </div>
 
@@ -214,6 +226,7 @@ export default function OrderPage() {
                   <label>Total</label>
                   <Input 
                     type="text"
+                    className="bg-gray-50 text-black text-lg font-semibold text-end"
                     value={currentTotal || ''}
                     disabled
                   />
@@ -223,11 +236,11 @@ export default function OrderPage() {
                   onClick={addDetail}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <ShoppingCart className="w-4 h-4 mr-2" />
                   Tambah
                 </Button>
               </div>
-
+              <h1 className="text-lg font-semibold">Detail Order</h1>
               <div className="border rounded-lg">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -300,7 +313,14 @@ export default function OrderPage() {
                   className="bg-blue-500 hover:bg-blue-600"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Menyimpan...' : 'Simpan Order'}
+                  {
+                    isSubmitting ? (
+                      <Loader2 className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )
+                  }
+                  {isSubmitting ? 'Sedang menyimpan...' : 'Simpan Order'}
                 </Button>
               </div>
             </form>

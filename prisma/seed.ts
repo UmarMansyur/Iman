@@ -34,10 +34,20 @@ async function main(): Promise<void> {
 
   const djava = await prisma.factory.create({
     data: {
-      nickname: "Djava",
+      nickname: "SJ",
       user_id: admin.id,
-      name: "Djava",
-      address: "Jl. Djava",
+      name: "Safira Jaya",
+      address: "Jl. Safira Jaya",
+      status: "Active",
+    },
+  });
+
+  await prisma.factory.create({
+    data: {
+      nickname: "PLT",
+      user_id: admin.id,
+      name: "Pelita",
+      address: "Jl. Pelita",
       status: "Active",
     },
   });
@@ -123,21 +133,9 @@ async function main(): Promise<void> {
       { name: "Keping" }, // id 11
       { name: "Pcs" }, // id 12
       { name: "Press" }, // id 13
-      { name: "Ball" }, // id 14
+      { name: "Bal" }, // id 14
     ],
   });
-
-//   -	Tsg : Kg
-// -	Filter : try
-// -	Bobin : rool
-// -	Etiket : pcs
-// -	Foil god : roll
-// -	Foil silver : roll
-// -	Inner gold: roll 
-// -	Inner silver :roll
-// -	Lem CTP : kg
-// -	Lem AMBRI: kg
-// -	CPT : roll
 
   await prisma.materialUnit.createMany({
     data: [
@@ -155,23 +153,29 @@ async function main(): Promise<void> {
   });
 
 
-  const product = await prisma.product.createMany({
+  await prisma.product.createMany({
     data: [
       {
         factory_id: djava.id,
         name: "ST Premium",
         type: "Kretek",
-        price: 10000,
+        price: 13000,
       },
       {
         factory_id: djava.id,
-        name: "ST Gold",
+        name: "ST Legend",
+        type: "Kretek",
+        price: 14000,
+      },
+      {
+        factory_id: djava.id,
+        name: "Lucca Click",
         type: "Kretek",
         price: 10000,
       },
       {
         factory_id: djava.id,
-        name: "ST Silver",
+        name: "Pharlap SPM",
         type: "Kretek",
         price: 10000,
       },

@@ -36,8 +36,8 @@ export default function DeleteButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none">
-          <Trash className="w-4 h-4" />
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2">
+          <Trash className="w-4 h-4 mr-2" />
           Hapus
         </DropdownMenuItem>
       </AlertDialogTrigger>

@@ -208,7 +208,7 @@ export default function OrderPage() {
       toast.success(
         orderId ? "Order berhasil diupdate" : "Order berhasil dibuat"
       );
-      router.push("/owner/persediaan-bahan-baku");
+      // window.location.href = "/operator/persediaan-bahan-baku";
     } catch (error: any) {
       toast.error(error.message);
     } finally {

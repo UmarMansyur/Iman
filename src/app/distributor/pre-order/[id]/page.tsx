@@ -513,9 +513,7 @@ export default function EditPreOrder({ params }: { params:any }) {
                                 <Select
                                   value={detail.desc}
                                   onValueChange={(value) => {
-                                    console.log(value)
                                     const selectedProduct = products.find((product: any) => product.name === value);
-                                    console.log(selectedProduct);
                                     handleDetailChange(index, "desc", selectedProduct)
                                   }}
                                 >

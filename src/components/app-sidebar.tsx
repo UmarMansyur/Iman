@@ -253,19 +253,11 @@ export function AppSidebar({
     }
     if (pathname?.startsWith("/owner")) {
       return <NavMain title="Owner" items={addActiveState(data.navOwner)} />;
-      if (user?.factory_selected?.position.includes("Owner")) {
-      } else {
-        return null;
-      }
     }
     if (pathname?.startsWith("/operator")) {
       return (
         <NavMain title="Operator" items={addActiveState(data.navOperator)} />
       );
-      if (user?.factory_selected?.position.includes("Operator")) {
-      } else {
-        return null;
-      }
     }
     if(pathname?.startsWith("/distributor")) {
       return <NavMain title="Distributor" items={addActiveState(data.navDistributor)} />;

@@ -5,6 +5,7 @@ import prisma from '@/lib/db';
 import { SigninFromSchema, SigninFormState, SessionPayload, Role, Position } from '@/lib/definitions'
 import bcrypt from 'bcrypt';
 import { redirect } from 'next/navigation';
+import { MemberFactoryStatus } from '@prisma/client';
 
 export async function login(state: SigninFormState, formData: FormData) {
   const validatedFields = SigninFromSchema.safeParse({
@@ -62,11 +63,21 @@ export async function login(state: SigninFormState, formData: FormData) {
         logo: member.factory.logo,
         address: member.factory.address,
         status: member.factory.status,
+        status_member: member.status as MemberFactoryStatus,
         position: [member.role.role as Position]
       })),
-      factory_selected: user?.memberFactories.length > 0 ? user?.memberFactories[0].factory : null,
+      factory_selected: user?.memberFactories.length > 0 ? {
+        id: user?.memberFactories[0].factory.id.toString(),
+        name: user?.memberFactories[0].factory.name,
+        logo: user?.memberFactories[0].factory.logo,
+        address: user?.memberFactories[0].factory.address,
+        status: user?.memberFactories[0].factory.status,
+        status_member: user?.memberFactories[0].status as string,
+        position: [user?.memberFactories[0].role.role as Position]
+      } : null,
       thumbnail: user.thumbnail ?? "",
     };
+  
     sessionUser = payload;
 
     await createSession(payload);
@@ -78,7 +89,6 @@ export async function login(state: SigninFormState, formData: FormData) {
   if(sessionUser?.typeUser === 'Administrator') {
     redirect('/admin/dashboard');
   } else if(sessionUser?.typeUser ==='Operator') {
-    // jika memiliki user.factory.position.includes('Owner')
     if(sessionUser?.factory.find((factory: any) => factory.position.includes('Owner'))) {
       redirect('/owner');
     } else {

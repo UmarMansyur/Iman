@@ -117,7 +117,6 @@ export default function InvoiceForm() {
       (sum, detail) => sum + detail.sub_total,
       0
     );
-    console.log(newDetails);
     setTotal(newTotal);
   };
 
@@ -218,7 +217,6 @@ export default function InvoiceForm() {
       });
 
       const data = await response.json();
-      console.log(data);
       if (!response.ok) {
         throw new Error(data.message);
       }

@@ -57,7 +57,7 @@ export function TeamSwitcher() {
                   {user?.factory_selected?.name}
                 </span>
                 <span className="truncate text-xs">
-                  {user?.factory_selected?.status}
+                  {user?.factory_selected?.status === "Active" ? "Aktif" : "Tidak Aktif"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -74,14 +74,14 @@ export function TeamSwitcher() {
             </DropdownMenuLabel>
             {user?.factory.map((team) => (
               <Link
-                href={`${team.position.includes("Owner") ? "/owner" : "/"}`}
+                href={`${team.position.includes("Owner") && team.status_member === "Active" ? "/owner" : "/"}`}
                 key={team.name}
-                className={team.status !== "Active" ? "pointer-events-none" : ""}
+                className={team.status_member !== "Active" || team.status !== "Active" ? "pointer-events-none" : ""}
               >
                 <DropdownMenuItem
                   key={team.name}
                   onClick={() => setActiveTeam(team)}
-                  disabled={team.status !== "Active"}
+                  disabled={team.status_member !== "Active" || team.status !== "Active"}
                   className={`gap-2 p-2 ${
                     team.id == user?.factory_selected?.id
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"

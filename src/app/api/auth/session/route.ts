@@ -1,5 +1,3 @@
-// app/api/auth/session/route.ts
-
 import { getSession } from '@/lib/token';
 import { NextResponse } from 'next/server'
 

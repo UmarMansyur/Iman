@@ -34,37 +34,6 @@ export async function POST(req: Request) {
     const bukti_pembayaran = data.get("file") as File;
     const detail_invoices = data.get("detail_invoices");
 
-    // // Validasi data yang diperlukan
-    // const {
-    //   factory_id,
-    //   user_id,
-    //   amount,
-    //   buyer,
-    //   sales_man,
-    //   recipient,
-    //   maturity_date,
-    //   item_amount,
-    //   discon_member,
-    //   buyer_address,
-    //   down_payment,
-    //   total,
-    //   sub_total,
-    //   remaining_balance,
-    //   payment_status,
-    //   payment_method_id,
-    //   notes,
-    //   detail_invoices,
-    //   location,
-    //   desc,
-    //   latitude,
-    //   longitude,
-    //   cost,
-    //   status,
-    //   file,
-    // } = data;
-
-    console.log(data);
-
     // Validasi data wajib
     if (!factory_id || !user_id || !amount || !buyer || !payment_method_id) {
       return NextResponse.json(
@@ -87,11 +56,10 @@ export async function POST(req: Request) {
         };
         fileUrl = await uploadFile(fileObject);
       } catch (error: any) {
-        console.log(error);
         return NextResponse.json(
           {
             status: "error", 
-            message: "Gagal mengupload file"
+            message: error.message || "Gagal mengupload file"
           },
           { status: 400 }
         );

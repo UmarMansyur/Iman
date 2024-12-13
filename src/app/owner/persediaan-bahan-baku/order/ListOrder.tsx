@@ -9,14 +9,10 @@ import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
-export default function PabrikPage() {
+export default function ListOrder() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const router = useRouter()
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -120,13 +116,6 @@ export default function PabrikPage() {
                   value={searchInput}
                 />
               </div>
-            </div>
-            <div>
-              <Button 
-                onClick={() => router.push('/owner/persediaan-bahan-baku/order')}
-              >
-                Tambah Order
-              </Button>
             </div>
           </div>
           {loadingSearch ? (

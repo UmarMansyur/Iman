@@ -1,4 +1,4 @@
-import { FactoryStatus, MaterialStockStatus, MemberFactoryStatus, PriceProductUnitStatus, ProductType, User } from "@prisma/client";
+import { FactoryStatus, MaterialStockStatus, MemberFactoryStatus, ProductType, User } from "@prisma/client";
 import { z } from "zod";
 
 export const SingupFromSchema = z.object({
@@ -59,6 +59,7 @@ export type Factory = {
   address: string;
   logo: string | null;
   status: FactoryStatus;
+  status_member: string;
   position: Position[];
 };
 
@@ -408,7 +409,7 @@ export type ProductUnitFormState =
     product_unit_id: number,
     price: number,
     sale_price: number,
-    status: PriceProductUnitStatus,
+    // status: PriceProductUnitStatus,
   }
 
   export const PriceProductUnitSchema = z.object({

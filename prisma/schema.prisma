@@ -67,17 +67,19 @@ model Factory {
   created_at DateTime      @default(now())
   updated_at DateTime      @updatedAt
 
-  bankAccounts        BankAccount[]
-  memberFactories     MemberFactory[]
-  products            Product[]
-  invoices            Invoice[]
-  reportProducts      ReportProduct[]
-  reportCosts         ReportCost[]
-  MaterialStock       MaterialStock[]
-  OrderMaterialUnit   OrderMaterialUnit[]
-  ReportMaterialStock ReportMaterialStock[]
-  MemberPriceProduct  MemberPriceProduct[]
-  DistributorStock    DistributorStock[]
+  bankAccounts         BankAccount[]
+  memberFactories      MemberFactory[]
+  products             Product[]
+  invoices             Invoice[]
+  reportProducts       ReportProduct[]
+  reportCosts          ReportCost[]
+  MaterialStock        MaterialStock[]
+  OrderMaterialUnit    OrderMaterialUnit[]
+  ReportMaterialStock  ReportMaterialStock[]
+  MemberPriceProduct   MemberPriceProduct[]
+  DistributorStock     DistributorStock[]
+  CostDelivery         CostDelivery[]
+  LogOrderMaterialUnit LogOrderMaterialUnit[]
 
   @@map("factories")
 }
@@ -233,6 +235,19 @@ model OrderMaterialUnit {
   @@map("order_material_units")
 }
 
+// buatkan log dari order material unit
+
+model LogOrderMaterialUnit {
+  id         Int      @id @default(autoincrement())
+  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("log_order_material_units")
+}
+
 model DetailOrderMaterialUnit {
   id                     Int                     @id @default(autoincrement())
   orderMaterialUnit      OrderMaterialUnit       @relation(fields: [order_material_unit_id], references: [id], onDelete: Cascade)
@@ -296,6 +311,18 @@ model MemberPriceProduct {
   updated_at        DateTime      @updatedAt
 
   @@map("member_price_products")
+}
+
+model CostDelivery {
+  id         Int      @id @default(autoincrement())
+  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
+  location   String
+  amount     Float
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("cost_deliveries")
 }
 
 model StockProduct {
@@ -388,13 +415,12 @@ model Invoice {
   user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id             Int
   invoice_code        String                @unique
-  amount              Float
-  discount            Float?
-  ppn                 Float?
-  buyer               String
-  sales_man           String
-  recipient           String
-  maturity_date       DateTime
+  discount            Float?                @default(0)
+  ppn                 Float?                @default(0)
+  buyer               String                @default("")
+  sales_man           String?
+  recipient           String?
+  maturity_date       DateTime?
   item_amount         Float
   discon_member       Float?
   buyer_address       String?
@@ -415,6 +441,16 @@ model Invoice {
   reject_reason       String?
 
   @@map("invoices")
+}
+
+model Service {
+  id         Int      @id @default(autoincrement())
+  name       String
+  price      Float
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("services")
 }
 
 model DetailInvoice {
@@ -476,6 +512,6 @@ model DistributorStock {
   desc       String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
   @@map("distributor_stocks")
 }
-

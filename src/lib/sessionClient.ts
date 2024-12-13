@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // lib/sessionClient.ts
-import { SessionPayload } from './definitions'
+// import { SessionPayload } from './definitions'
 
-export const getClientSession = async (): Promise<SessionPayload | null> => {
+export const getClientSession = async (): Promise<any | null> => {
   try {
     const response = await fetch('/api/auth/session', {
       method: 'GET',
-      credentials: 'include' // penting untuk mengirim cookies
+      credentials: 'include'
     });
-    
+
     if (!response.ok) {
       return null;
     }

@@ -130,7 +130,6 @@ export default function ManajemenOperatorPage() {
   };
 
   const choiced = (value: DropdownOptions) => {
-    // console.log(value);
     return value;
   };
 

@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Check, MoreHorizontal, Pencil } from "lucide-react";
+import { Check, Loader2, MoreHorizontal, Save } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import DeleteButton from "@/components/delete-button";
+import toast from "react-hot-toast";
 
 interface ActionCellProps {
   row: any;
@@ -36,7 +36,30 @@ interface ActionCellProps {
 
 export function ActionCell({ row, fetchData }: ActionCellProps) {
   const [status, setStatus] = useState(row.original.status);
-  
+  const [save, setSave] = useState(false);
+
+  const handleSave = async () => {
+    setSave(true);
+    try {
+      const response = await fetch(`/api/order/status/${row.original.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: status }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+      toast.success(data.message);
+      await fetchData();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+    setSave(false);
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -71,7 +94,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                   <SelectContent>
                     <SelectItem value="Pending">Menunggu</SelectItem>
                     <SelectItem value="Approved">Diterima</SelectItem>
-                    <SelectItem value="Rejected">Batal</SelectItem>
+                    <SelectItem value="Rejected">Ditolak</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -79,29 +102,11 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
             <DialogFooter>
               <Button 
                 variant="default"
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`/api/order/status/${row.original.id}`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        status: status,
-                      }),
-                    });
-                    
-                    if (!response.ok) {
-                      throw new Error('Gagal mengupdate status');
-                    }
-                    
-                    await fetchData();
-                  } catch (error) {
-                    console.error('Error updating status:', error);
-                  }
-                }}
+                onClick={handleSave}
+                disabled={save}
               >
-                Simpan
+                {save ? <Loader2 className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                {save ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <DialogClose asChild>
                 <Button variant="outline">Tutup</Button>
@@ -109,27 +114,6 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start"
-          disabled={status === "Approved" || status === "Rejected"}
-          onClick={() => {
-            window.location.href = `/owner/persediaan-bahan-baku/order/${row.original.id}`;
-          }}
-        >
-          <Pencil className="w-4 h-4" /> Ubah Detail Order
-        </Button>
-        {
-          status === "Pending" && (
-            <DeleteButton
-              id={row.original.id}
-              fetchData={fetchData}
-              endpoint="/order"
-            />
-          )
-        }
       </DropdownMenuContent>
     </DropdownMenu>
   );

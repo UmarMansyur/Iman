@@ -1,63 +1,85 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from './lib/session';
 import { jwtDecode } from 'jwt-decode';
-// 1. Specify protected and public routes
-const protectedRoutes = ['/owner/dashboard', '/owner/produk', '/owner/bahan-baku', '/owner/manajemen-operator', '/owner/laporan-bahan-baku', '/owner/laporan-produksi', '/owner/data-pembelian', '/owner/data-penjualan', '/owner/data-stok', '/owner/data-pengeluaran', '/owner/data-keuangan', '/admin/dashboard', '/']
+
+const protectedRoutes = [
+  '/',
+  "/admin/dashboard",
+  "/admin/pengguna",
+  "/admin/pabrik",
+  "/admin/satuan",
+  "/admin/bahan-baku",
+  "/admin/satuan-bahan-baku",
+  "/admin/hak-akses",
+  "/admin/setting/payment",
+  "/admin/setting/account",
+  "/owner",
+  "/owner/bahan-baku",
+  "/owner/persediaan-bahan-baku",
+  "/owner/bahan-baku-produksi",
+  "/owner/produk",
+  "/owner/stok-produk",
+  "/owner/laporan-produksi",
+  "/owner/data-order",
+  "/owner/manajemen-operator",
+  "/operator/dashboard",
+  "/operator/persediaan-bahan-baku",
+  "/operator/bahan-baku-produksi",
+  "/operator/stok-produk",
+  "/operator/laporan-produksi",
+  "/operator/data-order",
+  "/operator/transaksi",
+  "/operator/pengiriman",
+  "/distributor/dashboard",
+  "/distributor/pre-order",
+  "/distributor/data-order",
+  "/distributor/konfirmasi-penerimaan",
+];
 const publicRoutes = ['/login', '/signup']
  
 export default async function middleware(req: NextRequest): Promise<NextResponse> {
   const path = req.nextUrl.pathname
   const isProtectedRoute = protectedRoutes.includes(path)
   const isPublicRoute = publicRoutes.includes(path)
- 
   const session = await getSession();
 
   if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL('/login', req.nextUrl))
   }
 
-    
-
-  if (
-    isPublicRoute &&
-    session &&
-    !req.nextUrl.pathname.startsWith('/dashboard')
-  ) {
-    // isi nilai
+  if (isPublicRoute && session) {
     return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
   }
-
-  const decoded: any= jwtDecode(session || "");
-
-  console.log(decoded)
-
-  // jika req.nextUrl.pathname.startsWith('/owner/dashboard') maka redirect ke /owner/dashboard
-  // if (req.nextUrl.pathname.startsWith('/owner')) {
-  //   if(!decoded?.user?.factory_selected?.position.includes("Owner")){
-  //     return NextResponse.redirect(new URL('/', req.nextUrl));
-  //   }
-  // }
-
-  // if(req.nextUrl.pathname.startsWith('/admin')){
-  //   if(decoded?.user?.typeUser !== "Admin"){
-  //     return NextResponse.redirect(new URL('/', req.nextUrl));
-  //   }
-  // }
-
-  // if(req.nextUrl.pathname.startsWith('/operator')){
-  //   if(!decoded?.user?.factory_selected?.position.includes("Operator")){
-  //     return NextResponse.redirect(new URL('/', req.nextUrl));
-  //   }
-  // }
-
- 
+  if (session) {
+    try {
+      const decoded: any = jwtDecode(session);
+      if (req.nextUrl.pathname.startsWith('/owner')) {
+        if(!decoded?.factory_selected?.position.includes("Owner") || decoded?.factory_selected?.status_member !== "Active"){
+          return NextResponse.redirect(new URL('/401', req.nextUrl));
+        }
+      }
+      if(req.nextUrl.pathname.startsWith("/operator")) {
+        if(!decoded?.factory_selected?.position.includes("Operator") || decoded?.factory_selected?.status_member !== "Active"){
+          return NextResponse.redirect(new URL('/401', req.nextUrl));
+        }
+      }
+      if(req.nextUrl.pathname.startsWith("/distributor")) {
+        if(!decoded?.factory_selected?.position.includes("Distributor") || decoded?.factory_selected?.status_member !== "Active"){
+          return NextResponse.redirect(new URL('/401', req.nextUrl));
+        }
+      }
+      return NextResponse.next()
+    } catch (error: any) {
+      return NextResponse.redirect(new URL('/login', req.nextUrl))
+    }
+  }
   return NextResponse.next()
 }
  
-// Routes Middleware should not run on
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
 }

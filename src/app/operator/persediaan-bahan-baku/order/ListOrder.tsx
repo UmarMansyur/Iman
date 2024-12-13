@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, PlusCircle, Search } from "lucide-react";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
@@ -125,7 +125,8 @@ export default function PabrikPage() {
               <Button 
                 onClick={() => router.push('/operator/persediaan-bahan-baku/order')}
               >
-                Tambah Order
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Tambah Order Bahan Baku
               </Button>
             </div>
           </div>
