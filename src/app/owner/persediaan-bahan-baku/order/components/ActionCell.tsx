@@ -20,12 +20,12 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import DeleteButton from "@/components/delete-button";
 
@@ -36,7 +36,7 @@ interface ActionCellProps {
 
 export function ActionCell({ row, fetchData }: ActionCellProps) {
   const [status, setStatus] = useState(row.original.status);
-  
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -44,10 +44,15 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
           <MoreHorizontal className="w-4 h-4" />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-52">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-full justify-start" disabled={status === "Approved" || status === "Rejected"}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              disabled={status === "Approved" || status === "Rejected"}
+            >
               <Check className="w-4 h-4" /> Validasi Status Order
             </Button>
           </DialogTrigger>
@@ -61,7 +66,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
             <div className="space-y-4">
               <div className="grid gap-2">
                 <Label>Status</Label>
-                <Select 
+                <Select
                   defaultValue={status}
                   onValueChange={(value) => setStatus(value)}
                 >
@@ -77,27 +82,30 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button 
+              <Button
                 variant="default"
                 onClick={async () => {
                   try {
-                    const response = await fetch(`/api/order/status/${row.original.id}`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        status: status,
-                      }),
-                    });
-                    
+                    const response = await fetch(
+                      `/api/order/status/${row.original.id}`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          status: status,
+                        }),
+                      }
+                    );
+
                     if (!response.ok) {
-                      throw new Error('Gagal mengupdate status');
+                      throw new Error("Gagal mengupdate status");
                     }
-                    
+
                     await fetchData();
                   } catch (error) {
-                    console.error('Error updating status:', error);
+                    console.error("Error updating status:", error);
                   }
                 }}
               >
@@ -121,16 +129,14 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
         >
           <Pencil className="w-4 h-4" /> Ubah Detail Order
         </Button>
-        {
-          status === "Pending" && (
-            <DeleteButton
-              id={row.original.id}
-              fetchData={fetchData}
-              endpoint="/order"
-            />
-          )
-        }
+
+        <DeleteButton
+          id={row.original.id}
+          fetchData={fetchData}
+          endpoint="/order"
+          disabled={status === "Approved" || status === "Rejected"}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

@@ -17,6 +17,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ActionCell } from "./components/ActionCell";
+import { PrinterCheckIcon, SearchCodeIcon } from "lucide-react";
+import Link from "next/link";
 
 export const columns = (
   fetchData: () => Promise<void>,
@@ -27,6 +29,24 @@ export const columns = (
     id: "index",
     header: "No",
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tanggal" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {new Date(row.original.created_at).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </div>
+    ),
+
   },
   {
     accessorKey: "user",
@@ -51,23 +71,31 @@ export const columns = (
     ),
   },
   {
-    accessorKey: "total_item",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Item" />
+    accessorKey: "Item",
+    header: "Item",
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.DetailOrderMaterialUnit?.map((item: any) => (
+          <div key={item.id}>
+            {item.materialUnit?.material?.name} / {item.materialUnit?.unit?.name}
+          </div>
+        ))}
+      </div>
     ),
-    cell: ({ row }) => <div className="text-start">{row.original.total_item}</div>,
   },
   {
     accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
+    header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
       switch (status) {
         case "Pending":
-          return <Badge variant="outline" className="bg-yellow-500 text-white">Menunggu</Badge>;
-        case "Approved": 
+          return (
+            <Badge variant="outline" className="bg-yellow-500 text-white border-none">
+              Menunggu
+            </Badge>
+          );
+        case "Approved":
           return <Badge className="bg-blue-500 text-white">Diterima</Badge>;
         case "Rejected":
           return <Badge className="bg-red-500 text-white">Ditolak</Badge>;
@@ -78,14 +106,12 @@ export const columns = (
   },
   {
     accessorKey: "desc",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Keterangan" />
-    ),
+    header: "Keterangan",
     cell: ({ row }) => (
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            Lihat
+          <Button variant="outline" size="sm" className="bg-danger2 text-white border-none shadow-danger2/50 shadow-sm hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white">
+            <SearchCodeIcon className="w-4 h-4" />
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-4xl">
@@ -97,21 +123,51 @@ export const columns = (
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-4">
-              <div>
-                <Label>Operator Pemesan</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Avatar>
-                    <AvatarImage src={row.original.user?.thumbnail} />
-                    <AvatarFallback>
-                      {row.original.user?.username?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{row.original.user?.username}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {row.original.user?.email}
-                    </p>
+              <div className="flex justify-between">
+                <div>
+                  <Label>Operator Pemesan</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Avatar>
+                      <AvatarImage src={row.original.user?.thumbnail} />
+                      <AvatarFallback>
+                        {row.original.user?.username?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">
+                        {row.original.user?.username}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {row.original.user?.email}
+                      </p>
+                    </div>
                   </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(row.original.created_at).toLocaleDateString(
+                      "id-ID",
+                      {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    )}
+                  </div>
+                  {row.original.status === "Pending" && (
+                    <Badge
+                      variant="outline"
+                      className="bg-yellow-500 text-white border-none"
+                    >
+                      Menunggu
+                    </Badge>
+                  )}
+                  {row.original.status === "Approved" && (
+                    <Badge className="bg-blue-500 text-white border-none">Diterima</Badge>
+                  )}
+                  {row.original.status === "Rejected" && (
+                    <Badge className="bg-red-500 text-white border-none">Ditolak</Badge>
+                  )}
                 </div>
               </div>
 
@@ -195,25 +251,23 @@ export const columns = (
     ),
   },
   {
-    accessorKey: "created_at",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tanggal" />
-    ),
+    accessorKey: "Cetak",
+    header: "Cetak",
     cell: ({ row }) => (
-      <div className="text-start">
-        {new Date(row.original.created_at).toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })}
-      </div>
+      <Link href={`/owner/persediaan-bahan-baku/order/${row.original.id}/print`} target="_blank">
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-yellow-500 text-white border-none shadow-yellow-500/50 shadow-sm hover:bg-yellow-600 hover:shadow-yellow-600/50 hover:text-white"
+        >
+          <PrinterCheckIcon className="w-4 h-4" />
+        </Button>
+      </Link>
     ),
   },
   {
     accessorKey: "action",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Aksi" />
-    ),
+    header: "Aksi",
     cell: ({ row }) => <ActionCell row={row} fetchData={fetchData} />,
   },
 ];

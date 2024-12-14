@@ -38,13 +38,15 @@ export default function Form({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+
     const formData = new FormData(e.currentTarget);
     const price = formData.get('price')?.toString().replace(/\./g, '') || '';
     formData.set('price', price);
-    
     formData.append("id", product?.id?.toString() || "");
     formData.append("factory_id", user?.factory_selected?.id?.toString() || "");
+
     const response = await createProduct(undefined, formData);
+    
     if (response?.errors) {
       setState(response.errors as ProductFormState);
       toast.error(

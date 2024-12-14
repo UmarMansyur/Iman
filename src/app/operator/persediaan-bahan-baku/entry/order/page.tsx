@@ -21,11 +21,12 @@ interface DetailOrder {
 }
 
 export default function OrderPage() {
-  const router = useRouter();
-
   const [details, setDetails] = useState<DetailOrder[]>([]);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+
   const [currentMaterial, setCurrentMaterial] = useState('');
   const [currentAmount, setCurrentAmount] = useState<string>('');
   const [currentPrice, setCurrentPrice] = useState<string>('');
@@ -67,7 +68,6 @@ export default function OrderPage() {
     setCurrentPrice('');
     setCurrentTotal('');
   };
-  
   useEffect(() => {
     const amount = Number(currentAmount.replace(/,/g, ''));
     const price = Number(currentPrice.replace(/,/g, ''));

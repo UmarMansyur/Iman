@@ -12,15 +12,18 @@ import {
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Trash } from "lucide-react";
 import toast from "react-hot-toast";
+import { Button } from "./ui/button";
 
 export default function DeleteButton({
   fetchData,
   endpoint,
   id,
+  disabled,
 }: {
   fetchData: () => Promise<void>;
   endpoint: string;
   id: string;
+  disabled?: boolean;
 }) {
   const handleDelete = async () => {
     const response = await fetch(`/api/${endpoint}?id=${id}`, {
@@ -33,10 +36,18 @@ export default function DeleteButton({
     }
     fetchData();
   };
-  return (
+  return disabled ? (
+    <Button variant="outline" disabled className="w-full justify-start ps-3 border-none">
+      <Trash className="w-4 h-4" />
+      Hapus
+    </Button>
+  ) : (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2">
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2"
+        >
           <Trash className="w-4 h-4 mr-2" />
           Hapus
         </DropdownMenuItem>

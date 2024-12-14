@@ -81,7 +81,7 @@ export function TeamSwitcher() {
                 <DropdownMenuItem
                   key={team.name}
                   onClick={() => setActiveTeam(team)}
-                  disabled={team.status_member !== "Active" || team.status !== "Active"}
+                  disabled={team.status_member !== "Active"}
                   className={`gap-2 p-2 ${
                     team.id == user?.factory_selected?.id
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"

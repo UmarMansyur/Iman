@@ -51,7 +51,7 @@ export type TypeUser = "Operator" | "Administrator";
 
 export type StatusUser = "Active" | "Inactive";
 
-export type Position = "Operator" | "Owner";
+export type Position = "Operator" | "Owner" | "Distributor";
 
 export type Factory = {
   id: string;

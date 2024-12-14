@@ -23,17 +23,12 @@ export default async function createProduct(
   const { id, name, type, factory_id, price } = validatedFields.data;
 
   try {
-
-    
-
     if (id) {
       const exist = await prisma.product.findFirst({
         where: { name: name, factory_id: parseInt(factory_id), type: type, id: { not: parseInt(id) } },
       });
       if(exist) {
-        return {
-          message: "Produk sudah ada",
-        };
+        throw new Error("Produk sudah ada");
       }
       await prisma.product.update({
         where: { id: parseInt(id) },
@@ -44,9 +39,7 @@ export default async function createProduct(
         where: { name: name, factory_id: parseInt(factory_id), type: type },
       });
       if(exist) {
-        return {
-          message: "Produk sudah ada",
-        };
+        throw new Error("Produk sudah ada");
       }
       await prisma.product.create({
         data: { name, type, factory_id: parseInt(factory_id), price: parseInt(price) },

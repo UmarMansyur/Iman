@@ -32,6 +32,34 @@ async function main(): Promise<void> {
     },
   });
 
+  const owner = await prisma.user.create({
+    data: {
+      email: "owner@iman.com",
+      username: "owner",
+      password: await bcrypt.hash("owner", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Owner",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  const distributor = await prisma.user.create({
+    data: {
+      email: "distributor@iman.com",
+      username: "distributor",
+      password: await bcrypt.hash("distributor", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Distributor",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
   const djava = await prisma.factory.create({
     data: {
       nickname: "SJ",
@@ -56,27 +84,32 @@ async function main(): Promise<void> {
     data: [
       { role: "Owner" },
       { role: "Operator" },
-      { role: "Member" },
-      { role: "Downline" },
+      { role: "Distributor" },
+      { role: "Sales" },
     ],
   });
 
-  const djavaMember = await prisma.memberFactory.createMany({
+  await prisma.memberFactory.createMany({
     data: [
-      {
-        factory_id: djava.id,
-        user_id: admin.id,
-        role_id: 1,
-      },
       {
         factory_id: djava.id,
         user_id: operator.id,
         role_id: 2,
       },
+      {
+        factory_id: djava.id,
+        user_id: distributor.id,
+        role_id: 3,
+      },
+      {
+        factory_id: djava.id,
+        user_id: owner.id,
+        role_id: 1,
+      },
     ],
   });
 
-  const bankDjava = await prisma.bankAccount.createMany({
+  await prisma.bankAccount.createMany({
     data: [
       {
         factory_id: djava.id,
@@ -87,20 +120,15 @@ async function main(): Promise<void> {
     ],
   });
 
-  const paymentMethod = await prisma.paymentMethod.createMany({
+  await prisma.paymentMethod.createMany({
     data: [
-      { name: "Transfer" },
-      { name: "Cash" },
-      { name: "Virtual Account" },
-      { name: "QRIS" },
+      { name: "Kredit" },
       { name: "BOND" },
-      { name: "KREDIT" },
-      // jatuh tempo 1 bulan di email
-      // belum  lunas tagihan di distributor yang belum selesai
+      { name: "Cash" },
     ],
   });
 
-  const materials = await prisma.material.createMany({
+  await prisma.material.createMany({
     data: [
       { name: "TSG" },
       { name: "Filter" },
@@ -118,7 +146,7 @@ async function main(): Promise<void> {
     ],
   });
 
-  const unit = await prisma.unit.createMany({
+  await prisma.unit.createMany({
     data: [
       { name: "Kg" }, // id 1
       { name: "Try" }, // id 2

@@ -88,11 +88,15 @@ export async function login(state: SigninFormState, formData: FormData) {
   }
   if(sessionUser?.typeUser === 'Administrator') {
     redirect('/admin/dashboard');
-  } else if(sessionUser?.typeUser ==='Operator') {
+  } else if(sessionUser?.typeUser === 'Operator') {
     if(sessionUser?.factory.find((factory: any) => factory.position.includes('Owner'))) {
       redirect('/owner');
-    } else {
+    } else if(sessionUser?.factory.find((factory: any) => factory.position.includes('Distributor'))) {
+      redirect('/distributor');
+    } else if(sessionUser?.factory.find((factory: any) => factory.position.includes('Operator'))) {
       redirect('/operator');
+    } else {
+      redirect('/401');
     }
   }
 }

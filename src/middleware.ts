@@ -52,7 +52,7 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
   }
 
   if (isPublicRoute && session) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+    return NextResponse.redirect(new URL('/401', req.nextUrl));
   }
   if (session) {
     try {

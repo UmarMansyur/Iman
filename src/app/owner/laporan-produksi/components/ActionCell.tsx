@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/(dashboard)/laporan-produksi/components/ActionCell.tsx
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,60 +26,71 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useUserStore } from "@/store/user-store";
 
 interface ActionCellProps {
   row: any;
   fetchData: () => Promise<void>;
   products: any[];
-} 
+}
 
 export function ActionCell({ row, fetchData, products }: ActionCellProps) {
   const router = useRouter();
   const { user } = useUserStore();
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(row.original.product_id);
+  const [selectedProduct, setSelectedProduct] = useState(
+    row.original.product_id
+  );
 
   // Form states
-  const [morningAmount, setMorningAmount] = useState(row.original.morning_shift_amount?.toString() || "");
-  const [afternoonAmount, setAfternoonAmount] = useState(row.original.afternoon_shift_amount?.toString() || "");
+  const [morningAmount, setMorningAmount] = useState(
+    row.original.morning_shift_amount?.toString() || ""
+  );
+  const [afternoonAmount, setAfternoonAmount] = useState(
+    row.original.afternoon_shift_amount?.toString() || ""
+  );
 
   // Tambahkan array untuk opsi jam dan menit
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
+  const minutes = Array.from({ length: 60 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
 
   // Pisahkan waktu menjadi jam dan menit
   const [morningHour, setMorningHour] = useState(
-    row.original.morning_shift_time ? 
-    new Date(row.original.morning_shift_time).getHours().toString().padStart(2, '0') : 
-    ""
+    row.original.morning_shift_time
+      ? new Date(row.original.morning_shift_time)
+          .getHours()
+          .toString()
+          .padStart(2, "0")
+      : ""
   );
   const [morningMinute, setMorningMinute] = useState(
-    row.original.morning_shift_time ? 
-    new Date(row.original.morning_shift_time).getMinutes().toString().padStart(2, '0') : 
-    ""
+    row.original.morning_shift_time
+      ? new Date(row.original.morning_shift_time)
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")
+      : ""
   );
   const [afternoonHour, setAfternoonHour] = useState(
-    row.original.afternoon_shift_time ? 
-    new Date(row.original.afternoon_shift_time).getHours().toString().padStart(2, '0') : 
-    ""
+    row.original.afternoon_shift_time
+      ? new Date(row.original.afternoon_shift_time)
+          .getHours()
+          .toString()
+          .padStart(2, "0")
+      : ""
   );
   const [afternoonMinute, setAfternoonMinute] = useState(
-    row.original.afternoon_shift_time ? 
-    new Date(row.original.afternoon_shift_time).getMinutes().toString().padStart(2, '0') : 
-    ""
+    row.original.afternoon_shift_time
+      ? new Date(row.original.afternoon_shift_time)
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")
+      : ""
   );
 
   const formatNumber = (value: string) => {
@@ -87,21 +103,29 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     setIsSubmitting(true);
 
     try {
-      const morningTime = morningHour && morningMinute ? `${morningHour}:${morningMinute}` : null;
-      const afternoonTime = afternoonHour && afternoonMinute ? `${afternoonHour}:${afternoonMinute}` : null;
+      const morningTime =
+        morningHour && morningMinute ? `${morningHour}:${morningMinute}` : null;
+      const afternoonTime =
+        afternoonHour && afternoonMinute
+          ? `${afternoonHour}:${afternoonMinute}`
+          : null;
 
       const payload: any = {
-        morning_shift_amount: morningAmount ? parseFloat(morningAmount.replace(/,/g, "")) : null,
+        morning_shift_amount: morningAmount
+          ? parseFloat(morningAmount.replace(/,/g, ""))
+          : null,
         morning_shift_time: morningTime,
-        afternoon_shift_amount: afternoonAmount ? parseFloat(afternoonAmount.replace(/,/g, "")) : null,
+        afternoon_shift_amount: afternoonAmount
+          ? parseFloat(afternoonAmount.replace(/,/g, ""))
+          : null,
         afternoon_shift_time: afternoonTime,
       };
 
       // check apakah morning_shift_user_id atau afternoon_shift_user_id ada
-      if(!payload.morning_shift_user_id) {
+      if (!payload.morning_shift_user_id) {
         payload.morning_shift_user_id = Number(user!.id);
-      } 
-      if(!payload.afternoon_shift_user_id) {
+      }
+      if (!payload.afternoon_shift_user_id) {
         payload.afternoon_shift_user_id = Number(user!.id);
       }
 
@@ -129,25 +153,6 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      const response = await fetch(`/api/laporan-produksi/${row.original.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-
-      toast.success("Laporan berhasil dihapus");
-      setIsDeleteOpen(false);
-      router.refresh();
-      fetchData();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
 
   return (
     <>
@@ -161,11 +166,7 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="text-red-600">
-              <Trash className="mr-2 h-4 w-4" />
-              Hapus
+              Update Laporan
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -180,24 +181,27 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
             <div>
               <Label>Produk</Label>
               <Select
-              value={selectedProduct}
-              onValueChange={setSelectedProduct}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Produk">
-                  {products.find(product => product.id == selectedProduct)?.name + " - " + products.find(product => product.id == selectedProduct)?.type}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name} - {product.type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                value={selectedProduct}
+                onValueChange={setSelectedProduct}
+              >
+                <SelectTrigger disabled>
+                  <SelectValue placeholder="Pilih Produk">
+                    {products.find((product) => product.id == selectedProduct)
+                      ?.name +
+                      " - " +
+                      products.find((product) => product.id == selectedProduct)
+                        ?.type}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.name} - {product.type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -214,11 +218,16 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   placeholder="Jumlah produksi shift pagi"
                 />
                 <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">Waktu Shift Pagi</Label>
-                  <div className="flex gap-2">
+                  <Label className="text-sm text-gray-500">
+                    Waktu Shift Pagi
+                  </Label>
+                  <div className="flex gap-2 w-full">
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select value={morningHour} onValueChange={setMorningHour}>
+                      <Select
+                        value={morningHour}
+                        onValueChange={setMorningHour}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Jam" />
                         </SelectTrigger>
@@ -233,7 +242,10 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select value={morningMinute} onValueChange={setMorningMinute}>
+                      <Select
+                        value={morningMinute}
+                        onValueChange={setMorningMinute}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Menit" />
                         </SelectTrigger>
@@ -249,7 +261,6 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   </div>
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Shift Siang</Label>
                 <Input
@@ -264,11 +275,16 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   placeholder="Jumlah produksi shift siang"
                 />
                 <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">Waktu Shift Siang</Label>
-                  <div className="flex gap-2">
+                  <Label className="text-sm text-gray-500">
+                    Waktu Shift Siang
+                  </Label>
+                  <div className="flex gap-2 w-full">
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select value={afternoonHour} onValueChange={setAfternoonHour}>
+                      <Select
+                        value={afternoonHour}
+                        onValueChange={setAfternoonHour}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Jam" />
                         </SelectTrigger>
@@ -283,7 +299,10 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select value={afternoonMinute} onValueChange={setAfternoonMinute}>
+                      <Select
+                        value={afternoonMinute}
+                        onValueChange={setAfternoonMinute}
+                      >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Menit" />
                         </SelectTrigger>
@@ -301,33 +320,12 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Laporan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus laporan ini? Tindakan ini tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600">
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

@@ -75,7 +75,7 @@ export default function LaporanProduksiPage() {
   const [products, setProducts] = useState<any[]>([]);
 
   const fetchProducts = async () => {
-    const response = await fetch("/api/product?factory_id=" + user?.factory_selected?.id);
+    const response = await fetch("/api/product?factoryId=" + user?.factory_selected?.id);
     const result = await response.json();
     setProducts(result.products);
   };
@@ -125,12 +125,12 @@ export default function LaporanProduksiPage() {
               <CardTitle>
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">
-                    Laporan Produksi
+                    Input Laporan Produksi
                   </h3>
                 </div>
               </CardTitle>
               <CardDescription>
-                Laporan ini menampilkan data produksi per shift
+                Berikut adalah laporan produksi dari masing-masing produk yang dihasilkan. Operator hanya dapat menginput laporan produksi dari produk yang sudah ditentukan oleh owner.
               </CardDescription>
             </CardHeader>
             <CardContent>

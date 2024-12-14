@@ -80,7 +80,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { factory_id, desc, details, user_id } = body;
+    const { factory_id, desc, details, user_id, type_preorder = false } = body;
     // Calculate totals
     const total_item = details.reduce(
       (sum: number, detail: any) => sum + detail.amount,
@@ -101,6 +101,7 @@ export async function POST(request: Request) {
           price: total_price,
           total_item,
           desc,
+          type_preorder: type_preorder,
           status: OrderMaterialUnitStatus.Pending,
           user_id: parseInt(user_id),
           DetailOrderMaterialUnit: {

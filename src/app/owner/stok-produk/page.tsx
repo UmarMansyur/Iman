@@ -68,7 +68,7 @@ export default function Layout() {
     async function fetchData() {
       if(user?.factory_selected?.id){
         const response = await fetch(
-          `http://localhost:3000/api/stock-product?factory_id=${user?.factory_selected?.id}`
+          `/api/stock-product?factory_id=${user?.factory_selected?.id}`
       );
         const data = await response.json();
         setProducts(data.data);

@@ -220,10 +220,11 @@ model OrderMaterialUnit {
   id                      Int                       @id @default(autoincrement())
   factory                 Factory                   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id              Int
-  amount                  Float
-  price                   Float
-  total_item              Float
-  total_item_received     Float?
+  amount                  Float                     @default(0)
+  price                   Float                     @default(0)
+  total_item              Float                     @default(0)
+  total_item_received     Float                     @default(0)
+  type_preorder           Boolean                   @default(false)
   status                  OrderMaterialUnitStatus   @default(Pending)
   desc                    String?                   @db.Text
   user                    User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -415,6 +416,7 @@ model Invoice {
   user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id             Int
   invoice_code        String                @unique
+  amount              Float?                @default(0)
   discount            Float?                @default(0)
   ppn                 Float?                @default(0)
   buyer               String                @default("")

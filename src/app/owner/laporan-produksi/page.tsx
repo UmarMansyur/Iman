@@ -72,10 +72,11 @@ export default function LaporanProduksiPage() {
     }
   };
 
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any>([]);
 
   const fetchProducts = async () => {
-    const response = await fetch("/api/product?factory_id=" + user?.factory_selected?.id);
+    if (!user) return;
+    const response = await fetch("/api/product?limit=1000&factoryId=" + user?.factory_selected?.id);
     const result = await response.json();
     setProducts(result.products);
   };
@@ -148,7 +149,7 @@ export default function LaporanProduksiPage() {
                   </div>
                 </div>
                 <div>
-                  <Form fetchData={fetchReports} />
+                  <Form fetchData={fetchReports} products={products} />
                 </div>
               </div>
               {loadingSearch ? (
