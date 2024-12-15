@@ -27,6 +27,17 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     ),
   },
   {
+    accessorKey: "is_distributor",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Distributor"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.is_distributor === true ? "Distributor" : "Regular"}
+      </div>
+    ),
+  },
+  {
     accessorKey: "buyer",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Pembeli"/>

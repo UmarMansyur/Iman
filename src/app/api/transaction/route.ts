@@ -8,9 +8,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       factory_id,
+      buyer,
       user_id,
       discount,
-      buyer_id,
       maturity_date,
       down_payment,
       payment_method_id,
@@ -23,8 +23,10 @@ export async function POST(req: Request) {
       payment_status,
       detailInvoices,
       desc,
-      cost,
-      location,
+      shipping_cost,
+      shipping_address,
+      is_distributor,
+      buyer_address
     } = body;
 
     // inv tahun-bulan-id
@@ -37,10 +39,91 @@ export async function POST(req: Request) {
       Math.floor(100000 + Math.random() * 900000).toString();
 
 
-
-
     const response = await prisma.$transaction(async (tx) => {
-      // Create invoice with related records
+      let existingBuyer: any;
+      let locations: any;
+      if (is_distributor === "regular") {
+        existingBuyer = await tx.buyer.findFirst({
+          where: {
+            name: buyer,
+            factory_id: parseInt(factory_id),
+          },
+        });
+
+        if (!existingBuyer) {
+          await tx.buyer.create({
+            data: {
+              name: buyer,
+              factory_id: parseInt(factory_id),
+              address: buyer_address
+            },
+          });
+        }
+        locations = await tx.location.findFirst({
+          where: {
+            name: shipping_address,
+            factory_id: parseInt(factory_id)
+          }
+        });
+        if(!locations) {
+          locations = await tx.location.create({
+            data: {
+              name: shipping_address,
+              factory_id: parseInt(factory_id),
+              cost: shipping_cost
+            }
+          })
+        }
+      } else {
+        existingBuyer = await tx.user.findFirst({
+          where: {
+            id: parseInt(buyer)
+          }
+        })
+
+        if(!existingBuyer) {
+          throw new Error("Distributor not found!");
+        }
+
+        const buyerInput = await tx.buyer.findFirst({
+          where: {
+            name: existingBuyer.username,
+            factory_id: parseInt(factory_id)
+          }
+        })
+
+        if(!buyerInput) {
+          const result = await tx.buyer.create({
+            data: {
+              name: existingBuyer.username,
+              factory_id: parseInt(factory_id),
+              address: existingBuyer.address
+            }
+          })
+          existingBuyer.id = result.id;
+        }
+
+        locations = await tx.location.findFirst({
+          where: {
+            name: existingBuyer.address,
+            factory_id: parseInt(factory_id),
+            cost: 0
+          }
+        });
+
+        if(!locations) {
+          locations = await tx.location.create({
+            data: {
+              name: existingBuyer.address,
+              factory_id: parseInt(factory_id),
+              cost: 0
+            }
+          })
+        }
+      }
+
+      // console.log(locations);
+
       const invoice = await tx.invoice.create({
         data: {
           factory_id: parseInt(factory_id),
@@ -48,12 +131,13 @@ export async function POST(req: Request) {
           invoice_code,
           discount,
           ppn,
-          buyer_id: parseInt(buyer_id),
+          buyer_id: existingBuyer.id,
           maturity_date: new Date(maturity_date),
           item_amount,
           discon_member,
           down_payment,
           total,
+          is_distributor: is_distributor === "distributor" ? true : false,
           sub_total,
           remaining_balance,
           payment_status: payment_status as PaymentStatus,
@@ -61,12 +145,18 @@ export async function POST(req: Request) {
           detailInvoices: {
             createMany: {
               data: detailInvoices.map((detail: any) => ({
-                product_id: detail.product_id ? parseInt(detail.product_id) : undefined,
+                product_id: detail.product_id
+                  ? parseInt(detail.product_id)
+                  : undefined,
                 desc: detail.desc,
                 amount: detail.amount,
                 price: detail.price ? parseInt(detail.price) : undefined,
-                discount: detail.discount ? parseInt(detail.discount) : undefined,
-                sub_total: detail.sub_total ? parseInt(detail.sub_total) : undefined,
+                discount: detail.discount
+                  ? parseInt(detail.discount)
+                  : undefined,
+                sub_total: detail.sub_total
+                  ? parseInt(detail.sub_total)
+                  : undefined,
                 is_product: detail.is_product,
               })),
             },
@@ -76,12 +166,14 @@ export async function POST(req: Request) {
           detailInvoices: true,
         },
       });
+
+
       await tx.deliveryTracking.create({
         data: {
           invoice_id: invoice.id,
           desc: desc,
-          location_id: parseInt(location),
-          cost,
+          location_id: locations!.id,
+          cost: shipping_cost,
         },
       });
     });
@@ -92,6 +184,7 @@ export async function POST(req: Request) {
       data: response,
     });
   } catch (error: any) {
+    // console.log(error);
     return NextResponse.json(
       {
         status: "error",
@@ -113,13 +206,11 @@ export async function GET(req: Request) {
     const factory_id = searchParams.get("factory_id") || "";
     const type_preorder = searchParams.get("type_preorder") || "";
     const where = {
-      OR: [
-        { buyer: { name: { contains: search } } },
-      ],
+      OR: [{ buyer: { name: { contains: search } } }],
       user_id: user_id ? parseInt(user_id) : undefined,
       factory_id: factory_id ? parseInt(factory_id) : undefined,
       type_preorder: type_preorder === "1" ? true : false,
-    }
+    };
 
     const invoices = await prisma.invoice.findMany({
       where,
@@ -133,7 +224,11 @@ export async function GET(req: Request) {
         },
         buyer: true,
         payment_method: true,
-        deliveryTracking: true,
+        deliveryTracking: {
+          include: {
+            location: true
+          }
+        }
       },
       take: limit,
       skip: skip,
@@ -186,7 +281,6 @@ export async function DELETE(req: Request) {
       { message: "Invoice berhasil dihapus" },
       { status: 200 }
     );
-
   } catch (error: any) {
     return NextResponse.json(
       { message: error.message || "Invoice gagal dihapus" },

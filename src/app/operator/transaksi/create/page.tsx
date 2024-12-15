@@ -47,30 +47,23 @@ import {
 } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 
-// Add these utility functions at the top of your file
-// Add these utility functions at the top of your file
 const formatNumber = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
 const unformatNumber = (value: string | number): number => {
-  // If value is already a number, return it
   if (typeof value === "number") {
     return value;
   }
 
-  // If empty string, return 0
   if (value === "") {
     return 0;
   }
 
-  // Convert to string if not already
   const str = value.toString();
 
-  // Remove commas and convert to number
   const num = Number(str.replace(/,/g, ""));
 
-  // Check if result is NaN
   if (Number.isNaN(num)) {
     return 0;
   }
@@ -194,29 +187,29 @@ export default function InvoiceForm() {
 
     try {
       // If it's a new buyer, create it first
-      if (
-        buyerType === "regular" &&
-        !buyers.find((b) => b.name === invoiceData.buyer)
-      ) {
-        const buyerResponse: any = await fetch("/api/buyer", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: invoiceData.buyer,
-            address: invoiceData.buyer_address,
+      // if (
+      //   buyerType === "regular" &&
+      //   !buyers.find((b) => b.name === invoiceData.buyer)
+      // ) {
+      //   const buyerResponse: any = await fetch("/api/buyer", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       name: invoiceData.buyer,
+      //       address: invoiceData.buyer_address,
 
-            factory_id: session?.factory_selected?.id,
-          }),
-        });
+      //       factory_id: session?.factory_selected?.id,
+      //     }),
+      //   });
 
-        if (!buyerResponse.ok) {
-          throw new Error("Failed to create new buyer");
-        }
+      //   if (!buyerResponse.ok) {
+      //     throw new Error("Failed to create new buyer");
+      //   }
 
-        invoiceData.buyer = buyerResponse.id;
-      }
+      //   invoiceData.buyer = buyerResponse.id;
+      // }
 
       const { itemAmount, subTotal, total, remainingBalance } =
         calculateTotals();
@@ -235,24 +228,8 @@ export default function InvoiceForm() {
         location: invoiceData.location,
         location_cost: invoiceData.location_cost,
         buyer_id: invoiceData.buyer,
+        is_distributor: buyerType,
       };
-
-      // jika lokasi tidak ada maka buat lokasi baru terlebih dahulu
-      if (!locations.find((l) => l.name === invoiceData.location)) {
-        const locationResponse = await fetch("/api/location", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: invoiceData.shipping_address,
-            cost: invoiceData.shipping_cost,
-            factory_id: session?.factory_selected?.id,
-          }),
-        });
-        const locationData = await locationResponse.json();
-        invoiceData.location = locationData.data.id;
-      }
 
       const response = await fetch("/api/transaction", {
         method: "POST",

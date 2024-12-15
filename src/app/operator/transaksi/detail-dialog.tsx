@@ -47,34 +47,26 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Status Pengiriman</p>
-                {
-                  invoice.deliveryTracking[0]?.status === 'Pending' && (
-                    <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-                      Pending
-                    </Badge>
-                  )
-                }
-                {
-                  invoice.deliveryTracking[0]?.status === 'Process' && (
-                    <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-                      Proses
-                    </Badge>
-                  )
-                }
-                {
-                  invoice.deliveryTracking[0]?.status === 'Done' && (
-                    <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-                      Selesai
-                    </Badge>
-                  )
-                }
-                {
-                  invoice.deliveryTracking[0]?.status === 'Cancel' && (
-                    <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-                      Batal
-                    </Badge>
-                  )
-                }
+                {invoice.deliveryTracking[0]?.status === 'Pending' && (
+                  <Badge variant="outline" className="bg-gray-100 text-gray-800 border-0">
+                    Pending
+                  </Badge>
+                )}
+                {invoice.deliveryTracking[0]?.status === 'Process' && (
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-0">
+                    Proses
+                  </Badge>
+                )}
+                {invoice.deliveryTracking[0]?.status === 'Done' && (
+                  <Badge variant="outline" className="bg-green-100 text-green-800 border-0">
+                    Selesai
+                  </Badge>
+                )}
+                {invoice.deliveryTracking[0]?.status === 'Cancel' && (
+                  <Badge variant="outline" className="bg-red-100 text-red-800 border-0">
+                    Batal
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -87,11 +79,11 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Pembeli</p>
-                <p className="font-medium">{invoice.buyer}</p>
+                <p className="font-medium">{invoice.buyer.name}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Alamat</p>
-                <p className="font-medium">{invoice.buyer_address}</p>
+                <p className="font-medium">{invoice.buyer.address}</p>
               </div>
             </div>
           </div>
@@ -102,6 +94,10 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
           <div>
             <h3 className="font-semibold mb-2">Detail Pembayaran</h3>
             <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Metode Pembayaran</p>
+                <p className="font-medium">{invoice.payment_method?.name}</p>
+              </div>
               <div>
                 <p className="text-sm text-muted-foreground">Subtotal</p>
                 <p className="font-medium">
@@ -152,4 +148,4 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}
