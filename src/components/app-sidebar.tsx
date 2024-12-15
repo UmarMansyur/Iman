@@ -2,19 +2,19 @@
 
 import * as React from "react";
 import {
-  Calculator,
   CheckCheckIcon,
   Combine,
   Database,
   FileChartLine,
   Home,
+  MapPin,
   PackageCheckIcon,
   PackageSearch,
   ScrollText,
   SendToBack,
   Settings,
+  ShoppingBagIcon,
   SquareKanban,
-  Truck,
   Users,
 } from "lucide-react";
 
@@ -146,7 +146,7 @@ const data = {
   navOperator: [
     {
       title: "Dashboard",
-      url: "/operator/dashboard",
+      url: "/operator",
       icon: Home,
     },
     {
@@ -180,20 +180,36 @@ const data = {
       ],
     },
     {
-      title: "Data Order",
-      url: "/operator/data-order",
+      title: "Data Pre Order",
+      url: "/operator/data-pre-order",
       icon: SendToBack,
+      items: [
+        {
+          title: "Konfirmasi Pembayaran",
+          url: "/operator/konfirmasi-pembayaran",
+        },
+        {
+          title: "Pengiriman",
+          url: "/operator/pengiriman",
+        },
+      ]
     },
     {
       title: "Manajemen Transaksi",
       url: "/operator/transaksi",
-      icon: Calculator,
+      icon: ShoppingBagIcon,
+      items: [  
+        {
+          title: "Pengiriman",
+          url: "/operator/transaksi",
+        },
+      ]
     },
     {
-      title: "Pengiriman",
-      url: "/operator/pengiriman",
-      icon: Truck,
-    },
+      title: "Data Lokasi Pengiriman",
+      url: "/operator/lokasi-pengiriman",
+      icon: MapPin,
+    }
   ],
   navDistributor: [
     {
@@ -216,17 +232,6 @@ const data = {
       url: "/distributor/konfirmasi-penerimaan",
       icon: CheckCheckIcon,
     }
-
-    // {
-    //   title: "Data Produk",
-    //   url: "/distributor/data-produk",
-    //   icon: ScrollText,
-    // },
-    // {
-    //   title: "Stok Produk",
-    //   url: "/distributor/stok-produk",
-    //   icon: ScrollText,
-    // },
   ],
 };
 

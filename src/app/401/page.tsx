@@ -10,7 +10,6 @@ export default function Unaauthorized() {
   const { user } = useUserStore();
 
   const gotoHome = () => {
-    console.log(user);
     if(!user){
       router.replace("/login");
       return;

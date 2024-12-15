@@ -51,7 +51,7 @@ export const columns = (
   {
     accessorKey: "user",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Operator Pemesan" />
+      <DataTableColumnHeader column={column} title="Operator" />
     ),
     cell: ({ row }) => (
       <div className="text-start flex items-center gap-2">
@@ -82,27 +82,6 @@ export const columns = (
         ))}
       </div>
     ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status;
-      switch (status) {
-        case "Pending":
-          return (
-            <Badge variant="outline" className="bg-yellow-500 text-white border-none">
-              Menunggu
-            </Badge>
-          );
-        case "Approved":
-          return <Badge className="bg-blue-500 text-white">Diterima</Badge>;
-        case "Rejected":
-          return <Badge className="bg-red-500 text-white">Ditolak</Badge>;
-        default:
-          return <Badge>{status}</Badge>;
-      }
-    },
   },
   {
     accessorKey: "desc",

@@ -167,7 +167,7 @@ export default function EditMaterialStockReport({
       if (!response.ok) throw new Error(responseData.message);
 
       toast.success("Laporan berhasil diperbarui");
-      router.push("/owner/bahan-baku-produksi");
+      router.push("/operator/bahan-baku-produksi");
       fetchData();
     } catch (error: any) {
       toast.error(error.message);

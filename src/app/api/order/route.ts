@@ -13,26 +13,25 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || "";
     const sortBy = searchParams.get("sortBy") || "id";
     const sortOrder = searchParams.get("sortOrder") || "desc";
+    const type_preorder = searchParams.get("type_preorder") || "false";
     const factoryId = parseInt(searchParams.get("factoryId") || "0");
 
     const where: any = {
-      OR: [
-        { factory: { name: { contains: search } } },
-      ],
+      OR: [{ factory: { name: { contains: search } } }],
       factory_id: factoryId ? factoryId : undefined,
+      type_preorder: type_preorder === "true" ? true : false,
     };
 
-    const orderBy: any = 
-    sortBy === "user" 
-      ? { user_id: sortOrder }
-      : sortBy === "tanggal"
-      ? { created_at: sortOrder }
-      : sortBy === "total_amount"
-      ? { total_amount: sortOrder }
-      : sortBy === "desc"
-      ? { desc: sortOrder }
-      : { created_at: "desc" };
-
+    const orderBy: any =
+      sortBy === "user"
+        ? { user_id: sortOrder }
+        : sortBy === "tanggal"
+        ? { created_at: sortOrder }
+        : sortBy === "total_amount"
+        ? { total_amount: sortOrder }
+        : sortBy === "desc"
+        ? { desc: sortOrder }
+        : { created_at: "desc" };
 
     const orders = await prisma.orderMaterialUnit.findMany({
       where: {
@@ -102,7 +101,9 @@ export async function POST(request: Request) {
           total_item,
           desc,
           type_preorder: type_preorder,
-          status: OrderMaterialUnitStatus.Pending,
+          status: type_preorder
+            ? OrderMaterialUnitStatus.Pending
+            : OrderMaterialUnitStatus.Approved,
           user_id: parseInt(user_id),
           DetailOrderMaterialUnit: {
             create: details.map((detail: any) => ({
@@ -118,20 +119,30 @@ export async function POST(request: Request) {
         },
       });
 
+      if (!type_preorder) {
+        const detailsToCreate = details.map((detail: any) => ({
+          material_unit_id: parseInt(detail.material_unit_id),
+          amount: detail.amount,
+          factory_id: parseInt(factory_id),
+          report_material_stock_id: orderMaterialUnit.id,
+          order_material_unit_id: orderMaterialUnit.id,
+        }));
+
+        await tx.materialStock.createMany({
+          data: detailsToCreate,
+        });
+      }
+
       return orderMaterialUnit;
     });
 
     return NextResponse.json(order);
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 // app/api/order-material/[id]/route.ts
-
 
 // DELETE - Delete order
 
@@ -139,11 +150,21 @@ export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id") || "";
 
-  await prisma.orderMaterialUnit.delete({
-    where: {
-      id: parseInt(id as string)
-    }
-  })
+  const response = await prisma.$transaction(async (tx) => {
+    await tx.materialStock.deleteMany({
+      where: {
+        order_material_unit_id: parseInt(id as string),
+      },
+    });
+    await tx.orderMaterialUnit.delete({
+      where: {
+        id: parseInt(id as string),
+      },
+    });
+  });
 
-  return NextResponse.json({ message: "Order berhasil dihapus" }, { status: 200 });
+  return NextResponse.json(
+    { message: "Order berhasil dihapus", data: response },
+    { status: 200 }
+  );
 }

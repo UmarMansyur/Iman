@@ -35,7 +35,6 @@ export default function OrderPage() {
   const [currentMaterial, setCurrentMaterial] = useState("");
   const [currentAmount, setCurrentAmount] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("");
-  const [currentTotal, setCurrentTotal] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
   const formatNumber = (value: string) => {
@@ -50,10 +49,6 @@ export default function OrderPage() {
     }
     if (!currentAmount || Number(currentAmount) <= 0) {
       toast.error("Jumlah harus lebih dari 0");
-      return;
-    }
-    if (!currentPrice || Number(currentPrice) <= 0) {
-      toast.error("Harga harus lebih dari 0");
       return;
     }
 
@@ -104,19 +99,8 @@ export default function OrderPage() {
     setCurrentMaterial("");
     setCurrentAmount("");
     setCurrentPrice("");
-    setCurrentTotal("");
   };
 
-  useEffect(() => {
-    const amount = Number(currentAmount.replace(/,/g, ""));
-    const price = Number(currentPrice.replace(/,/g, ""));
-    setCurrentTotal(
-      Number(amount * price).toLocaleString("id-ID", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      })
-    );
-  }, [currentAmount, currentPrice]);
 
   const [materials, setMaterials] = useState<any[]>([]);
   useEffect(() => {
@@ -137,7 +121,6 @@ export default function OrderPage() {
     setDetails(newDetails);
   };
 
-  const grandTotal = details.reduce((sum, detail) => sum + detail.total, 0);
   const { user } = useUserStore();
 
   useEffect(() => {
@@ -247,7 +230,7 @@ export default function OrderPage() {
                 <Button
                   type="button"
                   className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
-                  onClick={() => router.back()}
+                  onClick={() => router.push("/operator/persediaan-bahan-baku")}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Kembali
@@ -268,7 +251,7 @@ export default function OrderPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-5 gap-4 items-end">
+              <div className="grid grid-cols-3 gap-4 items-end">
                 <div className="grid gap-2">
                   <label>Material</label>
                   <Select
@@ -310,24 +293,6 @@ export default function OrderPage() {
                     placeholder="Jumlah"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <label>Harga</label>
-                  <Input
-                    type="text"
-                    value={currentPrice}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, "");
-                      if (/^\d*$/.test(value) || value === "") {
-                        setCurrentPrice(formatNumber(value));
-                      }
-                    }}
-                    placeholder="Harga per unit"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label>Total</label>
-                  <Input type="text" value={currentTotal || ""} disabled />
-                </div>
                 <Button
                   type="button"
                   onClick={addDetail}
@@ -345,8 +310,6 @@ export default function OrderPage() {
                       <th className="px-4 py-2 text-left">Material</th>
                       <th className="px-4 py-2 text-left">Jumlah</th>
                       <th className="px-4 py-2 text-left">Harga</th>
-                      <th className="px-4 py-2 text-left">Total</th>
-                      <th className="px-4 py-2 text-left">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -369,12 +332,6 @@ export default function OrderPage() {
                           {formatNumber(detail.amount.toString())}
                         </td>
                         <td className="px-4 py-2">
-                          Rp {formatNumber(detail.price.toString())}
-                        </td>
-                        <td className="px-4 py-2">
-                          Rp {formatNumber(detail.total.toString())}
-                        </td>
-                        <td className="px-4 py-2">
                           <Button
                             type="button"
                             variant="destructive"
@@ -395,18 +352,6 @@ export default function OrderPage() {
                     )}
                   </tbody>
                 </table>
-              </div>
-
-              <div className="flex justify-between items-center border p-4 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-medium">Total Keseluruhan</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg font-medium">Rp</span>
-                  <span className="font-bold text-4xl tracking-tight">
-                    {grandTotal.toLocaleString("id-ID")}
-                  </span>
-                </div>
               </div>
 
               <div className="flex justify-between">

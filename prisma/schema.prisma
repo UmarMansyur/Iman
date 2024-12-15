@@ -80,6 +80,7 @@ model Factory {
   DistributorStock     DistributorStock[]
   CostDelivery         CostDelivery[]
   LogOrderMaterialUnit LogOrderMaterialUnit[]
+  Location             Location[]
 
   @@map("factories")
 }
@@ -183,6 +184,7 @@ model MaterialStock {
   material_unit_id         Int
   amount                   Float
   report_material_stock_id Int?
+  order_material_unit_id   Int?
   status                   MaterialStockStatus @default(In)
   created_at               DateTime            @default(now())
   updated_at               DateTime            @updatedAt
@@ -315,13 +317,14 @@ model MemberPriceProduct {
 }
 
 model CostDelivery {
-  id         Int      @id @default(autoincrement())
-  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id Int
-  location   String
-  amount     Float
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  factory     Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id  Int
+  location    Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  location_id Int
+  amount      Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   @@map("cost_deliveries")
 }
@@ -409,28 +412,37 @@ enum PPNStatus {
   Inactive
 }
 
+model Buyer {
+  id         Int       @id @default(autoincrement())
+  name       String
+  address    String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  Invoice    Invoice[]
+
+  @@map("buyers")
+}
+
 model Invoice {
   id                  Int                   @id @default(autoincrement())
   factory             Factory               @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id          Int
   user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id             Int
+  is_distributor      Boolean               @default(false)
   invoice_code        String                @unique
-  amount              Float?                @default(0)
   discount            Float?                @default(0)
   ppn                 Float?                @default(0)
-  buyer               String                @default("")
-  sales_man           String?
-  recipient           String?
+  buyer               Buyer?                @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id            Int?
   maturity_date       DateTime?
   item_amount         Float
-  discon_member       Float?
-  buyer_address       String?
-  down_payment        Float
-  total               Float
-  sub_total           Float
-  remaining_balance   Float
-  payment_status      PaymentStatus
+  discon_member       Float?                @default(0)
+  down_payment        Float                 @default(0)
+  total               Float                 @default(0)
+  sub_total           Float                 @default(0)
+  remaining_balance   Float                 @default(0)
+  payment_status      PaymentStatus         @default(Pending)
   payment_method      PaymentMethod         @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
   payment_method_id   Int
   proof_of_payment    String?
@@ -466,6 +478,7 @@ model DetailInvoice {
   sub_total  Float    @default(0)
   invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
   invoice_id Int
+  is_product Boolean  @default(true)
 
   @@map("detail_invoices")
 }
@@ -481,18 +494,35 @@ model LogOrderDistributor {
   @@map("log_order_distributors")
 }
 
+model Location {
+  id               Int                @id @default(autoincrement())
+  factory          Factory            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id       Int
+  name             String
+  cost             Float              @default(0)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  DeliveryTracking DeliveryTracking[]
+  CostDelivery     CostDelivery[]
+
+  @@map("locations")
+}
+
 model DeliveryTracking {
-  id         Int                    @id @default(autoincrement())
-  invoice    Invoice                @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
-  invoice_id Int
-  desc       String
-  location   String
-  latitude   Float?
-  longitude  Float?
-  cost       Float?                 @default(0)
-  created_at DateTime               @default(now())
-  updated_at DateTime               @updatedAt
-  status     DeliveryTrackingStatus @default(Pending)
+  id          Int                    @id @default(autoincrement())
+  sales_man   String?
+  recipient   String?
+  invoice     Invoice                @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id  Int
+  desc        String
+  location    Location               @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  location_id Int
+  latitude    Float?
+  longitude   Float?
+  cost        Float?                 @default(0)
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
+  status      DeliveryTrackingStatus @default(Pending)
 
   @@map("delivery_trackings")
 }

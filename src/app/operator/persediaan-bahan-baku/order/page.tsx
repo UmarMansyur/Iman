@@ -101,6 +101,7 @@ export default function OrderPage() {
         factory_id: 1, // Adjust based on your needs
         desc: description,
         user_id: user?.id,
+        type_preorder: true,
         details: details.map(detail => ({
           material_unit_id: detail.material_unit_id,
           amount: detail.amount,

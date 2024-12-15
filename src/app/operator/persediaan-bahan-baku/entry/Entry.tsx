@@ -51,7 +51,7 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/order?${queryParams}`);
+      const response = await fetch(`/api/order?${queryParams}&type_preorder=false`);
       const data = await response.json();
 
       setData(data.data);
@@ -124,10 +124,10 @@ export default function PabrikPage() {
             <div>
               <Button 
                   className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
-                onClick={() => router.push('/operator/persediaan-bahan-baku/order')}
+                onClick={() => router.push('/operator/persediaan-bahan-baku/entry')}
               >
                 <PlusCircle className="w-4 h-4 mr-2" />
-                Tambah Order Bahan Baku
+                Entry Stok Bahan Baku
               </Button>
             </div>
           </div>

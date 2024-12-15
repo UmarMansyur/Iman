@@ -27,7 +27,7 @@ export default function LaporanProduksiPage() {
 
   const [filters, setFilters] = useState({
     search: "",
-    sortBy: "created_at",
+    sortBy: "id",
     sortOrder: "desc",
   });
 
@@ -72,10 +72,11 @@ export default function LaporanProduksiPage() {
     }
   };
 
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any>([]);
 
   const fetchProducts = async () => {
-    const response = await fetch("/api/product?factoryId=" + user?.factory_selected?.id);
+    if (!user) return;
+    const response = await fetch("/api/product?limit=1000&factoryId=" + user?.factory_selected?.id);
     const result = await response.json();
     setProducts(result.products);
   };
@@ -125,12 +126,12 @@ export default function LaporanProduksiPage() {
               <CardTitle>
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">
-                    Input Laporan Produksi
+                    Laporan Produksi
                   </h3>
                 </div>
               </CardTitle>
               <CardDescription>
-                Berikut adalah laporan produksi dari masing-masing produk yang dihasilkan. Operator hanya dapat menginput laporan produksi dari produk yang sudah ditentukan oleh owner.
+                Laporan ini menampilkan data produksi per shift
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -148,7 +149,7 @@ export default function LaporanProduksiPage() {
                   </div>
                 </div>
                 <div>
-                  <Form fetchData={fetchReports} />
+                  <Form fetchData={fetchReports} products={products} />
                 </div>
               </div>
               {loadingSearch ? (

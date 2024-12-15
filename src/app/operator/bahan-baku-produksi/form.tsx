@@ -131,7 +131,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
 
       setDetails([]);
       toast.success("Laporan berhasil dibuat");
-      router.push("/owner/bahan-baku-produksi");
+      router.push("/operator/bahan-baku-produksi");
       fetchData();
     } catch (error: any) {
       toast.error(error.message);

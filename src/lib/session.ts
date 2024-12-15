@@ -24,15 +24,21 @@ export async function generateToken(payload: any) {
 }
 
 export async function verifyToken(token: string): Promise<any> {
-  return jwtVerify(token, encodedKey, { algorithms: ['HS256'] });
+  try {
+    return jwtVerify(token, encodedKey, { algorithms: ['HS256'] });
+  } catch (error: any) {
+    console.error(error ||'Failed to verify session')
+  }
 }
  
 export async function decrypt(session: string | undefined = '') {
   try {
-    const { payload } = await jwtVerify(session, encodedKey, {
+    if(!session) return null;
+    const data = await jwtVerify(session, encodedKey, {
       algorithms: ['HS256'],
     })
-    return payload
+    if(!data) return null;
+    return data.payload;
   } catch (error: any) {
     console.error(error ||'Failed to verify session')
   }

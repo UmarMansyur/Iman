@@ -17,7 +17,6 @@ export default function PrintPage({
     try {
       const response = await fetch(`/api/order/${orderId}`);
       const fetchedData = await response.json();
-      console.log(fetchedData);
       setData(fetchedData);
     } catch (error) {
       console.error("Terjadi kesalahan saat mengambil data:", error);

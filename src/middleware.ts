@@ -3,7 +3,7 @@
 'use server'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from './lib/session';
+import { deleteSession, getSession } from './lib/session';
 import { jwtDecode } from 'jwt-decode';
 
 const protectedRoutes = [
@@ -59,20 +59,28 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
       const decoded: any = jwtDecode(session);
       if (req.nextUrl.pathname.startsWith('/owner')) {
         if(!decoded?.factory_selected?.position.includes("Owner") || decoded?.factory_selected?.status_member !== "Active"){
+          deleteSession();
           return NextResponse.redirect(new URL('/401', req.nextUrl));
+        } else {
+          return NextResponse.next();
         }
       }
       if(req.nextUrl.pathname.startsWith("/operator")) {
         if(!decoded?.factory_selected?.position.includes("Operator") || decoded?.factory_selected?.status_member !== "Active"){
+          deleteSession();
           return NextResponse.redirect(new URL('/401', req.nextUrl));
+        } else {
+          return NextResponse.next();
         }
       }
       if(req.nextUrl.pathname.startsWith("/distributor")) {
         if(!decoded?.factory_selected?.position.includes("Distributor") || decoded?.factory_selected?.status_member !== "Active"){
+          deleteSession();
           return NextResponse.redirect(new URL('/401', req.nextUrl));
+        } else {
+          return NextResponse.next();
         }
       }
-      return NextResponse.next()
     } catch (error: any) {
       return NextResponse.redirect(new URL('/login', req.nextUrl))
     }

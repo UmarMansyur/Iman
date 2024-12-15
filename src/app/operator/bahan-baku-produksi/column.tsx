@@ -23,6 +23,16 @@ export const columns = (
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Tanggal" />
     ),
+    cell: ({ row }) => {
+      const date = new Date(row.original.created_at);
+      return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
   },
   {
     accessorKey: "Operator",
@@ -50,18 +60,19 @@ export const columns = (
   {
     accessorKey: "total_amount",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Bahan Baku" />
+      <DataTableColumnHeader column={column} title="Bahan Baku" />
     ),
     cell: ({ row }) => {
       const totalAmount = row.original as any;
-      return totalAmount.total_amount ? totalAmount.total_amount.toLocaleString("id-ID") : "-";
+      const response = totalAmount.detail.map((detail: any, index: number) => {
+        return <div key={'amount-'+index}>{detail.amount} {detail.material_unit} - {detail.unit}</div>
+      })
+      return response
     },
   },
   {
     accessorKey: "desc",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Keterangan" />
-    ),
+    header: "Keterangan",
     cell: ({ row }) => (
       <Dialog>
         <DialogTrigger asChild>

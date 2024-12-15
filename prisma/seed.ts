@@ -95,16 +95,19 @@ async function main(): Promise<void> {
         factory_id: djava.id,
         user_id: operator.id,
         role_id: 2,
+        status: "Active"
       },
       {
         factory_id: djava.id,
         user_id: distributor.id,
         role_id: 3,
+        status: "Active"
       },
       {
         factory_id: djava.id,
         user_id: owner.id,
         role_id: 1,
+        status: "Active"
       },
     ],
   });
@@ -241,18 +244,22 @@ async function main(): Promise<void> {
     },
   });
 
+  const buyer = await prisma.buyer.create({
+    data: {
+      name: "PT. Iman",
+      address: "Jl. Iman",
+    },
+  });
+
   const invoice = await prisma.invoice.create({
     data: {
       factory_id: djava.id,
       user_id: admin.id,
+      is_distributor: true,
       invoice_code: "INV-001",
-      amount: 1000000,
-      buyer: "PT. Iman",
-      sales_man: "John Doe",
-      recipient: "PT. Iman",
+      buyer_id: buyer.id,
       maturity_date: new Date("2024-01-01"),
       item_amount: 1,
-      buyer_address: "Jl. Iman",
       down_payment: 100000,
       ppn: ppns.percentage,
       payment_method_id: 1,
@@ -265,21 +272,33 @@ async function main(): Promise<void> {
 
   await prisma.detailInvoice.create({
     data: {
+      product_id: 1,
       invoice_id: invoice.id,
       desc: "ST Premium",
       amount: 1,
       sub_total: 1000000,
+      is_product: true,
     },
   });
+
+  const location = await prisma.location.create({
+    data: {
+      factory_id: djava.id,
+      name: "Jl. Delivery",
+      cost: 100000,
+    }
+  })
 
   await prisma.deliveryTracking.create({
     data: {
       invoice_id: invoice.id,
       desc: "Delivery",
-      location: "Jl. Delivery",
+      location_id: location.id,
       latitude: -6.2088,
       longitude: 106.8456,
       cost: 100000,
+      sales_man: "John Doe",
+      recipient: "PT. Iman",
     },
   });
 }

@@ -29,7 +29,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
     cell: ({ row }) => (
       <div className="text-start">
-        {row.original.amount} {row.original.unit}
+        {new Intl.NumberFormat("id-ID").format(row.original.amount)} {row.original.unit}
       </div>
     ),
   },

@@ -16,8 +16,6 @@ import { useUserStore } from "@/store/user-store";
 interface DetailOrder {
   material_unit_id: string;
   amount: number;
-  price: number;
-  total: number;
 }
 
 export default function OrderPage() {
@@ -29,8 +27,6 @@ export default function OrderPage() {
 
   const [currentMaterial, setCurrentMaterial] = useState('');
   const [currentAmount, setCurrentAmount] = useState<string>('');
-  const [currentPrice, setCurrentPrice] = useState<string>('');
-  const [currentTotal, setCurrentTotal] = useState<string>('');
 
   const formatNumber = (value: string) => {
     const number = value.replace(/\D/g, '');
@@ -46,10 +42,7 @@ export default function OrderPage() {
       toast.error('Jumlah harus lebih dari 0');
       return;
     }
-    if (!currentPrice || Number(currentPrice) <= 0) {
-      toast.error('Harga harus lebih dari 0');
-      return;
-    }
+
 
     const existingDetail = details.find(detail => detail.material_unit_id === currentMaterial);
     if (existingDetail) {
@@ -59,20 +52,12 @@ export default function OrderPage() {
     setDetails([...details, { 
       material_unit_id: currentMaterial, 
       amount: Number(currentAmount.replace(/,/g, '')), 
-      price: Number(currentPrice.replace(/,/g, '')),
-      total: Number(currentAmount.replace(/,/g, '')) * Number(currentPrice.replace(/,/g, ''))
     }]);
 
     setCurrentMaterial('');
     setCurrentAmount('');
-    setCurrentPrice('');
-    setCurrentTotal('');
   };
-  useEffect(() => {
-    const amount = Number(currentAmount.replace(/,/g, ''));
-    const price = Number(currentPrice.replace(/,/g, ''));
-    setCurrentTotal(Number(amount * price).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-  }, [currentAmount, currentPrice]);
+
 
   const [materials, setMaterials] = useState<any[]>([]);
   useEffect(() => {
@@ -90,7 +75,6 @@ export default function OrderPage() {
   };
 
 
-  const grandTotal = details.reduce((sum, detail) => sum + detail.total, 0);
   const { user } = useUserStore()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,10 +85,12 @@ export default function OrderPage() {
         factory_id: 1, // Adjust based on your needs
         desc: description,
         user_id: user?.id,
+        price: 0,
+        type_preorder: false,
         details: details.map(detail => ({
           material_unit_id: detail.material_unit_id,
           amount: detail.amount,
-          price: detail.price,
+          price: 0,
         }))
       };
 
@@ -171,7 +157,7 @@ export default function OrderPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-5 gap-4 items-end">
+              <div className="grid grid-cols-3 gap-4 items-end">
                 <div className="grid gap-2">
                   <label>Material</label>
                   <Select 
@@ -208,29 +194,6 @@ export default function OrderPage() {
                     placeholder="Jumlah"
                   />
                 </div>
-                <div className="grid gap-2">
-                  <label>Harga</label>
-                  <Input 
-                    type="text"
-                    value={currentPrice}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, '');
-                      if (/^\d*$/.test(value) || value === '') {
-                        setCurrentPrice(formatNumber(value));
-                      }
-                    }}
-                    placeholder="Harga per unit"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label>Total</label>
-                  <Input 
-                    type="text"
-                    className="bg-gray-50 text-black text-lg font-semibold text-end"
-                    value={currentTotal || ''}
-                    disabled
-                  />
-                </div>
                 <Button 
                   type="button"
                   onClick={addDetail}
@@ -248,8 +211,6 @@ export default function OrderPage() {
                       <th className="px-4 py-2 text-left">Material</th>
                       <th className="px-4 py-2 text-left">Jumlah</th>
                       <th className="px-4 py-2 text-left">Harga</th>
-                      <th className="px-4 py-2 text-left">Total</th>
-                      <th className="px-4 py-2 text-left">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -260,8 +221,6 @@ export default function OrderPage() {
                           {materials.find(m => m.id == detail.material_unit_id)?.unit}
                         </td>
                         <td className="px-4 py-2">{formatNumber(detail.amount.toString())}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.price.toString())}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.total.toString())}</td>
                         <td className="px-4 py-2">
                           <Button 
                             type="button"
@@ -283,18 +242,6 @@ export default function OrderPage() {
                     }
                   </tbody>
                 </table>
-              </div>
-
-              <div className="flex justify-between items-center border p-4 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-medium">Total Keseluruhan</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg font-medium">Rp</span>
-                  <span className="font-bold text-4xl tracking-tight">
-                    {grandTotal.toLocaleString('id-ID')}
-                  </span>
-                </div>
               </div>
 
               <div className="flex justify-between">

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // buatkan fungsi untuk jika angkanya sampai di atas 1 juta maka rubah ke 1jt
 // buatkan fungsi untuk jika angkanya sampai di atas 1000000000 maka rubah ke 1M
 // buatkan fungsi untuk jika angkanya sampai di atas 1000000000000 maka rubah ke 1T
@@ -39,10 +40,35 @@ export function convert(number: number): {
   const slop = number / 10 || 0;
   const bal = slop / 4 || 0;
   const karton = bal / 8 || 0;
+
+  const splitSlop = slop < 1000 ? slop.toString() : splitNumber(slop);
+  const splitPack = number < 1000 ? number.toString() : splitNumber(number);
+  const splitBal = bal < 1000 ? bal.toString() : splitNumber(bal);
+  const splitKarton = karton < 1000 ? karton.toString() : splitNumber(karton);
+
   return {
-    slop: `${slop.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
-    pack: `${number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
-    bal: `${bal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
-    karton: `${karton.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
+    slop: splitSlop,
+    pack: splitPack,
+    bal: splitBal,
+    karton: splitKarton,
   };
+}
+
+
+export function formatCurrency(number: number): string {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+
+export function parseCurrency(number: string): number {
+  if(!number) {
+    return 0;
+  }
+  return parseInt(number.replace(/[^0-9]/g, ''));
+}
+
+
+export function formatCurrencyInput(e: any) {
+  const value = e.target.value;
+  return parseCurrency(value);
 }

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Inventory from "./inventory/inventory";
 import ListOrder from "./order/ListOrder";
+import Entry from "./entry/Entry";
 
 export default function PageStockMaterial() {
   return (
@@ -27,7 +28,7 @@ export default function PageStockMaterial() {
               <Inventory />
             </TabsContent>
             <TabsContent value="entry">
-              
+              <Entry/>
             </TabsContent>
             <TabsContent value="order">
               <ListOrder/>

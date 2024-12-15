@@ -51,7 +51,7 @@ export default function PabrikPage() {
         queryParams.set("factoryId", factoryId.toString());
       }
   
-      const response = await fetch(`/api/order?${queryParams}`);
+      const response = await fetch(`/api/order?${queryParams}&type_preorder=true`);
       const data = await response.json();
 
       setData(data.data);

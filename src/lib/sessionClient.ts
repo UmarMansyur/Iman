@@ -8,7 +8,7 @@ export const getClientSession = async (): Promise<any | null> => {
       method: 'GET',
       credentials: 'include'
     });
-
+    
     if (!response.ok) {
       return null;
     }

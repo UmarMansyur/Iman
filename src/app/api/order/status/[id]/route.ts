@@ -33,6 +33,7 @@ export async function PUT(request: Request, { params }: any) {
           material_unit_id: detail.material_unit_id,
           amount: detail.amount,
           status: MaterialStockStatus.In,
+          order_material_unit_id: parseInt(id),
         }));
 
         await tx.materialStock.createMany({
