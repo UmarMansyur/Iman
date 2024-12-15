@@ -31,9 +31,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { id } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { convert } from "@/lib/number";
@@ -354,22 +352,22 @@ export default function InvoiceForm() {
       const data = await response.json();
       
       if (response.ok) {
-        // Set invoice data
+        // Add null checks and default values
         setInvoiceData({
-          buyer: data.buyer_id,
-          sales_man: data.sales_man,
-          recipient: data.recipient,
-          maturity_date: data.maturity_date,
-          buyer_address: data.buyer_address,
-          desc: data.desc,
-          down_payment: data.down_payment,
-          payment_method_id: data.payment_method_id.toString(),
-          discon_member: data.discon_member,
-          shipping_address: data.shipping_address,
-          shipping_cost: data.shipping_cost,
-          notes: data.notes,
-          location: data.location,
-          location_cost: data.location_cost,
+          buyer: data.buyer_id || "",
+          sales_man: data.sales_man || "",
+          recipient: data.recipient || "",
+          maturity_date: data.maturity_date || "",
+          buyer_address: data.buyer_address || "",
+          desc: data.desc || "",
+          down_payment: data.down_payment || 0,
+          payment_method_id: data.payment_method_id?.toString() || "",
+          discon_member: data.discon_member || 0,
+          shipping_address: data.shipping_address || "",
+          shipping_cost: data.shipping_cost || 0,
+          notes: data.notes || "",
+          location: data.location || "",
+          location_cost: data.location_cost || 0,
         });
 
         // Set details
@@ -973,7 +971,6 @@ export default function InvoiceForm() {
                     required
                     value={invoiceData.payment_method_id || ""}
                     onValueChange={(value) => {
-                      console.log(value);
                       setInvoiceData((prev) => ({
                         ...prev,
                         payment_method_id: value,
@@ -984,7 +981,7 @@ export default function InvoiceForm() {
                       <SelectValue placeholder="Pilih Metode Pembayaran">
                         {paymentMethods.find(
                           (method: any) =>
-                            method.id == invoiceData.payment_method_id
+                            method.id.toString() === invoiceData.payment_method_id
                         )?.name || "Pilih Metode Pembayaran"}
                       </SelectValue>
                     </SelectTrigger>
@@ -1018,8 +1015,10 @@ export default function InvoiceForm() {
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {invoiceData.maturity_date ? (
-                          format(new Date(invoiceData.maturity_date), "PPP", {
-                            locale: id,
+                          new Date(invoiceData.maturity_date).toLocaleDateString("id-ID", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
                           })
                         ) : (
                           <span>Pilih tanggal</span>
