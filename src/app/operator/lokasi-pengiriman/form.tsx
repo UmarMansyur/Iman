@@ -64,7 +64,7 @@ export default function Form({ location }: { location?: Location }) {
     return useMutation({
       mutationFn: (data: LocationFormState) => createLocation(data),
       onSuccess: (data: any) => {
-        if(data.error) {
+        if (data.error) {
           throw new Error(data.error);
         }
         toast.success(data.message);
@@ -150,10 +150,11 @@ export default function Form({ location }: { location?: Location }) {
                 Batal
               </Button>
             </DialogClose>
-            <DialogClose asChild> </DialogClose>
-            <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-              Simpan
-            </Button>
+            <DialogClose asChild>
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                Simpan
+              </Button>
+            </DialogClose>
           </DialogFooter>
         </form>
       </DialogContent>

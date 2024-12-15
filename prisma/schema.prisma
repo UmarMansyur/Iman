@@ -81,6 +81,7 @@ model Factory {
   CostDelivery         CostDelivery[]
   LogOrderMaterialUnit LogOrderMaterialUnit[]
   Location             Location[]
+  Buyer                Buyer[]
 
   @@map("factories")
 }
@@ -414,6 +415,8 @@ enum PPNStatus {
 
 model Buyer {
   id         Int       @id @default(autoincrement())
+  factory    Factory   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
   name       String
   address    String
   created_at DateTime  @default(now())
@@ -446,6 +449,7 @@ model Invoice {
   payment_method      PaymentMethod         @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
   payment_method_id   Int
   proof_of_payment    String?
+  type_preorder       Boolean               @default(false)
   detailInvoices      DetailInvoice[]
   deliveryTracking    DeliveryTracking[]
   notes               String?
@@ -522,14 +526,14 @@ model DeliveryTracking {
   cost        Float?                 @default(0)
   created_at  DateTime               @default(now())
   updated_at  DateTime               @updatedAt
-  status      DeliveryTrackingStatus @default(Pending)
+  status      DeliveryTrackingStatus @default(Process)
 
   @@map("delivery_trackings")
 }
 
 enum DeliveryTrackingStatus {
-  Pending
   Process
+  Sent
   Done
   Cancel
 }

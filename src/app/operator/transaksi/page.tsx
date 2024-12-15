@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -9,101 +10,105 @@ import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 
-export default function PabrikPage() {
-  const [data, setData] = useState<PaymentSetting[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
+type TransactionFilters = {
+  search: string;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+type TransactionData = {
+  data: any[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export default function TransactionPage() {
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [queryParams, setQueryParams] = useState<TransactionFilters & {
+    page: number;
+    limit: number;
+  }>({
     page: 1,
     limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
-
-  const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",
     sortOrder: "asc",
   });
+  const { user } = useUserStore();
 
-  // Tambahkan state baru untuk nilai input search
-  const [searchInput, setSearchInput] = useState("");
-  const { user } = useUserStore()
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      if(!user) return;
-      const factoryId = user?.factory_selected?.id;
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        search: filters.search,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-      });
+  const fetchTransactions = async (): Promise<TransactionData> => {
+    const { page, limit, search, sortBy, sortOrder } = queryParams;
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search,
+      sortBy,
+      sortOrder,
+    });
 
-      if(factoryId) {
-        queryParams.set("factory_id", factoryId.toString());
-      }
-  
-      const response = await fetch(`/api/transaction?${queryParams}`);
-      const data = await response.json();
+    const response = await fetch(`/api/transaction?${params}&factory_id=${user?.factory_selected?.id}`);
 
-      setData(data.data);
-      setPagination((prev) => ({
-        ...prev,
-        total: data.pagination.total,
-        totalPages: data.pagination.totalPages,
-      }));
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-      setLoadingSearch(false);
+    if(!response.ok) {
+      throw new Error("Failed to fetch transactions");
     }
-  };
 
-  useEffect(() => {
-    fetchProducts();
-  }, [
-    pagination.page,
-    pagination.limit,
-    filters.search,
-    filters.sortBy,
-    filters.sortOrder,
-    user,
-  ]);
+    const data = await response.json();
+    return data;
+  }
 
+  const { data, isLoading, isError, error } = useQuery<TransactionData>({
+    queryKey: ["transactions", queryParams],
+    queryFn: fetchTransactions,
+    placeholderData: (previousData) => previousData,
+  });
 
-  const debouncedSearch = useCallback(
-    debounce((value: string) => {
-      setFilters((prev) => ({ ...prev, search: value }));
-      setPagination((prev) => ({ ...prev, page: 1 }));
-    }, 500),
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue: string) => {
+        setQueryParams((prev) => ({
+          ...prev,
+          search: searchValue,
+          page: 1,
+        }));
+      }, 500),
     []
   );
-  const [loadingSearch, setLoadingSearch] = useState(false);
-  const handleSearch = (value: string) => {
-    setSearchInput(value);
-    setLoadingSearch(true);
-    debouncedSearch(value);
-  };
 
-  // Tambahkan handler untuk pagination
-  const handlePageChange = (newPage: number) => {
-    setPagination((prev) => ({
+  const handleSearchInputChange = useCallback(
+    (value: string) => {
+      setSearchInput(value);
+      debouncedSearch(value);
+    },
+    [debouncedSearch]
+  );
+
+  const updateQueryParams = (updates: Partial<typeof queryParams>) => {
+    setQueryParams((prev) => ({
       ...prev,
-      page: newPage + 1, // Tambah 1 karena table menggunakan zero-based index
+      ...updates,
     }));
   };
 
+  if(isError) {
+    return (
+      <div>
+        Error: {error instanceof Error ? error.message : "An unknown error occurred"}
+      </div>
+    );
+  }
+
   return (
     <MainPage>
-      {loading ? (
+      {isLoading ? (
         <LoaderScreen />
       ) : (
         <Card>
@@ -121,7 +126,7 @@ export default function PabrikPage() {
                   type="text"
                   placeholder="Cari produk"
                   className="ps-8"
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}
                 />
               </div>
@@ -133,21 +138,23 @@ export default function PabrikPage() {
               </Button>
             </Link>
           </div>
-          {loadingSearch ? (
+          {isLoading ? (
             <div className="flex justify-center items-center h-24">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           ) : (
             <DataTable
-              columns={columns(fetchProducts, pagination.page, pagination.limit)}
-              data={data}
-              pagination={pagination}
+              columns={columns(queryParams.page, queryParams.limit)}
+              data={data?.data || []}
+              pagination={data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 }}
               sorting={(sortBy, sortOrder) => {
-                setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+                updateQueryParams({ sortBy, sortOrder: sortOrder as "asc" | "desc" });
               }}
-              onPageChange={handlePageChange}
+              onPageChange={(page) => {
+                updateQueryParams({ page });
+              }}
               onPageSizeChange={(size) => {
-                setPagination((prev) => ({ ...prev, limit: size, page: 1 }));
+                updateQueryParams({ limit: size, page: 1 });
               }}
             />
           )}

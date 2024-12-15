@@ -10,11 +10,8 @@ export async function POST(req: Request) {
       factory_id,
       user_id,
       discount,
-      buyer,
-      sales_man,
-      recipient,
+      buyer_id,
       maturity_date,
-      buyer_address,
       down_payment,
       payment_method_id,
       ppn,
@@ -38,10 +35,9 @@ export async function POST(req: Request) {
       (new Date().getMonth() + 1) +
       "-" +
       Math.floor(100000 + Math.random() * 900000).toString();
-    let amount_total = 0;
-    detailInvoices.forEach((detail: any) => {
-      amount_total += detail.sub_total;
-    });
+
+
+
 
     const response = await prisma.$transaction(async (tx) => {
       // Create invoice with related records
@@ -50,16 +46,12 @@ export async function POST(req: Request) {
           factory_id: parseInt(factory_id),
           user_id: parseInt(user_id),
           invoice_code,
-          amount: amount_total,
           discount,
           ppn,
-          buyer,
-          sales_man,
-          recipient,
+          buyer_id: parseInt(buyer_id),
           maturity_date: new Date(maturity_date),
           item_amount,
           discon_member,
-          buyer_address,
           down_payment,
           total,
           sub_total,
@@ -69,12 +61,13 @@ export async function POST(req: Request) {
           detailInvoices: {
             createMany: {
               data: detailInvoices.map((detail: any) => ({
-                product_id: detail.product_id,
+                product_id: detail.product_id ? parseInt(detail.product_id) : undefined,
                 desc: detail.desc,
                 amount: detail.amount,
-                price: detail.price,
-                discount: detail.discount,
-                sub_total: detail.sub_total,
+                price: detail.price ? parseInt(detail.price) : undefined,
+                discount: detail.discount ? parseInt(detail.discount) : undefined,
+                sub_total: detail.sub_total ? parseInt(detail.sub_total) : undefined,
+                is_product: detail.is_product,
               })),
             },
           },
@@ -87,7 +80,7 @@ export async function POST(req: Request) {
         data: {
           invoice_id: invoice.id,
           desc: desc,
-          location: location,
+          location_id: parseInt(location),
           cost,
         },
       });
@@ -117,15 +110,19 @@ export async function GET(req: Request) {
     const search = searchParams.get("search") || "";
     const user_id = searchParams.get("user_id") || "";
     const skip = (page - 1) * limit;
+    const factory_id = searchParams.get("factory_id") || "";
+    const type_preorder = searchParams.get("type_preorder") || "";
+    const where = {
+      OR: [
+        { buyer: { name: { contains: search } } },
+      ],
+      user_id: user_id ? parseInt(user_id) : undefined,
+      factory_id: factory_id ? parseInt(factory_id) : undefined,
+      type_preorder: type_preorder === "1" ? true : false,
+    }
 
     const invoices = await prisma.invoice.findMany({
-      where: {
-        OR: [
-          { buyer: { contains: search } },
-          { recipient: { contains: search } },
-        ],
-        user_id: user_id ? parseInt(user_id) : undefined,
-      },
+      where,
       include: {
         factory: true,
         user: true,
@@ -134,6 +131,7 @@ export async function GET(req: Request) {
             product: true,
           },
         },
+        buyer: true,
         payment_method: true,
         deliveryTracking: true,
       },
@@ -145,12 +143,7 @@ export async function GET(req: Request) {
     });
 
     const total = await prisma.invoice.count({
-      where: {
-        OR: [
-          { buyer: { contains: search } },
-          { recipient: { contains: search } },
-        ],
-      },
+      where,
     });
 
     return NextResponse.json({

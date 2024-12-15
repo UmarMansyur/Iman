@@ -248,6 +248,7 @@ async function main(): Promise<void> {
     data: {
       name: "PT. Iman",
       address: "Jl. Iman",
+      factory_id: djava.id,
     },
   });
 

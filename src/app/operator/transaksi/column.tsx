@@ -8,13 +8,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import DeleteButton from "@/components/delete-button";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import DeleteButtonQuery from "@/components/DeleteButton";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
+export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
     header: "No",
@@ -31,6 +31,11 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Pembeli"/>
     ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.buyer.name}
+      </div>
+    ),
   },
   {
     accessorKey: "total",
@@ -42,42 +47,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(row.original.total).slice(0, -3)}
       </div>
     ),
-  },
-  {
-    accessorKey: "payment_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status Pembayaran"/>
-    ),
-    cell: ({ row }) => {
-      const status = row.original.payment_status;
-      // const variants: { [key: string]: string } = {
-      //   PENDING: "bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300",
-      //   PAID: "bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300",
-      //   FAILED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300",
-      //   CANCELLED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300"
-      // };
-      
-      if(status === 'Pending') {
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Paid') {
-        return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Failed') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Cancelled') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
-        </Badge>
-      }
-    }
   },
   {
     accessorKey: "payment_method",
@@ -98,27 +67,27 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const status = row.original.deliveryTracking[0]?.status;
 
-      if(status === 'Pending') {
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
+      if(status === 'Process') {
+        return <Badge variant="outline" className={`bg-blue-100 text-blue-400 hover:bg-blue-100/80 dark:bg-blue-400 dark:text-blue-300 border-0`}>
           Pending
         </Badge>
       }
 
-      if(status === 'Process') { 
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Proses
+      if(status === 'Sent') { 
+        return <Badge variant="outline" className={`bg-yellow-100 text-yellow-400 hover:bg-yellow-100/80 dark:bg-yellow-400 dark:text-yellow-300 border-0`}>
+          Dikirim
         </Badge>
       }
 
 
       if(status === 'Done') {
-        return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
+        return <Badge variant="outline" className={`bg-green-100 text-green-400 hover:bg-green-100/80 dark:bg-green-400 dark:text-green-300 border-0`}>
           Selesai
         </Badge>
       }
 
       if(status === 'Cancel') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
+        return <Badge variant="outline" className={`bg-red-100 text-red-400 hover:bg-red-100/80 dark:bg-red-400 dark:text-red-300 border-0`}>
           Batal
         </Badge>
       }
@@ -154,7 +123,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
                 Edit
               </Button>
             </Link>
-            <DeleteButton fetchData={fetchData} endpoint="transaction" id={row.original.id.toString()} />
+            <DeleteButtonQuery endpoint="transaction" id={row.original.id.toString()} queryKey="transactions" />
           </DropdownMenuContent>
         </DropdownMenu>
       );

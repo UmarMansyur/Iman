@@ -200,6 +200,10 @@ const data = {
       icon: ShoppingBagIcon,
       items: [  
         {
+          title: "Daftar Transaksi",
+          url: "/operator/transaksi",
+        },
+        {
           title: "Pengiriman",
           url: "/operator/transaksi",
         },

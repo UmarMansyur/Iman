@@ -20,10 +20,11 @@ export type SelectDebounceProps = {
   placeholder: string;
   notFound: string;
   options: DropdownOptions[];
-  keyword: string;
+  keyword?: string;
   searchData: (query: string) => Promise<void>;
   choiced: React.Dispatch<React.SetStateAction<DropdownOptions | null>>;
   onSearch?: (value: string) => void;
+  className?: string
 };
 
 export default function SelectOption({
@@ -34,6 +35,7 @@ export default function SelectOption({
   searchData,
   choiced,
   onSearch,
+  className = "col-span-3"
 }: SelectDebounceProps) {
   const [selectedUser, setSelectedUser] = useState<DropdownOptions | null>(
     null
@@ -73,7 +75,7 @@ export default function SelectOption({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild className="col-span-3" name="user_id">
+      <PopoverTrigger asChild className={className} name="user_id">
         <Button
           variant="ghost"
           role="combobox"

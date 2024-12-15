@@ -292,6 +292,7 @@ CREATE TABLE `ppns` (
 -- CreateTable
 CREATE TABLE `buyers` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `factory_id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -320,6 +321,7 @@ CREATE TABLE `invoices` (
     `payment_status` ENUM('Pending', 'Paid', 'Paid_Off', 'Failed', 'Cancelled') NOT NULL DEFAULT 'Pending',
     `payment_method_id` INTEGER NOT NULL,
     `proof_of_payment` VARCHAR(191) NULL,
+    `type_preorder` BOOLEAN NOT NULL DEFAULT false,
     `notes` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -391,7 +393,7 @@ CREATE TABLE `delivery_trackings` (
     `cost` DOUBLE NULL DEFAULT 0,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `status` ENUM('Pending', 'Process', 'Done', 'Cancel') NOT NULL DEFAULT 'Pending',
+    `status` ENUM('Process', 'Sent', 'Done', 'Cancel') NOT NULL DEFAULT 'Process',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -516,6 +518,9 @@ ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_unit_id_fkey` FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE `report_costs` ADD CONSTRAINT `report_costs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `buyers` ADD CONSTRAINT `buyers_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `invoices` ADD CONSTRAINT `invoices_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

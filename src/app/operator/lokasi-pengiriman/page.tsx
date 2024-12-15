@@ -18,6 +18,7 @@ import { debounce } from "lodash";
 import Form from "./form";
 import { useQuery } from "@tanstack/react-query";
 import LoaderScreen from "@/components/views/loader";
+import { useUserStore } from "@/store/user-store";
 
 // Type definitions for better type safety
 interface LocationFilters {
@@ -52,6 +53,8 @@ export default function LokasiPengirimanPage() {
     sortOrder: "asc",
   });
 
+  const { user } = useUserStore();
+
   // Improved fetch function with proper error handling
   const fetchLocations = async () => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
@@ -63,7 +66,7 @@ export default function LokasiPengirimanPage() {
       sortOrder,
     });
 
-    const response = await fetch(`/api/location?${params}`);
+    const response = await fetch(`/api/location?${params}&factory_id=${user?.factory_selected?.id}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch locations");

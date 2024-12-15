@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || "";
   const sortBy = searchParams.get("sortBy") || "id";
   const sortOrder = searchParams.get("sortOrder") || "desc";
-
+  const factory_id = searchParams.get("factory_id") || "";
   const where: any = {
     OR: [
       {
@@ -19,6 +19,10 @@ export async function GET(request: Request) {
       },
     ],
   };
+
+  if(factory_id) {
+    where.factory_id = parseInt(factory_id);
+  }
 
   try {
     const total = await prisma.location.count({ where });
