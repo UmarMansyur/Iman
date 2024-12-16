@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import MainPage from "@/components/main";
 import {
@@ -39,9 +41,8 @@ export default function CreateTransaction() {
   const [buyer, setBuyer] = useState([]);
   const [location, setLocation] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState([]);
+  const [paymentMethodId, setPaymentMethodId] = useState<any>();
   const [product, setProduct] = useState<any[]>([]);
-  const [stockProductPack, setStockProductPack] = useState<any>();
-  const [stockProductBal, setStockProductBal] = useState<any>();
   const [priceProduct, setPriceProduct] = useState<any>();
   const [product_id, setProductId] = useState<any>();
   const [amountBal, setAmountBal] = useState<any>();
@@ -55,12 +56,16 @@ export default function CreateTransaction() {
   const [cart, setCart] = useState<any[]>([]);
   const [desc, setDesc] = useState("");
   const [distributor, setDistributor] = useState([]);
+  const [distributorSelected, setDistributorSelected] = useState<any>();
   const [newBuyer, setNewBuyer] = useState(false);
   const [locationPrice, setLocationPrice] = useState<any>();
-
+  const [buyerAddress, setBuyerAddress] = useState("");
+  const [buyerName, setBuyerName] = useState("");
   const [harga, setHarga] = useState(0);
-  const [total, setTotal] = useState(0);
   const [downPayment, setDownPayment] = useState(0);
+  const [buyerId, setBuyerId] = useState<any>();
+  const [notes, setNotes] = useState<string>("");
+  const [selectLocation, setSelectLocation] = useState<any>();
 
   const { user } = useUserStore();
 
@@ -106,6 +111,7 @@ export default function CreateTransaction() {
         return {
           id: item.user.id,
           name: item.user.username,
+          address: item.user.address,
         };
       });
       setDistributor(result);
@@ -135,15 +141,28 @@ export default function CreateTransaction() {
   };
 
   const handleAddToCart = () => {
-    console.log(product_id);
-    if(!product_id) {
+    if (amountBal === 0) {
+      toast.error("Stok produk bal tidak mencukupi");
+      return;
+    }
+
+    if (!product_id) {
       toast.error("Pilih produk terlebih dahulu");
       return;
     }
-    if (jumlah > stockProductBal) {
-      toast.error("Jumlah tidak boleh lebih besar dari stok produk bal");
+
+    if (jumlah === 0) {
+      toast.error(
+        "Anda belum memasukkan jumlah pada produk yang telah dipilih!"
+      );
       return;
     }
+
+    if (jumlah > amountBal) {
+      toast.error("Jumlah tidak boleh melebihi stok produk!");
+      return;
+    }
+
     const data = {
       product_id: isProduct ? product_id : null,
       desc: isProduct
@@ -173,10 +192,10 @@ export default function CreateTransaction() {
     const selectedProduct: any = product.find(
       (product: any) => product.id === item
     );
-    setProductId(selectedProduct?.id);
     const bal = convert(parseInt(selectedProduct?.stock || "0")).bal;
     const pack = convert(parseInt(selectedProduct?.stock || "0")).pack;
     setPriceProduct(selectedProduct?.price);
+    setProductId(selectedProduct?.id);
     setAmountPack(pack);
     setAmountBal(bal);
     setTotalHarga(0);
@@ -203,9 +222,9 @@ export default function CreateTransaction() {
       return;
     }
 
-    if (jumlah > stockProductBal) {
-      setJumlah(stockProductBal);
-      const pack = stockProductBal * 200;
+    if (jumlah > amountBal) {
+      setJumlah(amountBal);
+      const pack = amountBal * 200;
       const subTotal = pack * priceProduct;
       const potongan = (subTotal * diskon) / 100;
       setAmountPack(pack);
@@ -282,6 +301,7 @@ export default function CreateTransaction() {
     const locationSelected: any = location.find(
       (item: any) => item.id === value
     );
+    setSelectLocation(locationSelected?.id);
     setLocationPrice(locationSelected?.cost || 0);
     setTotalCart(totalCart);
   };
@@ -297,20 +317,11 @@ export default function CreateTransaction() {
     setPriceProductBall(0);
   };
 
-  const convertToNumber = (value: any) => {
-    const numericValue = value.replace(/\D/g, '');
-    if (numericValue === "") {
-      return 0;
-    }
-    return parseInt(numericValue);
-  };
-
   const handleChangeLocationPrice = (e: any) => {
     const value = e.target.value;
-    
-    // Hapus semua karakter non-angka dan format mata uang
-    const numericValue = value.replace(/[^0-9]/g, '');
-    
+
+    const numericValue = value.replace(/[^0-9]/g, "");
+
     if (numericValue === "") {
       setLocationPrice(0);
       setTotalCart(cart.reduce((acc, item) => acc + item.total_harga, 0));
@@ -336,7 +347,6 @@ export default function CreateTransaction() {
       is_product: isProduct,
     };
     setCart([...cart, data]);
-    // clear form
     setJumlah(0);
     setDiskon(0);
     setHarga(0);
@@ -349,8 +359,8 @@ export default function CreateTransaction() {
 
   const handleDownPaymentChange = (e: any) => {
     const value = e.target.value;
-    const numericValue = value.replace(/[^0-9]/g, '');
-    
+    const numericValue = value.replace(/[^0-9]/g, "");
+
     if (numericValue === "") {
       setDownPayment(0);
     } else {
@@ -363,6 +373,75 @@ export default function CreateTransaction() {
   const handleRemoveFromCart = (index: number) => {
     const newCart = cart.filter((_, i) => i !== index);
     setCart(newCart);
+  };
+
+  const handleSubmitButton = async () => {
+    const data = {
+      detail_invoices: cart,
+      total: finalTotal,
+      down_payment: downPayment,
+      location_price: locationPrice,
+      is_distributor: isDistributor === "2" ? true : false,
+      type_preoder: false,
+      new_pembeli: newBuyer ? newBuyer : null,
+      buyer_name: newBuyer ? buyerName : null,
+      buyer_address: buyerAddress,
+      distributor_id: distributorSelected,
+      factory_id: user?.factory_selected?.id,
+      user_id: user?.id,
+      buyer_id: newBuyer ? null : buyerId,
+      new_address: newAddress ? newAddress : null,
+      payment_method_id: paymentMethodId,
+      sub_total: totalCart,
+      payment_status: "Paid",
+      location_selected: selectLocation,
+      notes: notes,
+    };
+
+    try {
+      const response = await fetch("/api/transaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if(response.ok) {
+        toast.success(result.message || "Berhasil menambahkan transaksi");
+        setCart([]);
+        setTotalCart(0);
+        setDownPayment(0);
+        setNotes("");
+        setBuyerName("");
+        setBuyerAddress("");
+        setBuyerId(null);
+        setDistributorSelected(null);
+        setPaymentMethodId(null);
+        setSelectLocation(null);
+        setNewBuyer(false);
+        setNewAddress(false);
+        setAmountBal(0);
+        setAmountPack(0);
+        setTotalHarga(0);
+        setTotalPrice(0);
+        setPriceProduct(0);
+        setProductId(null);
+        setJumlah(0);
+        setDiskon(0);
+        setDesc("");
+        setLocationPrice(0);
+        setTotalCart(0);
+        return;
+      }
+      throw new Error(result.message || "Terjadi kesalahan saat menambahkan transaksi");
+    } catch (error: any) {
+      toast.error(error.message || "Terjadi kesalahan saat menambahkan transaksi");
+    }
+
+
+
+    
   };
 
   return (
@@ -409,8 +488,8 @@ export default function CreateTransaction() {
                   <Input
                     type="text"
                     placeholder="Masukkan jumlah stok (Pack)"
-                    value={stockProductPack || "0"}
-                    onChange={(e) => setStockProductPack(e.target.value)}
+                    value={amountPack || "0"}
+                    onChange={(e) => setAmountPack(e.target.value)}
                     disabled
                   />
                 </div>
@@ -421,8 +500,8 @@ export default function CreateTransaction() {
                   <Input
                     type="text"
                     placeholder="Masukkan jumlah stok (Bal)"
-                    value={stockProductBal || "0"}
-                    onChange={(e) => setStockProductBal(e.target.value)}
+                    value={amountBal || "0"}
+                    onChange={(e) => setAmountBal(e.target.value)}
                     disabled
                   />
                 </div>
@@ -433,7 +512,7 @@ export default function CreateTransaction() {
                     placeholder="Masukkan jumlah bal"
                     value={jumlah || ""}
                     min={0}
-                    max={stockProductBal || 0}
+                    max={amountBal || 0}
                     onChange={(e) => handleChangeJumlah(e)}
                   />
                 </div>
@@ -598,9 +677,10 @@ export default function CreateTransaction() {
                 <TableRow className="bg-muted">
                   <TableHead className="text-center w-16">No</TableHead>
                   <TableHead>Nama Produk</TableHead>
-                  <TableHead className="text-center w-24">Jumlah</TableHead>
-                  <TableHead>Harga Produk/Bal</TableHead>
-                  <TableHead>Total</TableHead>
+                  <TableHead className="text-center">Jumlah</TableHead>
+                  <TableHead className="text-end">Harga Produk/Bal</TableHead>
+                  <TableHead className="text-end">Diskon</TableHead>
+                  <TableHead className="text-end">Total</TableHead>
                   <TableHead className="text-center w-20">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -612,7 +692,7 @@ export default function CreateTransaction() {
                     <TableCell className=" text-center">
                       {item.jumlah}
                     </TableCell>
-                    <TableCell className="">
+                    <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
@@ -620,7 +700,15 @@ export default function CreateTransaction() {
                         .format(item.harga)
                         .slice(0, -3)}
                     </TableCell>
-                    <TableCell className="">
+                    <TableCell className="text-end">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                      })
+                        .format(item.diskon)
+                        .slice(0, -3)}
+                    </TableCell>
+                    <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
@@ -629,9 +717,9 @@ export default function CreateTransaction() {
                         .slice(0, -3)}
                     </TableCell>
                     <TableCell className=" text-center">
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
+                      <Button
+                        variant="destructive"
+                        size="sm"
                         onClick={() => handleRemoveFromCart(index)}
                       >
                         <Trash></Trash>
@@ -715,7 +803,17 @@ export default function CreateTransaction() {
                     <Label className="text-sm font-medium mb-2">
                       Nama Distributor
                     </Label>
-                    <Select>
+                    <Select
+                      onValueChange={(e) => {
+                        const selectedDistributor: any = distributor.find(
+                          (item: any) => item.id === e
+                        );
+                        if (selectedDistributor) {
+                          setDistributorSelected(e);
+                          setBuyerAddress(selectedDistributor.address);
+                        }
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih Distributor" />
                       </SelectTrigger>
@@ -735,14 +833,28 @@ export default function CreateTransaction() {
                         <Label className="text-sm font-medium mb-2">
                           Nama Pembeli
                         </Label>
-                        <Input placeholder="Masukkan nama distributor/pembeli" />
+                        <Input
+                          placeholder="Masukkan nama distributor/pembeli"
+                          value={buyerName}
+                          onChange={(e: any) => setBuyerName(e)}
+                        />
                       </div>
                     ) : (
                       <div className="mb-3">
                         <Label className="text-sm font-medium mb-2">
                           Nama Pembeli
                         </Label>
-                        <Select>
+                        <Select
+                          onValueChange={(e: any) => {
+                            setBuyerId(e);
+                            const selectedBuyer: any = buyer.find(
+                              (item: any) => item.id === e
+                            );  
+                            if(selectedBuyer){
+                              setBuyerAddress(selectedBuyer.address);
+                            }
+                          }}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih Pembeli" />
                           </SelectTrigger>
@@ -770,7 +882,7 @@ export default function CreateTransaction() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label className="font-medium text-sm">Metode Pembayaran</Label>
-                <Select>
+                <Select onValueChange={(e: any) => setPaymentMethodId(e)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Metode Pembayaran" />
                   </SelectTrigger>
@@ -785,8 +897,8 @@ export default function CreateTransaction() {
               </div>
               <div className="flex flex-col gap-2 col-span-3">
                 <Label className="font-medium text-sm">Uang Muka</Label>
-                <Input 
-                  placeholder="Masukkan jumlah uang muka" 
+                <Input
+                  placeholder="Masukkan jumlah uang muka"
                   value={new Intl.NumberFormat("id-ID", {
                     style: "currency",
                     currency: "IDR",
@@ -798,13 +910,26 @@ export default function CreateTransaction() {
               </div>
               <div className="flex flex-col gap-2 col-span-3">
                 <Label className="font-medium text-sm">Alamat</Label>
-                <Textarea placeholder="Masukkan alamat lengkap" />
+                <Textarea
+                  placeholder="Masukkan alamat lengkap"
+                  value={buyerAddress}
+                  onChange={(e: any) => setBuyerAddress(e)}
+                  disabled={!newBuyer}
+                />
+              </div>
+              <div className="flex flex-col gap-2 col-span-3">
+                <Label className="font-medium text-sm">Catatan</Label>
+                <Textarea
+                  placeholder="Masukkan catatan seperti nama penerima, nomor telepon, dll"
+                  value={notes}
+                  onChange={(e: any) => setNotes(e.target.value)}
+                />
               </div>
             </div>
           </div>
 
           {/* Shipping Information */}
-          {isDistributor && (
+          {isDistributor == "1" && (
             <div className="space-y-6 -t pt-6">
               <h3 className="text-lg font-semibold">Informasi Pengiriman</h3>
               <div className="grid grid-cols-2 gap-6">
@@ -846,10 +971,16 @@ export default function CreateTransaction() {
                   </Label>
                   <Input
                     placeholder="Masukkan biaya pengiriman"
-                    value={locationPrice === 0 ? "" : new Intl.NumberFormat("id-ID", {
-                      style: "currency",
-                      currency: "IDR",
-                    }).format(locationPrice).slice(0, -3)}
+                    value={
+                      locationPrice === 0
+                        ? ""
+                        : new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                          })
+                            .format(locationPrice)
+                            .slice(0, -3)
+                    }
                     onChange={handleChangeLocationPrice}
                     disabled={!newAddress}
                   />
@@ -870,7 +1001,11 @@ export default function CreateTransaction() {
           )}
           {/* Submit Button */}
           <div className="flex justify-end pt-4">
-            <Button size="lg">Simpan Transaksi</Button>
+            <Button type="button" onClick={handleSubmitButton} size="lg" disabled={
+              cart.length === 0 || !paymentMethodId
+            }>
+              Simpan Transaksi
+            </Button>
           </div>
         </CardContent>
       </Card>

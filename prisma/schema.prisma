@@ -521,7 +521,7 @@ model DeliveryTracking {
   recipient   String?
   invoice     Invoice                @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
   invoice_id  Int
-  desc        String
+  desc        String?
   location    Location               @relation(fields: [location_id], references: [id], onDelete: Cascade)
   location_id Int
   latitude    Float?
