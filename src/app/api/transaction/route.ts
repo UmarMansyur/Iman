@@ -101,6 +101,8 @@ export async function POST(req: Request) {
             }
           })
           existingBuyer.id = result.id;
+        } else {
+          existingBuyer.id = buyerInput.id;
         }
 
         locations = await tx.location.findFirst({
@@ -162,9 +164,6 @@ export async function POST(req: Request) {
             },
           },
         },
-        include: {
-          detailInvoices: true,
-        },
       });
 
 
@@ -205,12 +204,14 @@ export async function GET(req: Request) {
     const skip = (page - 1) * limit;
     const factory_id = searchParams.get("factory_id") || "";
     const type_preorder = searchParams.get("type_preorder") || "";
-    const where = {
+    const where: any = {
       OR: [{ buyer: { name: { contains: search } } }],
       user_id: user_id ? parseInt(user_id) : undefined,
-      factory_id: factory_id ? parseInt(factory_id) : undefined,
       type_preorder: type_preorder === "1" ? true : false,
     };
+    if(factory_id) {
+      where.factory_id = parseInt(factory_id);
+    }
 
     const invoices = await prisma.invoice.findMany({
       where,

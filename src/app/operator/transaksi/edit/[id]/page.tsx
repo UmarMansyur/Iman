@@ -72,6 +72,7 @@ const unformatNumber = (value: string | number): number => {
 
 export default function InvoiceForm() {
   const router = useRouter();
+  const [defaultValue, setDefaultValue] = useState<any>(null);
   const { user: session } = useUserStore();
   const [details, setDetails] = useState<
     Array<{
@@ -185,7 +186,8 @@ export default function InvoiceForm() {
     e.preventDefault();
 
     try {
-      const { itemAmount, subTotal, total, remainingBalance } = calculateTotals();
+      const { itemAmount, subTotal, total, remainingBalance } =
+        calculateTotals();
       const formData = {
         ...invoiceData,
         item_amount: itemAmount,
@@ -196,7 +198,7 @@ export default function InvoiceForm() {
         payment_status: "Paid",
         factory_id: session?.factory_selected?.id,
         user_id: user?.id,
-        desc: invoiceData.notes,
+        notes: invoiceData.notes,
         cost: invoiceData.shipping_cost,
         location: invoiceData.location,
         location_cost: invoiceData.location_cost,
@@ -222,7 +224,9 @@ export default function InvoiceForm() {
         router.push("/operator/transaksi");
       }
     } catch (error: any) {
-      toast.error(error.message || "Terjadi kesalahan saat memperbarui transaksi");
+      toast.error(
+        error.message || "Terjadi kesalahan saat memperbarui transaksi"
+      );
     }
   };
 
@@ -264,7 +268,7 @@ export default function InvoiceForm() {
         `/api/location?limit=10000&factory_id=${user?.factory_selected?.id}`
       );
       const data = await response.json();
-      setLocations(data.locations || []);
+      setLocations(data.data || []);
     } catch (error) {
       console.error("Error fetching locations:", error);
       setLocations([]);
@@ -280,13 +284,11 @@ export default function InvoiceForm() {
     }
   }, [session?.factory_selected?.id]);
 
-  // Pertama, tambahkan fungsi untuk mengecek stock
   const isExceedingStock = (productId: number, amount: number) => {
     const product = products.find((p: any) => p.id === productId);
     return product && amount > product.stock;
   };
 
-  // Tambahkan fungsi untuk mengecek apakah ada item yang melebihi stok
   const hasExceedingStock = () => {
     return details.some((detail) => {
       if (detail.is_product && detail.desc) {
@@ -343,50 +345,50 @@ export default function InvoiceForm() {
     );
   };
 
-  const { id } = useParams(); // Ambil ID dari URL
-
-  // Fetch transaction data
+  const { id } = useParams();
   const fetchTransactionData = async () => {
     try {
       const response = await fetch(`/api/transaction/${id}`);
       const data = await response.json();
-      
       if (response.ok) {
-        // Add null checks and default values
+        setDefaultValue(data.data);
         setInvoiceData({
-          buyer: data.buyer_id || "",
-          sales_man: data.sales_man || "",
-          recipient: data.recipient || "",
-          maturity_date: data.maturity_date || "",
-          buyer_address: data.buyer_address || "",
-          desc: data.desc || "",
-          down_payment: data.down_payment || 0,
-          payment_method_id: data.payment_method_id?.toString() || "",
-          discon_member: data.discon_member || 0,
-          shipping_address: data.shipping_address || "",
-          shipping_cost: data.shipping_cost || 0,
-          notes: data.notes || "",
-          location: data.location || "",
-          location_cost: data.location_cost || 0,
+          buyer: data.data.buyer_id || "",
+          sales_man: data.data.sales_man || "",
+          recipient: data.data.recipient || "",
+          maturity_date: data.data.maturity_date || "",
+          buyer_address: data.data.buyer_address || "",
+          desc: data.data.desc || "",
+          down_payment: data.data.down_payment || 0,
+          payment_method_id: data.data.payment_method.id || "",
+          discon_member: data.data.discon_member || 0,
+          shipping_address: data.data.shipping_address || "",
+          shipping_cost: data.data.shipping_cost || 0,
+          notes: data.data.notes || "",
+          location: data.data.location || "",
+          location_cost: data.data.location_cost || 0,
         });
 
-        // Set details
-        setDetails(data.detailInvoices.map((detail: any) => ({
-          desc: detail.desc,
-          amount: detail.amount,
-          price: detail.price,
-          discount: detail.discount,
-          product_id: detail.product_id,
-          is_product: detail.is_product,
-          sub_total: detail.sub_total,
-        })));
-
-        // Set buyer type
-        setBuyerType(data.is_distributor ? "distributor" : "regular");
-        
-        // Set other values
-        setValueBuyer(data.buyer);
-        setValueLocation(data.shipping_address);
+        setDetails(
+          data.data.detailInvoices.map((detail: any) => ({
+            desc: detail.desc,
+            amount: detail.amount,
+            price: detail.price,
+            discount: detail.discount,
+            product_id: detail.product_id,
+            is_product: detail.is_product,
+            sub_total: detail.sub_total,
+          }))
+        );
+        setBuyerType(data.data.is_distributor ? "distributor" : "regular");
+        if (data.data.is_distributor) {
+          setValueBuyer(data.data.buyer.name);
+        } else {
+          if (data.data.buyer) {
+            setValueBuyer(data.data.buyer.name);
+          }
+        }
+        setValueLocation(data.data.shipping_address);
       }
     } catch (error) {
       console.error("Error fetching transaction:", error);
@@ -395,12 +397,38 @@ export default function InvoiceForm() {
   };
 
   useEffect(() => {
+    if (defaultValue?.buyer) {
+      const distributor = distributors.find(
+        (d) => d.user.username == defaultValue?.buyer.name
+      );
+      if (distributor) {
+        setInvoiceData({
+          ...invoiceData,
+          buyer: distributor.user.id.toString(),
+          buyer_address: distributor.user.address,
+        });
+      }
+    }
+  }, [distributors]);
+
+
+  useEffect(() => {
+    if (defaultValue?.payment_method) {
+      setInvoiceData({
+        ...invoiceData,
+        payment_method_id: defaultValue?.payment_method.id.toString(),
+      });
+    }
+  }, [paymentMethods]);
+
+
+  useEffect(() => {
     if (!id) {
       toast.error("ID transaksi tidak ditemukan");
       router.push("/operator/transaksi");
       return;
     }
-    
+
     fetchTransactionData();
   }, [id]);
 
@@ -820,7 +848,7 @@ export default function InvoiceForm() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Distributor" />
+                        <SelectValue placeholder="Pilih Distributor"/>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -850,7 +878,10 @@ export default function InvoiceForm() {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0">
-                          <Command className="md:w-[620px]">
+                          <Command
+                            className="md:w-[620px]"
+                            defaultValue={defaultValue?.buyer}
+                          >
                             <CommandInput
                               placeholder="Cari pembeli..."
                               value={valueBuyer}
@@ -978,12 +1009,7 @@ export default function InvoiceForm() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Pilih Metode Pembayaran">
-                        {paymentMethods.find(
-                          (method: any) =>
-                            method.id.toString() === invoiceData.payment_method_id
-                        )?.name || "Pilih Metode Pembayaran"}
-                      </SelectValue>
+                      <SelectValue placeholder="Pilih Metode Pembayaran" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -1015,7 +1041,9 @@ export default function InvoiceForm() {
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {invoiceData.maturity_date ? (
-                          new Date(invoiceData.maturity_date).toLocaleDateString("id-ID", {
+                          new Date(
+                            invoiceData.maturity_date
+                          ).toLocaleDateString("id-ID", {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",

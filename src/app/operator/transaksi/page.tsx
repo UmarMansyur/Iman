@@ -55,7 +55,11 @@ export default function TransactionPage() {
       sortOrder,
     });
 
-    const response = await fetch(`/api/transaction?${params}&factory_id=${user?.factory_selected?.id}`);
+    if(user?.factory_selected?.id) {
+      params.set("factory_id", user?.factory_selected?.id.toString());
+    }
+
+    const response = await fetch(`/api/transaction?${params}`);
 
     if(!response.ok) {
       throw new Error("Failed to fetch transactions");

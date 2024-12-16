@@ -293,7 +293,7 @@ export default function InvoiceForm() {
         `/api/location?limit=10000&factory_id=${user?.factory_selected?.id}`
       );
       const data = await response.json();
-      setLocations(data.locations || []);
+      setLocations(data.data || []);
     } catch (error) {
       console.error("Error fetching locations:", error);
       setLocations([]);
