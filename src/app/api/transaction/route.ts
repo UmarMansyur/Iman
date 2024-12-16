@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { PaymentStatus } from "@prisma/client";
+import { DeliveryTrackingStatus, PaymentStatus } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
       factory_id,
+      notes,
       buyer,
       user_id,
       discount,
@@ -139,6 +140,7 @@ export async function POST(req: Request) {
           discon_member,
           down_payment,
           total,
+          notes,
           is_distributor: is_distributor === "distributor" ? true : false,
           sub_total,
           remaining_balance,
@@ -204,11 +206,22 @@ export async function GET(req: Request) {
     const skip = (page - 1) * limit;
     const factory_id = searchParams.get("factory_id") || "";
     const type_preorder = searchParams.get("type_preorder") || "";
+    const status_delivery = searchParams.get("status_delivery") || "" as DeliveryTrackingStatus
     const where: any = {
-      OR: [{ buyer: { name: { contains: search } } }],
+      OR: [
+        { buyer: { name: { contains: search } } },
+        { invoice_code: { contains: search } }
+      ],
       user_id: user_id ? parseInt(user_id) : undefined,
       type_preorder: type_preorder === "1" ? true : false,
     };
+
+    if(status_delivery) {
+      where.deliveryTracking = {
+        status: status_delivery
+      }
+    }
+
     if(factory_id) {
       where.factory_id = parseInt(factory_id);
     }

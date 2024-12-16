@@ -32,7 +32,6 @@ export async function GET(request: Request, { params }: { params: any }) {
       );
     }
 
-
     return NextResponse.json({ data: invoice }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
@@ -59,13 +58,16 @@ export async function PUT(req: Request, { params }: { params: any }) {
       discon_member,
       item_amount,
       sub_total,
+      notes,
       total,
       remaining_balance,
       payment_status,
       detailInvoices,
+      desc,
+      shipping_cost,
+      shipping_address,
       is_distributor,
       buyer_address,
-      buyer_id
     } = body;
     // Validasi ID
     const existingInvoice = await prisma.invoice.findUnique({
@@ -79,132 +81,163 @@ export async function PUT(req: Request, { params }: { params: any }) {
       );
     }
 
-    let existingBuyer: any;
-    let locations: any;
-
-    if(body.is_distributor) {
-      existingBuyer = await prisma.buyer.findFirst({
-        where: {
-          id: parseInt(buyer_id)
-        }
-      })
-      if(!existingBuyer) {
-        existingBuyer = await prisma.buyer.create({
-          data: {
+    const response = await prisma.$transaction(async (tx) => {
+      let existingBuyer: any;
+      let locations: any;
+      if (is_distributor === "regular") {
+        existingBuyer = await tx.buyer.findFirst({
+          where: {
             name: buyer,
-            address: buyer_address,
             factory_id: parseInt(factory_id),
-          }
-        })
-      }
-      locations = await prisma.location.findFirst({
-        where: {
-          name: buyer_address,
-          factory_id: parseInt(factory_id)
-        }
-      })
-      if(!locations) {
-        locations = await prisma.location.create({
-          data: {
-            name: buyer_address,
-            factory_id: parseInt(factory_id)
-          }
-        })
-      }
-    } else {
-      existingBuyer = await prisma.user.findFirst({
-        where: {
-          id: parseInt(buyer_id)
-        }
-      })
+          },
+        });
 
-      if(!existingBuyer) {
-        throw new Error("Distributor not found!");
-      }
-
-      const buyerInput = await prisma.buyer.findFirst({
-        where: {
-          name: existingBuyer.username,
-          factory_id: parseInt(factory_id)
+        if (!existingBuyer) {
+          await tx.buyer.create({
+            data: {
+              name: buyer,
+              factory_id: parseInt(factory_id),
+              address: buyer_address,
+            },
+          });
         }
-      })
+        locations = await tx.location.findFirst({
+          where: {
+            name: shipping_address,
+            factory_id: parseInt(factory_id),
+          },
+        });
+        if (!locations) {
+          locations = await tx.location.create({
+            data: {
+              name: shipping_address,
+              factory_id: parseInt(factory_id),
+              cost: shipping_cost,
+            },
+          });
+        }
+      } else {
+        existingBuyer = await tx.user.findFirst({
+          where: {
+            id: parseInt(buyer),
+          },
+        });
 
-      if(!buyerInput) {
-        const result = await prisma.buyer.create({
-          data: {
+        if (!existingBuyer) {
+          throw new Error("Distributor not found!");
+        }
+
+        const buyerInput = await tx.buyer.findFirst({
+          where: {
             name: existingBuyer.username,
             factory_id: parseInt(factory_id),
-            address: existingBuyer.address
-          }
-        })
-        existingBuyer.id = result.id;
-      } else {
-        existingBuyer.id = buyerInput.id;
-      }
+          },
+        });
 
-      locations = await prisma.location.findFirst({
-        where: {
-          name: existingBuyer.address,
-          factory_id: parseInt(factory_id),
-          cost: 0
+        if (!buyerInput) {
+          const result = await tx.buyer.create({
+            data: {
+              name: existingBuyer.username,
+              factory_id: parseInt(factory_id),
+              address: existingBuyer.address,
+            },
+          });
+          existingBuyer.id = result.id;
+        } else {
+          existingBuyer.id = buyerInput.id;
         }
-      })
 
-      if(!locations) {
-        locations = await prisma.location.create({
-          data: {
+        locations = await tx.location.findFirst({
+          where: {
             name: existingBuyer.address,
             factory_id: parseInt(factory_id),
-            cost: 0
-          }
-        })
-      }
-    }
+            cost: 0,
+          },
+        });
 
-    const updatedInvoice = await prisma.invoice.update({
-      where: { id: parseInt(id) },
-      data: {
-        factory_id: parseInt(factory_id),
-        user_id: parseInt(user_id),
-        discount: discount,
-        ppn: ppn,
-        buyer_id: existingBuyer.id,
-        maturity_date: new Date(maturity_date),
-        item_amount: item_amount,
-        discon_member: discon_member,
-        down_payment: down_payment,
-        total: total,
-        is_distributor: is_distributor === "distributor" ? true : false,
-        sub_total: sub_total,
-        remaining_balance: remaining_balance,
-        payment_status: payment_status as PaymentStatus,
-        payment_method_id: parseInt(payment_method_id),
-        detailInvoices: {
-          createMany: {
-            data: detailInvoices.map((detail: any) => ({
-              product_id: detail.product_id
-                ? parseInt(detail.product_id)
-                : undefined,
-              desc: detail.desc,
-              amount: detail.amount,
-              price: detail.price ? parseInt(detail.price) : undefined,
-              discount: detail.discount
-                ? parseInt(detail.discount)
-                : undefined,
-              sub_total: detail.sub_total
-                ? parseInt(detail.sub_total)
-                : undefined,
-              is_product: detail.is_product,
-            })),
+        if (!locations) {
+          locations = await tx.location.create({
+            data: {
+              name: existingBuyer.address,
+              factory_id: parseInt(factory_id),
+              cost: 0,
+            },
+          });
+        }
+      }
+
+      const status = await tx.deliveryTracking.findFirst({
+        where: {
+          invoice_id: existingInvoice.id,
+        },
+      });
+
+
+
+      await tx.invoice.delete({
+        where: {
+          id: existingInvoice.id,
+        },
+      });
+
+      const invoice = await tx.invoice.create({
+        data: {
+          factory_id: parseInt(factory_id),
+          user_id: parseInt(user_id),
+          invoice_code: existingInvoice.invoice_code,
+          discount,
+          ppn,
+          buyer_id: existingBuyer.id,
+          maturity_date: new Date(maturity_date),
+          item_amount,
+          discon_member,
+          down_payment,
+          total,
+          notes,
+          is_distributor: is_distributor === "distributor" ? true : false,
+          sub_total,
+          remaining_balance,
+          payment_status: payment_status as PaymentStatus,
+          payment_method_id: parseInt(payment_method_id),
+          detailInvoices: {
+            createMany: {
+              data: detailInvoices.map((detail: any) => ({
+                product_id: detail.product_id
+                  ? parseInt(detail.product_id)
+                  : undefined,
+                desc: detail.desc,
+                amount: detail.amount,
+                price: detail.price ? parseInt(detail.price) : undefined,
+                discount: detail.discount
+                  ? parseInt(detail.discount)
+                  : undefined,
+                sub_total: detail.sub_total
+                  ? parseInt(detail.sub_total)
+                  : undefined,
+                is_product: detail.is_product,
+              })),
+            },
           },
         },
-      },
-    })
+      });
+
+
+
+      await tx.deliveryTracking.create({
+        data: {
+          invoice_id: invoice.id,
+          desc: desc,
+          location_id: locations!.id,
+          cost: shipping_cost,
+          status: status?.status,
+        },
+      });
+    });
 
     return NextResponse.json(
       {
         message: "Invoice berhasil diupdate",
-        data: updatedInvoice,
+        data: response,
       },
       { status: 200 }
     );

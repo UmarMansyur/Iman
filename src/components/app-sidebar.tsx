@@ -205,7 +205,7 @@ const data = {
         },
         {
           title: "Pengiriman",
-          url: "/operator/transaksi",
+          url: "/operator/transaksi/pengiriman",
         },
       ]
     },

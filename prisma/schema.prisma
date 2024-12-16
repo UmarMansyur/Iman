@@ -338,6 +338,8 @@ model StockProduct {
   type              StockProductType @default(In)
   report_product    ReportProduct?   @relation(fields: [report_product_id], references: [id], onDelete: Cascade)
   report_product_id Int?
+  invoice           Invoice?         @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id        Int?
   created_at        DateTime         @default(now())
   updated_at        DateTime         @updatedAt
 
@@ -457,6 +459,7 @@ model Invoice {
   updated_at          DateTime              @updatedAt
   LogOrderDistributor LogOrderDistributor[]
   reject_reason       String?
+  StockProduct        StockProduct[]
 
   @@map("invoices")
 }

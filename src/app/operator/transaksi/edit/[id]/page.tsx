@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import { useParams } from "next/navigation";
+import LoaderScreen from "@/components/views/loader";
 
 const formatNumber = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -114,44 +115,31 @@ export default function InvoiceForm() {
   };
 
   const handleDetailChange = (index: number, field: string, value: any) => {
-    const newDetails = [...details];
-    if (field === "product_id") {
-      const selectedProduct = products.find((p: any) => p.id == value);
-      newDetails[index] = {
-        ...newDetails[index],
-        is_product: true,
-        desc: selectedProduct?.name + " - " + selectedProduct?.type,
-        price: selectedProduct?.price || 0,
-        product_id: value,
-      };
-    } else if (
-      field === "amount" ||
-      field === "price" ||
-      field === "discount"
-    ) {
-      const numericValue = unformatNumber(value);
-      newDetails[index] = { ...newDetails[index], [field]: numericValue };
-    } else {
-      newDetails[index] = { ...newDetails[index], [field]: value };
-    }
+    setDetails(prev => {
+      const newDetails = [...prev];
+      const detail = {...newDetails[index]};
 
-    // Recalculate sub_total
-    newDetails[index].sub_total =
-      newDetails[index].amount *
-      newDetails[index].price *
-      (1 - newDetails[index].discount / 100);
+      if (field === "product_id") {
+        const selectedProduct = products.find((p) => p.id == value);
+        if (selectedProduct) {
+          detail.is_product = true;
+          detail.desc = `${selectedProduct.name} - ${selectedProduct.type}`;
+          detail.price = selectedProduct.price;
+          detail.product_id = value;
+        }
+      } else if (["amount", "price", "discount"].includes(field)) {
+        detail[field as "amount" | "price" | "discount"] = unformatNumber(value);
+      } else if (field === "desc") {
+        detail.desc = value;
+      }
 
-    setDetails(newDetails);
+      detail.sub_total = detail.amount * detail.price * (1 - detail.discount / 100);
+      newDetails[index] = detail;
 
-    // Update total
-    const newTotal = newDetails.reduce(
-      (sum: number, detail: any) => sum + detail.sub_total,
-      0
-    );
-    setTotal(newTotal);
+      return newDetails;
+    });
   };
 
-  // Basic invoice state
   const [invoiceData, setInvoiceData] = useState({
     buyer: "",
     sales_man: "",
@@ -171,14 +159,17 @@ export default function InvoiceForm() {
 
   // Calculate totals
   const calculateTotals = () => {
-    const itemAmount = details.reduce((sum, detail) => sum + detail.amount, 0);
     const subTotal = details.reduce((sum, detail) => sum + detail.sub_total, 0);
-    const totalBeforeFees = subTotal - invoiceData.discon_member;
-    const total =
-      totalBeforeFees + invoiceData.shipping_cost + invoiceData.location_cost;
-    const remainingBalance = total - invoiceData.down_payment;
+    const totalAfterDiscount = subTotal - invoiceData.discon_member;
+    const totalWithShipping = totalAfterDiscount + invoiceData.shipping_cost + invoiceData.location_cost;
+    const remainingBalance = totalWithShipping - invoiceData.down_payment;
 
-    return { itemAmount, subTotal, total, remainingBalance };
+    return {
+      itemAmount: details.reduce((sum, detail) => sum + detail.amount, 0),
+      subTotal,
+      total: totalWithShipping,
+      remainingBalance
+    };
   };
 
   const { user } = useUserStore();
@@ -203,7 +194,7 @@ export default function InvoiceForm() {
         location: invoiceData.location,
         location_cost: invoiceData.location_cost,
         buyer_id: invoiceData.buyer,
-        is_distributor: buyerType === "distributor",
+        is_distributor: buyerType,
       };
 
       const response = await fetch(`/api/transaction/${id}`, {
@@ -346,70 +337,92 @@ export default function InvoiceForm() {
   };
 
   const { id } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
+
   const fetchTransactionData = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`/api/transaction/${id}`);
       const data = await response.json();
-      if (response.ok) {
-        setDefaultValue(data.data);
-        setInvoiceData({
-          buyer: data.data.buyer_id || "",
-          sales_man: data.data.sales_man || "",
-          recipient: data.data.recipient || "",
-          maturity_date: data.data.maturity_date || "",
-          buyer_address: data.data.buyer_address || "",
-          desc: data.data.desc || "",
-          down_payment: data.data.down_payment || 0,
-          payment_method_id: data.data.payment_method.id || "",
-          discon_member: data.data.discon_member || 0,
-          shipping_address: data.data.shipping_address || "",
-          shipping_cost: data.data.shipping_cost || 0,
-          notes: data.data.notes || "",
-          location: data.data.location || "",
-          location_cost: data.data.location_cost || 0,
-        });
-
-        setDetails(
-          data.data.detailInvoices.map((detail: any) => ({
-            desc: detail.desc,
-            amount: detail.amount,
-            price: detail.price,
-            discount: detail.discount,
-            product_id: detail.product_id,
-            is_product: detail.is_product,
-            sub_total: detail.sub_total,
-          }))
-        );
-        setBuyerType(data.data.is_distributor ? "distributor" : "regular");
-        if (data.data.is_distributor) {
-          setValueBuyer(data.data.buyer.name);
-        } else {
-          if (data.data.buyer) {
-            setValueBuyer(data.data.buyer.name);
-          }
-        }
-        setValueLocation(data.data.shipping_address);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch transaction');
       }
+
+      setDefaultValue(data.data);
+      setInvoiceData({
+        buyer: data.data.buyer_id || "",
+        sales_man: data.data.sales_man || "",
+        recipient: data.data.recipient || "",
+        maturity_date: data.data.maturity_date || "",
+        buyer_address: data.data.buyer_address || "",
+        desc: data.data.desc || "",
+        down_payment: data.data.down_payment || 0,
+        payment_method_id: data.data.payment_method.id || "",
+        discon_member: data.data.discon_member || 0,
+        shipping_address: data.data.shipping_address || "",
+        shipping_cost: data.data.shipping_cost || 0,
+        notes: data.data.notes || "",
+        location: data.data.location || "",
+        location_cost: data.data.location_cost || 0,
+      });
+
+      setDetails(
+        data.data.detailInvoices.map((detail: any) => ({
+          desc: detail.desc,
+          amount: detail.amount,
+          price: detail.price,
+          discount: detail.discount,
+          product_id: detail.product_id,
+          is_product: detail.is_product,
+          sub_total: detail.sub_total,
+        }))
+      );
+      setBuyerType(data.data.is_distributor ? "distributor" : "regular");
+      if (data.data.is_distributor) {
+        setValueBuyer(data.data.buyer.name);
+      } else {
+        if (data.data.buyer) {
+          setValueBuyer(data.data.buyer.name);
+        }
+      }
+      setValueLocation(data.data.shipping_address);
     } catch (error) {
-      console.error("Error fetching transaction:", error);
+      console.error(error);
       toast.error("Gagal mengambil data transaksi");
+      router.push("/operator/transaksi");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (defaultValue?.buyer) {
-      const distributor = distributors.find(
-        (d) => d.user.username == defaultValue?.buyer.name
-      );
-      if (distributor) {
-        setInvoiceData({
-          ...invoiceData,
-          buyer: distributor.user.id.toString(),
-          buyer_address: distributor.user.address,
-        });
+      if (defaultValue.is_distributor) {
+        // Jika distributor
+        const distributor = distributors.find(
+          (d) => d.user.username == defaultValue.buyer.name
+        );
+
+        if (distributor) {
+          setInvoiceData((prev) => ({
+            ...prev,
+            buyer: distributor.user.id.toString(),
+            buyer_address: distributor.user.address,
+          }));
+          setValueBuyer(distributor.user.username);
+        }
+      } else {
+        // Jika regular buyer
+        setInvoiceData((prev) => ({
+          ...prev, 
+          buyer: defaultValue.buyer.id.toString(),
+          buyer_address: defaultValue.buyer.address
+        }));
+        setValueBuyer(defaultValue.buyer.name);
       }
     }
-  }, [distributors]);
+  }, [defaultValue, distributors]);
 
 
   useEffect(() => {
@@ -432,740 +445,511 @@ export default function InvoiceForm() {
     fetchTransactionData();
   }, [id]);
 
+  useEffect(() => {
+    const newTotal = details.reduce((sum, detail) => sum + detail.sub_total, 0);
+    setTotal(newTotal);
+  }, [details]);
+
   return (
     <MainPage>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Edit Transaksi</h3>
+      {isLoading ? (
+        <LoaderScreen />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Edit Transaksi</h3>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Jika anda ingin melakukan transaksi non produk, silahkan pilih
+              &quot;Transaksi Non Produk&quot;.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="absolute top-0 left-5 text-sm text-gray-500 mr-4 mt-2">
+              <span className="text-red-500">*</span> Wajib diisi
             </div>
-          </CardTitle>
-          <CardDescription>
-            Jika anda ingin melakukan transaksi non produk, silahkan pilih
-            &quot;Transaksi Non Produk&quot;.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="relative">
-          <div className="absolute top-0 left-5 text-sm text-gray-500 mr-4 mt-2">
-            <span className="text-red-500">*</span> Wajib diisi
-          </div>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              {/* Detail Items Section */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label>Detail Item</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
-                    onClick={handleAddDetail}
-                  >
-                    + Tambah Item
-                  </Button>
-                </div>
-
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                {/* Detail Items Section */}
                 <div className="space-y-4">
-                  {details.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <div className="text-gray-500">
-                        <svg
-                          className="mx-auto h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium">
-                          Keranjang Kosong
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-400">
-                          Mulai dengan menambahkan item ke keranjang
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      {details.map((detail, index) => (
-                        <div
-                          key={index}
-                          className="bg-white rounded-lg border p-4 space-y-3"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                className="mr-2"
-                                checked={detail.is_product}
-                                onCheckedChange={(checked) =>
-                                  handleDetailChange(
-                                    index,
-                                    "is_product",
-                                    checked
-                                  )
-                                }
-                              />
-                              <Label>
-                                {detail.is_product ? "Produk" : "Non-Produk"}
-                              </Label>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveDetail(index)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
+                  <div className="flex justify-between items-center">
+                    <Label>Detail Item</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
+                      onClick={handleAddDetail}
+                    >
+                      + Tambah Item
+                    </Button>
+                  </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>
-                                Deskripsi{" "}
-                                <span className="text-red-500">*</span>
-                              </Label>
-                              {detail.is_product ? (
-                                <Select
-                                  value={detail.product_id?.toString() || ""}
-                                  onValueChange={(value) => {
-                                    const selectedProduct = products.find(
-                                      (p) => p.id.toString() === value
-                                    );
-                                    if (selectedProduct) {
-                                      handleDetailChange(
-                                        index,
-                                        "product_id",
-                                        selectedProduct.id
-                                      );
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Pilih Produk">
-                                      {detail.desc || "Pilih Produk"}
-                                    </SelectValue>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      {products.map((product) => (
-                                        <SelectItem
-                                          key={product.id}
-                                          value={product.id.toString()}
-                                          disabled={isProductSelected(
-                                            product.id,
-                                            index
-                                          )}
-                                        >
-                                          {product.name} - {product.type}
-                                          {isProductSelected(
-                                            product.id,
-                                            index
-                                          ) && " (Sudah dipilih)"}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <Input
-                                  value={detail.desc}
-                                  onChange={(e) =>
+                  <div className="space-y-4">
+                    {details.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <div className="text-gray-500">
+                          <svg
+                            className="mx-auto h-12 w-12"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                          <h3 className="mt-2 text-sm font-medium">
+                            Keranjang Kosong
+                          </h3>
+                          <p className="mt-1 text-sm text-gray-400">
+                            Mulai dengan menambahkan item ke keranjang
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                        {details.map((detail, index) => (
+                          <div
+                            key={index}
+                            className="bg-white rounded-lg border p-4 space-y-3"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-center space-x-2">
+                                <Switch
+                                  className="mr-2"
+                                  checked={detail.is_product}
+                                  onCheckedChange={(checked) =>
                                     handleDetailChange(
                                       index,
-                                      "desc",
-                                      e.target.value
+                                      "is_product",
+                                      checked
                                     )
                                   }
-                                  placeholder="Deskripsi item"
                                 />
-                              )}
+                                <Label>
+                                  {detail.is_product ? "Produk" : "Non-Produk"}
+                                </Label>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveDetail(index)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
                             </div>
 
-                            {/* Tambahkan kolom Stok Pack */}
-                            {detail.is_product && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
-                                <Label>Stok (Pack)</Label>
-                                <Input
-                                  type="text"
-                                  value={
-                                    products.find(
-                                      (p: any) => p.id === detail.product_id
-                                    )?.stock || 0
-                                  }
-                                  disabled
-                                  className="bg-gray-50"
-                                />
+                                <Label>
+                                  Deskripsi{" "}
+                                  <span className="text-red-500">*</span>
+                                </Label>
+                                {detail.is_product ? (
+                                  <Select
+                                    value={detail.product_id?.toString() || ""}
+                                    onValueChange={(value) => {
+                                      const selectedProduct = products.find(
+                                        (p) => p.id.toString() === value
+                                      );
+                                      if (selectedProduct) {
+                                        handleDetailChange(
+                                          index,
+                                          "product_id",
+                                          selectedProduct.id
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Pilih Produk">
+                                        {detail.desc || "Pilih Produk"}
+                                      </SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectGroup>
+                                        {products.map((product) => (
+                                          <SelectItem
+                                            key={product.id}
+                                            value={product.id.toString()}
+                                            disabled={isProductSelected(
+                                              product.id,
+                                              index
+                                            )}
+                                          >
+                                            {product.name} - {product.type}
+                                            {isProductSelected(
+                                              product.id,
+                                              index
+                                            ) && " (Sudah dipilih)"}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <Input
+                                    value={detail.desc}
+                                    onChange={(e) =>
+                                      handleDetailChange(
+                                        index,
+                                        "desc",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Deskripsi item"
+                                  />
+                                )}
                               </div>
-                            )}
 
-                            {/* Tambahkan kolom Stok Bal */}
-                            {detail.is_product && (
-                              <div className="space-y-2">
-                                <Label>Stok (Bal)</Label>
-                                <Input
-                                  type="text"
-                                  value={
-                                    convert(
+                              {/* Tambahkan kolom Stok Pack */}
+                              {detail.is_product && (
+                                <div className="space-y-2">
+                                  <Label>Stok (Pack)</Label>
+                                  <Input
+                                    type="text"
+                                    value={
                                       products.find(
                                         (p: any) => p.id === detail.product_id
                                       )?.stock || 0
-                                    ).bal
+                                    }
+                                    disabled
+                                    className="bg-gray-50"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Tambahkan kolom Stok Bal */}
+                              {detail.is_product && (
+                                <div className="space-y-2">
+                                  <Label>Stok (Bal)</Label>
+                                  <Input
+                                    type="text"
+                                    value={
+                                      convert(
+                                        products.find(
+                                          (p: any) => p.id === detail.product_id
+                                        )?.stock || 0
+                                      ).bal
+                                    }
+                                    disabled
+                                    className="bg-gray-50"
+                                  />
+                                </div>
+                              )}
+
+                              <div className="space-y-2">
+                                <Label>
+                                  Jumlah <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  type="text"
+                                  value={formatNumber(detail.amount)}
+                                  onChange={(e) =>
+                                    handleDetailChange(
+                                      index,
+                                      "amount",
+                                      e.target.value
+                                    )
                                   }
-                                  disabled
-                                  className="bg-gray-50"
+                                  placeholder="0"
+                                  className={
+                                    detail.is_product &&
+                                    isExceedingStock(
+                                      detail.product_id,
+                                      detail.amount
+                                    )
+                                      ? "border-red-500 focus-visible:ring-red-500"
+                                      : ""
+                                  }
+                                />
+                                {detail.is_product && (
+                                  <small className="text-gray-500">
+                                    Masukkan jumlah dalam bentuk bal.
+                                  </small>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>
+                                  Harga <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  type="text"
+                                  value={formatNumber(detail.price)}
+                                  onChange={(e) =>
+                                    handleDetailChange(
+                                      index,
+                                      "price",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="0"
+                                  disabled={detail.is_product}
+                                  className={
+                                    detail.is_product ? "bg-gray-50" : ""
+                                  }
                                 />
                               </div>
-                            )}
 
-                            <div className="space-y-2">
-                              <Label>
-                                Jumlah <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.amount)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "amount",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                                className={
-                                  detail.is_product &&
-                                  isExceedingStock(
-                                    detail.product_id,
-                                    detail.amount
-                                  )
-                                    ? "border-red-500 focus-visible:ring-red-500"
-                                    : ""
-                                }
-                              />
-                              {detail.is_product && (
-                                <small className="text-gray-500">
-                                  Masukkan jumlah dalam bentuk bal.
-                                </small>
-                              )}
+                              <div className="space-y-2">
+                                <Label>Diskon (%)</Label>
+                                <Input
+                                  type="text"
+                                  value={formatNumber(detail.discount)}
+                                  onChange={(e) =>
+                                    handleDetailChange(
+                                      index,
+                                      "discount",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="0"
+                                />
+                              </div>
                             </div>
 
-                            <div className="space-y-2">
-                              <Label>
-                                Harga <span className="text-red-500">*</span>
-                              </Label>
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.price)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "price",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                                disabled={detail.is_product}
-                                className={
-                                  detail.is_product ? "bg-gray-50" : ""
-                                }
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Diskon (%)</Label>
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.discount)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "discount",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                              />
+                            <div className="pt-3 border-t">
+                              <div className="flex justify-between items-center">
+                                <Label>Sub Total:</Label>
+                                <Input
+                                  type="text"
+                                  value={formatNumber(detail.sub_total)}
+                                  disabled
+                                  className="bg-gray-50 w-40 text-right"
+                                />
+                              </div>
                             </div>
                           </div>
-
-                          <div className="pt-3 border-t">
-                            <div className="flex justify-between items-center">
-                              <Label>Sub Total:</Label>
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.sub_total)}
-                                disabled
-                                className="bg-gray-50 w-40 text-right"
-                              />
-                            </div>
-                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <span className="text-red-500 text-xs">
+                  Jika jumlah melebihi stock yang tersedia, maka inputan jumlah
+                  akan berwarna merah.
+                </span>
+                {/* Summary Section */}
+                <div className="border-t mt-2 pt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Sub Total:</span>
+                          <span className="font-semibold">
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(total)}
+                          </span>
                         </div>
-                      ))}
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Biaya Pengiriman:
+                          </span>
+                          <span className="font-semibold">
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(invoiceData.shipping_cost)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Uang Muka:</span>
+                          <span className="font-semibold">
+                            -{" "}
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(invoiceData.down_payment)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-lg border-t pt-2">
+                          <span className="font-medium">Total:</span>
+                          <span className="font-bold text-blue-600">
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                            }).format(
+                              total +
+                                invoiceData.shipping_cost +
+                                invoiceData.location_cost -
+                                invoiceData.down_payment
+                            )}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                    <div className="space-y-2 col-span-2">
+                      <Label>Sisa Pembayaran</Label>
+                      <div
+                        className={`p-2 rounded-md font-semibold text-right ${
+                          total +
+                            invoiceData.shipping_cost +
+                            invoiceData.location_cost -
+                            invoiceData.down_payment >
+                          0
+                            ? "bg-red-50 text-red-600"
+                            : "bg-green-50 text-green-600"
+                        }`}
+                      >
+                        {new Intl.NumberFormat("id-ID", {
+                          style: "currency",
+                          currency: "IDR",
+                        }).format(
+                          total +
+                            invoiceData.shipping_cost +
+                            invoiceData.location_cost -
+                            invoiceData.down_payment
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <span className="text-red-500 text-xs">
-                Jika jumlah melebihi stock yang tersedia, maka inputan jumlah
-                akan berwarna merah.
-              </span>
-              {/* Summary Section */}
-              <div className="border-t mt-2 pt-4 space-y-4">
+
+                {/* Basic Invoice Info */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Sub Total:</span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(total)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Biaya Pengiriman:
-                        </span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(invoiceData.shipping_cost)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Uang Muka:</span>
-                        <span className="font-semibold">
-                          -{" "}
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(invoiceData.down_payment)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-lg border-t pt-2">
-                        <span className="font-medium">Total:</span>
-                        <span className="font-bold text-blue-600">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(
-                            total +
-                              invoiceData.shipping_cost +
-                              invoiceData.location_cost -
-                              invoiceData.down_payment
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Sisa Pembayaran</Label>
-                    <div
-                      className={`p-2 rounded-md font-semibold text-right ${
-                        total +
-                          invoiceData.shipping_cost +
-                          invoiceData.location_cost -
-                          invoiceData.down_payment >
-                        0
-                          ? "bg-red-50 text-red-600"
-                          : "bg-green-50 text-green-600"
-                      }`}
-                    >
-                      {new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      }).format(
-                        total +
-                          invoiceData.shipping_cost +
-                          invoiceData.location_cost -
-                          invoiceData.down_payment
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Invoice Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipe Pembeli</Label>
-                  <Select
-                    value={buyerType}
-                    onValueChange={(value: "distributor" | "regular") => {
-                      setBuyerType(value);
-                      setInvoiceData({
-                        ...invoiceData,
-                        buyer: "",
-                        buyer_address: "",
-                        shipping_cost:
-                          value === "distributor"
-                            ? 0
-                            : invoiceData.shipping_cost,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih tipe pembeli" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="regular">Pembeli Biasa</SelectItem>
-                      <SelectItem value="distributor">Distributor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="buyer">
-                    Pembeli <span className="text-red-500">*</span>
-                  </Label>
-                  {buyerType === "distributor" ? (
+                  <div className="space-y-2">
+                    <Label>Tipe Pembeli</Label>
                     <Select
-                      required
-                      value={invoiceData.buyer}
-                      onValueChange={(value) => {
-                        const distributor = distributors.find(
-                          (d) => d.user.id.toString() === value
-                        );
+                      value={buyerType}
+                      onValueChange={(value: "distributor" | "regular") => {
+                        setBuyerType(value);
                         setInvoiceData({
                           ...invoiceData,
-                          buyer: value,
-                          buyer_address: distributor?.user.address || "",
-                          shipping_cost: 0,
+                          buyer: "",
+                          buyer_address: "",
+                          shipping_cost:
+                            value === "distributor"
+                              ? 0
+                              : invoiceData.shipping_cost,
                         });
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Distributor"/>
+                        <SelectValue placeholder="Pilih tipe pembeli" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          {distributors.map((distributor) => (
-                            <SelectItem
-                              key={distributor.user.id}
-                              value={distributor.user.id.toString()}
-                            >
-                              {distributor.user.username}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
+                        <SelectItem value="regular">Pembeli Biasa</SelectItem>
+                        <SelectItem value="distributor">Distributor</SelectItem>
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <div className="flex w-full">
-                      <Popover open={openBuyer} onOpenChange={setOpenBuyer}>
-                        <PopoverTrigger asChild className="w-full">
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openBuyer}
-                            className="w-full justify-between"
-                          >
-                            {valueBuyer || "Select buyer..."}
-                            <ChevronsUpDown className="opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command
-                            className="md:w-[620px]"
-                            defaultValue={defaultValue?.buyer}
-                          >
-                            <CommandInput
-                              placeholder="Cari pembeli..."
-                              value={valueBuyer}
-                              onValueChange={setValueBuyer}
-                            />
-                            <CommandList>
-                              <CommandEmpty className="p-2">
-                                <div className="flex flex-col gap-2">
-                                  <span className="text-sm">
-                                    Tidak ada pembeli yang ditemukan.
-                                  </span>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => {
-                                      setValueBuyer(valueBuyer);
-                                      setInvoiceData({
-                                        ...invoiceData,
-                                        buyer: valueBuyer,
-                                      });
-                                      setOpenBuyer(false);
-                                    }}
-                                  >
-                                    Gunakan &quot;{valueBuyer}&quot;
-                                  </Button>
-                                </div>
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {buyers.map((buyer) => (
-                                  <CommandItem
-                                    key={buyer.name}
-                                    value={buyer.name}
-                                    onSelect={(currentValue) => {
-                                      setValueBuyer(currentValue);
-                                      setInvoiceData({
-                                        ...invoiceData,
-                                        buyer: currentValue,
-                                        buyer_address: buyer.address,
-                                      });
-                                      setOpenBuyer(false);
-                                    }}
-                                  >
-                                    {buyer.name}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto",
-                                        valueBuyer === buyer.name
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="buyer_address">
-                    Alamat Pembeli <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    required
-                    placeholder="Alamat pembeli"
-                    value={invoiceData.buyer_address}
-                    disabled={buyerType === "distributor"}
-                    onChange={(e) =>
-                      setInvoiceData({
-                        ...invoiceData,
-                        buyer_address: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="down_payment">
-                    Uang Muka <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    inputMode="numeric"
-                    required
-                    placeholder="Masukkan jumlah uang muka"
-                    value={formatNumber(invoiceData.down_payment)}
-                    onChange={(e) =>
-                      setInvoiceData({
-                        ...invoiceData,
-                        down_payment: unformatNumber(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="discon_member">
-                    Diskon Member <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    required
-                    placeholder="Masukkan diskon member"
-                    value={formatNumber(invoiceData.discon_member)}
-                    onChange={(e) =>
-                      setInvoiceData({
-                        ...invoiceData,
-                        discon_member: unformatNumber(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment_method">
-                    Metode Pembayaran <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    required
-                    value={invoiceData.payment_method_id || ""}
-                    onValueChange={(value) => {
-                      setInvoiceData((prev) => ({
-                        ...prev,
-                        payment_method_id: value,
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Metode Pembayaran" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {paymentMethods.map((method: any) => (
-                          <SelectItem
-                            key={method.id}
-                            value={method.id.toString()}
-                          >
-                            {method.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maturity_date">
-                    Tanggal Jatuh Tempo <span className="text-red-500">*</span>
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !invoiceData.maturity_date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {invoiceData.maturity_date ? (
-                          new Date(
-                            invoiceData.maturity_date
-                          ).toLocaleDateString("id-ID", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          })
-                        ) : (
-                          <span>Pilih tanggal</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          invoiceData.maturity_date
-                            ? new Date(invoiceData.maturity_date)
-                            : undefined
-                        }
-                        onSelect={(date) =>
+                  <div className="space-y-2">
+                    <Label htmlFor="buyer">
+                      Pembeli <span className="text-red-500">*</span>
+                    </Label>
+                    {buyerType === "distributor" ? (
+                      <Select
+                        required
+                        value={invoiceData.buyer}
+                        onValueChange={(value) => {
+                          const distributor = distributors.find(
+                            (d) => d.user.id.toString() === value
+                          );
                           setInvoiceData({
                             ...invoiceData,
-                            maturity_date: date ? date.toISOString() : "",
-                          })
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div>
-                  <Label htmlFor="catatan">Catatan: </Label>
-                  <Textarea
-                    id="catatan"
-                    name="catatan"
-                    value={invoiceData.notes}
-                    onChange={(e) =>
-                      setInvoiceData({ ...invoiceData, notes: e.target.value })
-                    }
-                    placeholder="Keterangan pembelian"
-                  />
-                </div>
-              </div>
-
-              {/* Shipping and Location Details */}
-              {/* jika bukan distributor */}
-              {buyerType !== "distributor" && (
-                <div className="border-t mt-4 pt-4">
-                  <h4 className="font-medium mb-4">
-                    Informasi Pengiriman & Lokasi
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="shipping_address">
-                        Alamat Pengiriman{" "}
-                        <span className="text-red-500">*</span>
-                      </Label>
+                            buyer: value,
+                            buyer_address: distributor?.user.address || "",
+                            shipping_cost: 0,
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Distributor"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {distributors.map((distributor) => (
+                              <SelectItem
+                                key={distributor.user.id}
+                                value={distributor.user.id.toString()}
+                              >
+                                {distributor.user.username}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    ) : (
                       <div className="flex w-full">
-                        <Popover
-                          open={openLocation}
-                          onOpenChange={setOpenLocation}
-                        >
+                        <Popover open={openBuyer} onOpenChange={setOpenBuyer}>
                           <PopoverTrigger asChild className="w-full">
                             <Button
                               variant="outline"
                               role="combobox"
-                              aria-expanded={openLocation}
+                              aria-expanded={openBuyer}
                               className="w-full justify-between"
                             >
-                              {valueLocation || "Pilih lokasi..."}
+                              {valueBuyer || "Select buyer..."}
                               <ChevronsUpDown className="opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-full p-0">
-                            <Command className="md:w-[620px]">
+                            <Command
+                              className="md:w-[620px]"
+                              defaultValue={defaultValue?.buyer}
+                            >
                               <CommandInput
-                                placeholder="Cari lokasi..."
-                                value={valueLocation}
-                                onValueChange={setValueLocation}
+                                placeholder="Cari pembeli..."
+                                value={valueBuyer}
+                                onValueChange={setValueBuyer}
                               />
                               <CommandList>
                                 <CommandEmpty className="p-2">
                                   <div className="flex flex-col gap-2">
                                     <span className="text-sm">
-                                      Tidak ada lokasi yang ditemukan.
+                                      Tidak ada pembeli yang ditemukan.
                                     </span>
                                     <Button
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => {
-                                        setValueLocation(valueLocation);
+                                        setValueBuyer(valueBuyer);
                                         setInvoiceData({
                                           ...invoiceData,
-                                          shipping_address: valueLocation,
-                                          shipping_cost: 0,
+                                          buyer: valueBuyer,
                                         });
-                                        setOpenLocation(false);
+                                        setOpenBuyer(false);
                                       }}
                                     >
-                                      Gunakan &quot;{valueLocation}&quot;
+                                      Gunakan &quot;{valueBuyer}&quot;
                                     </Button>
                                   </div>
                                 </CommandEmpty>
                                 <CommandGroup>
-                                  {locations.map((location: any) => (
+                                  {buyers.map((buyer) => (
                                     <CommandItem
-                                      key={location.id}
-                                      value={location.name}
+                                      key={buyer.name}
+                                      value={buyer.name}
                                       onSelect={(currentValue) => {
-                                        setValueLocation(currentValue);
+                                        setValueBuyer(currentValue);
                                         setInvoiceData({
                                           ...invoiceData,
-                                          shipping_address: currentValue,
-                                          shipping_cost: location.cost || 0,
+                                          buyer: currentValue,
+                                          buyer_address: buyer.address,
                                         });
-                                        setOpenLocation(false);
+                                        setOpenBuyer(false);
                                       }}
                                     >
-                                      {location.name}
+                                      {buyer.name}
                                       <Check
                                         className={cn(
                                           "ml-auto",
-                                          valueLocation === location.name
+                                          valueBuyer === buyer.name
                                             ? "opacity-100"
                                             : "opacity-0"
                                         )}
@@ -1178,68 +962,308 @@ export default function InvoiceForm() {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="shipping_cost">
-                        Biaya Pengiriman <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        inputMode="numeric"
-                        required
-                        disabled={locations.some(
-                          (loc) => loc.name === valueLocation
-                        )}
-                        placeholder="Masukkan biaya pengiriman"
-                        value={formatNumber(invoiceData.shipping_cost)}
-                        onChange={(e) =>
-                          setInvoiceData({
-                            ...invoiceData,
-                            shipping_cost: unformatNumber(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="buyer_address">
+                      Alamat Pembeli <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      required
+                      placeholder="Alamat pembeli"
+                      value={invoiceData.buyer_address}
+                      disabled={buyerType === "distributor"}
+                      onChange={(e) =>
+                        setInvoiceData({
+                          ...invoiceData,
+                          buyer_address: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="down_payment">
+                      Uang Muka <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      inputMode="numeric"
+                      required
+                      placeholder="Masukkan jumlah uang muka"
+                      value={formatNumber(invoiceData.down_payment)}
+                      onChange={(e) =>
+                        setInvoiceData({
+                          ...invoiceData,
+                          down_payment: unformatNumber(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="discon_member">
+                      Diskon Member <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      required
+                      placeholder="Masukkan diskon member"
+                      value={formatNumber(invoiceData.discon_member)}
+                      onChange={(e) =>
+                        setInvoiceData({
+                          ...invoiceData,
+                          discon_member: unformatNumber(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_method">
+                      Metode Pembayaran <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      required
+                      value={invoiceData.payment_method_id || ""}
+                      onValueChange={(value) => {
+                        setInvoiceData((prev) => ({
+                          ...prev,
+                          payment_method_id: value,
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Metode Pembayaran" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {paymentMethods.map((method: any) => (
+                            <SelectItem
+                              key={method.id}
+                              value={method.id.toString()}
+                            >
+                              {method.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                    <div className="space-y-2 col-span-2">
-                      <Label htmlFor="notes">Catatan</Label>
-                      <Textarea
-                        placeholder="Nama penerima, nomor telepon, jalan, kelurahan, kecamatan, kota, provinsi, dan kode pos"
-                        value={invoiceData.desc}
-                        onChange={(e) =>
-                          setInvoiceData({
-                            ...invoiceData,
-                            desc: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="maturity_date">
+                      Tanggal Jatuh Tempo <span className="text-red-500">*</span>
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !invoiceData.maturity_date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceData.maturity_date ? (
+                            new Date(
+                              invoiceData.maturity_date
+                            ).toLocaleDateString("id-ID", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })
+                          ) : (
+                            <span>Pilih tanggal</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            invoiceData.maturity_date
+                              ? new Date(invoiceData.maturity_date)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            setInvoiceData({
+                              ...invoiceData,
+                              maturity_date: date ? date.toISOString() : "",
+                            })
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="catatan">Catatan: </Label>
+                    <Textarea
+                      id="catatan"
+                      name="catatan"
+                      value={invoiceData.notes}
+                      onChange={(e) =>
+                        setInvoiceData({ ...invoiceData, notes: e.target.value })
+                      }
+                      placeholder="Keterangan pembelian"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex justify-end space-x-2 mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={hasExceedingStock()}
-                className={
-                  hasExceedingStock() ? "opacity-50 cursor-not-allowed" : ""
-                }
-              >
-                Update
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                {/* Shipping and Location Details */}
+                {/* jika bukan distributor */}
+                {buyerType !== "distributor" && (
+                  <div className="border-t mt-4 pt-4">
+                    <h4 className="font-medium mb-4">
+                      Informasi Pengiriman & Lokasi
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="shipping_address">
+                          Alamat Pengiriman{" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="flex w-full">
+                          <Popover
+                            open={openLocation}
+                            onOpenChange={setOpenLocation}
+                          >
+                            <PopoverTrigger asChild className="w-full">
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openLocation}
+                                className="w-full justify-between"
+                              >
+                                {valueLocation || "Pilih lokasi..."}
+                                <ChevronsUpDown className="opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <Command className="md:w-[620px]">
+                                <CommandInput
+                                  placeholder="Cari lokasi..."
+                                  value={valueLocation}
+                                  onValueChange={setValueLocation}
+                                />
+                                <CommandList>
+                                  <CommandEmpty className="p-2">
+                                    <div className="flex flex-col gap-2">
+                                      <span className="text-sm">
+                                        Tidak ada lokasi yang ditemukan.
+                                      </span>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => {
+                                          setValueLocation(valueLocation);
+                                          setInvoiceData({
+                                            ...invoiceData,
+                                            shipping_address: valueLocation,
+                                            shipping_cost: 0,
+                                          });
+                                          setOpenLocation(false);
+                                        }}
+                                      >
+                                        Gunakan &quot;{valueLocation}&quot;
+                                      </Button>
+                                    </div>
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {locations.map((location: any) => (
+                                      <CommandItem
+                                        key={location.id}
+                                        value={location.name}
+                                        onSelect={(currentValue) => {
+                                          setValueLocation(currentValue);
+                                          setInvoiceData({
+                                            ...invoiceData,
+                                            shipping_address: currentValue,
+                                            shipping_cost: location.cost || 0,
+                                          });
+                                          setOpenLocation(false);
+                                        }}
+                                      >
+                                        {location.name}
+                                        <Check
+                                          className={cn(
+                                            "ml-auto",
+                                            valueLocation === location.name
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="shipping_cost">
+                          Biaya Pengiriman <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          inputMode="numeric"
+                          required
+                          disabled={locations.some(
+                            (loc) => loc.name === valueLocation
+                          )}
+                          placeholder="Masukkan biaya pengiriman"
+                          value={formatNumber(invoiceData.shipping_cost)}
+                          onChange={(e) =>
+                            setInvoiceData({
+                              ...invoiceData,
+                              shipping_cost: unformatNumber(e.target.value),
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-2 col-span-2">
+                        <Label htmlFor="notes">Catatan</Label>
+                        <Textarea
+                          placeholder="Nama penerima, nomor telepon, jalan, kelurahan, kecamatan, kota, provinsi, dan kode pos"
+                          value={invoiceData.desc}
+                          onChange={(e) =>
+                            setInvoiceData({
+                              ...invoiceData,
+                              desc: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading || hasExceedingStock() || details.length === 0}
+                  className={
+                    isLoading || hasExceedingStock() || details.length === 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }
+                >
+                  Update
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </MainPage>
   );
 }

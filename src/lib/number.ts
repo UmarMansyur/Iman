@@ -31,28 +31,39 @@ export function splitNumber(number: number): string {
   return result;
 }
 
-export function convert(number: number): {
+export function convert(totalPack: number): {
   slop: string;
   pack: string;
   bal: string;
   karton: string;
 } {
-  const slop = number / 10 || 0;
-  const bal = slop / 4 || 0;
-  const karton = bal / 8 || 0;
+  // Validasi input
+  if (totalPack <= 0 || isNaN(totalPack)) {
+    return {
+      slop: "0",
+      pack: "0",
+      bal: "0",
+      karton: "0",
+    };
+  }
 
-  const splitSlop = slop < 1000 ? slop.toString() : splitNumber(slop);
-  const splitPack = number < 1000 ? number.toString() : splitNumber(number);
-  const splitBal = bal < 1000 ? bal.toString() : splitNumber(bal);
-  const splitKarton = karton < 1000 ? karton.toString() : splitNumber(karton);
+  // Perhitungan
+  const slop = totalPack / 10;
+  const bal = slop / 20;
+  const karton = bal / 4;
+
+  // Fungsi pembantu untuk memformat angka
+  const formatNumber = (value: number): string =>
+    value < 1000 ? value.toFixed(2).toString() : splitNumber(value);
 
   return {
-    slop: splitSlop,
-    pack: splitPack,
-    bal: splitBal,
-    karton: splitKarton,
+    slop: formatNumber(slop),
+    pack: formatNumber(totalPack),
+    bal: formatNumber(bal),
+    karton: formatNumber(karton),
   };
 }
+
 
 
 export function formatCurrency(number: number): string {
