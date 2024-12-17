@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,45 +17,58 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { 
-  Truck, 
-  ArrowRight, 
-  MapPin, 
+import {
+  Truck,
+  ArrowRight,
+  MapPin,
   Calendar,
   Building,
   CreditCard,
   FileText,
-  User
+  User,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
+import { id } from "date-fns/locale";
 
-export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: any, fetchData: () => void }) {
+export default function DeliveryStatusDialog({
+  invoice,
+  fetchData,
+}: {
+  invoice: any;
+  fetchData: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(
     invoice.deliveryTracking[0]?.status || "Process"
   );
-  const [sales_name, setSalesName] = useState(invoice.deliveryTracking[0]?.sales_man || "");
+  const [sales_name, setSalesName] = useState(
+    invoice.deliveryTracking[0]?.sales_man || ""
+  );
   const [desc, setDesc] = useState(invoice.deliveryTracking[0]?.desc || "");
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/invoice/${invoice.id}/delivery-status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status,
-          sales_name,
-          desc,
-        }),
-      });
+      const response = await fetch(
+        `/api/invoice/${invoice.id}/delivery-status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status,
+            sales_name,
+            desc,
+          }),
+        }
+      );
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -85,20 +98,22 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
     }).format(amount);
   };
+
+  const [date, setDate] = useState(new Date());
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start px-2 hover:bg-secondary"
         >
-          <Truck className="w-4 h-4 mr-2" /> 
+          <Truck className="w-4 h-4 mr-2" />
           Ubah Status Pengiriman
         </Button>
       </DialogTrigger>
@@ -117,7 +132,9 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
           <div className="grid grid-cols-3 gap-4">
             <Card className="col-span-2">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Informasi Pengiriman</CardTitle>
+                <CardTitle className="text-lg font-semibold">
+                  Informasi Pengiriman
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -134,11 +151,14 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
                       <span className="text-sm">Tanggal Pesanan</span>
                     </div>
                     <p className="font-medium">
-                      {new Date(invoice.created_at).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
+                      {new Date(invoice.created_at).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
                     </p>
                   </div>
                 </div>
@@ -185,21 +205,31 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
 
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Ringkasan Pesanan</CardTitle>
+                <CardTitle className="text-lg font-semibold">
+                  Ringkasan Pesanan
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">Total Pesanan</span>
-                  <p className="text-xl font-semibold">{formatCurrency(invoice.total)}</p>
+                  <span className="text-sm text-muted-foreground">
+                    Total Pesanan
+                  </span>
+                  <p className="text-xl font-semibold">
+                    {formatCurrency(invoice.total)}
+                  </p>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">Status Saat Ini</span>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-sm px-3 py-1 ${statusColors[status as keyof typeof statusColors]}`}
+                  <span className="text-sm text-muted-foreground">
+                    Status Saat Ini
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className={`text-sm px-3 py-1 ${
+                      statusColors[status as keyof typeof statusColors]
+                    }`}
                   >
                     {statusText[status as keyof typeof statusText]}
                   </Badge>
@@ -210,9 +240,20 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
 
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Perbarui Status</CardTitle>
+              <CardTitle className="text-lg font-semibold">
+                Perbarui Status
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label>Tanggal Pengiriman</Label>
+                <ShadcnCalendar
+                  mode="single"
+                  selected={date}
+                  locale={id}
+                  className="rounded-md border"
+                />
+              </div>
               <div className="space-y-3">
                 <Label>Status Pengiriman</Label>
                 <Select value={status} onValueChange={setStatus}>
@@ -223,7 +264,9 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
                     <SelectItem value="Process">Sedang Diproses</SelectItem>
                     <SelectItem value="Sent">Sedang Dikirim</SelectItem>
                     <SelectItem value="Done">Pengiriman Selesai</SelectItem>
-                    <SelectItem value="Cancel">Pengiriman Dibatalkan</SelectItem>
+                    <SelectItem value="Cancel">
+                      Pengiriman Dibatalkan
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -246,7 +289,7 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: { invoice: 
                 />
               </div>
 
-              <Button 
+              <Button
                 onClick={handleSubmit}
                 disabled={loading}
                 className="w-full h-10"

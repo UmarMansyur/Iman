@@ -32,9 +32,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ShoppingCart, Trash } from "lucide-react";
 import { useUserStore } from "@/store/user-store";
-import { convert } from "@/lib/number";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 export default function CreateTransaction() {
+  const router = useRouter();
   const [isProduct, setIsProduct] = useState(true);
   const [isDistributor, setIsDistributor] = useState("0");
   const [newAddress, setNewAddress] = useState(false);
@@ -66,7 +67,8 @@ export default function CreateTransaction() {
   const [buyerId, setBuyerId] = useState<any>();
   const [notes, setNotes] = useState<string>("");
   const [selectLocation, setSelectLocation] = useState<any>();
-
+  const [stockPack, setStockPack] = useState<any>();
+  const [stockBal, setStockBal] = useState<any>();
   const { user } = useUserStore();
 
   async function getProduct() {
@@ -190,14 +192,17 @@ export default function CreateTransaction() {
 
   const handleSelectProduct = (item: any) => {
     const selectedProduct: any = product.find(
-      (product: any) => product.id === item
+      (product: any) => product.id == item
     );
-    const bal = convert(parseInt(selectedProduct?.stock || "0")).bal;
-    const pack = convert(parseInt(selectedProduct?.stock || "0")).pack;
+
+    const stockNumber = selectedProduct?.stock;
+    const bal = Math.floor(stockNumber / 200);
+    const pack = stockNumber;
+
     setPriceProduct(selectedProduct?.price);
     setProductId(selectedProduct?.id);
-    setAmountPack(pack);
-    setAmountBal(bal);
+    setStockPack(pack);
+    setStockBal(bal);
     setTotalHarga(0);
     setTotalPrice(0);
     setPriceProductBall(selectedProduct?.price * 200);
@@ -208,6 +213,7 @@ export default function CreateTransaction() {
     if (isNaN(value) || value === "") {
       setJumlah(0);
       setAmountPack(0);
+      setAmountBal(0);
       setTotalHarga(0);
       setTotalPrice(0);
       return;
@@ -217,28 +223,34 @@ export default function CreateTransaction() {
     if (jumlah < 0) {
       setJumlah(0);
       setAmountPack(0);
+      setAmountBal(0);
       setTotalHarga(0);
       setTotalPrice(0);
       return;
     }
 
-    if (jumlah > amountBal) {
-      setJumlah(amountBal);
-      const pack = amountBal * 200;
-      const subTotal = pack * priceProduct;
+    const maxBal = parseInt(String(stockBal).replace(/\D/g, ''));
+
+    if (jumlah > maxBal) {
+      setJumlah(maxBal);
+      const packAmount = maxBal * 200;
+      const subTotal = packAmount * priceProduct;
       const potongan = (subTotal * diskon) / 100;
-      setAmountPack(pack);
+      
+      setAmountPack(packAmount);
+      setAmountBal(maxBal);
       setTotalHarga(subTotal - potongan);
       setTotalPrice(subTotal);
       return;
     }
 
-    const pack = jumlah * 200;
-    const subTotal = pack * priceProduct;
+    const packAmount = jumlah * 200;
+    const subTotal = packAmount * priceProduct;
     const potongan = (subTotal * diskon) / 100;
 
     setJumlah(jumlah);
-    setAmountPack(pack);
+    setAmountPack(packAmount);
+    setAmountBal(jumlah);
     setTotalHarga(subTotal - potongan);
     setTotalPrice(subTotal);
   };
@@ -432,6 +444,7 @@ export default function CreateTransaction() {
         setDesc("");
         setLocationPrice(0);
         setTotalCart(0);
+        router.push(`/operator/transaksi/edit/${result.data.id}`);
         return;
       }
       throw new Error(result.message || "Terjadi kesalahan saat menambahkan transaksi");
@@ -488,8 +501,8 @@ export default function CreateTransaction() {
                   <Input
                     type="text"
                     placeholder="Masukkan jumlah stok (Pack)"
-                    value={amountPack || "0"}
-                    onChange={(e) => setAmountPack(e.target.value)}
+                    value={stockPack ? new Intl.NumberFormat('id-ID').format(stockPack) : "0"}
+                    onChange={(e) => setStockPack(e.target.value)}
                     disabled
                   />
                 </div>
@@ -500,20 +513,21 @@ export default function CreateTransaction() {
                   <Input
                     type="text"
                     placeholder="Masukkan jumlah stok (Bal)"
-                    value={amountBal || "0"}
-                    onChange={(e) => setAmountBal(e.target.value)}
+                    value={stockBal ? new Intl.NumberFormat('id-ID').format(stockBal) : "0"}
+                    onChange={(e) => setStockBal(e.target.value)}
                     disabled
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label className="font-medium text-sm">Jumlah Bal</Label>
                   <Input
-                    type="number"
+                    type="text"
                     placeholder="Masukkan jumlah bal"
-                    value={jumlah || ""}
-                    min={0}
-                    max={amountBal || 0}
-                    onChange={(e) => handleChangeJumlah(e)}
+                    value={jumlah ? new Intl.NumberFormat('id-ID').format(jumlah) : ""}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      handleChangeJumlah({ target: { value } });
+                    }}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -521,7 +535,7 @@ export default function CreateTransaction() {
                   <Input
                     type="text"
                     placeholder="Masukkan jumlah pack"
-                    value={amountPack || ""}
+                    value={amountPack ? new Intl.NumberFormat('id-ID').format(amountPack) : ""}
                     disabled
                   />
                 </div>

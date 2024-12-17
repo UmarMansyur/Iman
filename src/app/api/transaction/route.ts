@@ -70,7 +70,6 @@ export async function POST(req: Request) {
         }
         location_id = location.id;
       }
-
       if(new_pembeli) {
         const buyer = await tx.buyer.create({
           data: {
@@ -84,8 +83,36 @@ export async function POST(req: Request) {
         pembeli_id = buyer_id;
       }
 
-      if(is_distributor === "2") {
-        pembeli_id = Number(distributor_id);
+      if(is_distributor) {
+        const user = await tx.user.findFirst({
+          where: {
+            id: parseInt(distributor_id),
+          }
+        });
+
+        if(!user) {
+          throw new Error("User tidak ditemukan");
+        }
+
+        const existBuyer = await tx.buyer.findFirst({
+          where: {
+            name: user.username,
+            factory_id: parseInt(factory_id),
+          }
+        });
+
+        if(!existBuyer) {
+          const buyer = await tx.buyer.create({
+            data: {
+              name: user.username,
+              address: user.address,
+              factory_id: parseInt(factory_id),
+            }
+          });
+          pembeli_id = buyer.id;
+        } else {
+          pembeli_id = existBuyer.id;
+        }
       }
 
       const invoice = await tx.invoice.create({
@@ -93,8 +120,8 @@ export async function POST(req: Request) {
           invoice_code,
           total: Number(total) + Number(down_payment),
           down_payment,
-          is_distributor: is_distributor === "2" ? true : false,
-          type_preorder: type_preorder === "1" ? true : false,
+          is_distributor: is_distributor,
+          type_preorder: type_preorder,
           user_id: parseInt(user_id),
           factory_id: parseInt(factory_id),
           buyer_id: pembeli_id,

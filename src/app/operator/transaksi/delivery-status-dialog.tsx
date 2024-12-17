@@ -24,10 +24,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Calendar, Package, Clock } from "lucide-react";
+import { MapPin, Calendar1, Package, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
 
 export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
   const [open, setOpen] = useState(false);
@@ -36,22 +35,27 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
     invoice.deliveryTracking[0]?.status || "Process"
   );
   const [desc, setDesc] = useState(invoice.deliveryTracking[0]?.desc || "");
-  const [location, setLocation] = useState(invoice.deliveryTracking[0]?.location || "");
+  const [location, setLocation] = useState(
+    invoice.deliveryTracking[0]?.location || ""
+  );
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/invoice/${invoice.id}/delivery-status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status,
-          desc,
-          location,
-        }),
-      });
+      const response = await fetch(
+        `/api/invoice/${invoice.id}/delivery-status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status,
+            desc,
+            location,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Gagal mengubah status");
 
@@ -80,9 +84,11 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Status Pengiriman</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Status Pengiriman
+          </DialogTitle>
         </DialogHeader>
-        
+
         <Card className="mb-4">
           <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-4">
@@ -102,11 +108,11 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Calendar1 className="w-4 h-4 mr-2" />
                   <span>Tanggal Pesanan</span>
                 </div>
                 <p className="font-medium">
-                  {new Date(invoice.created_at).toLocaleDateString('id-ID')}
+                  {new Date(invoice.created_at).toLocaleDateString("id-ID")}
                 </p>
               </div>
               <div className="space-y-2">
@@ -114,8 +120,15 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
                   <Clock className="w-4 h-4 mr-2" />
                   <span>Status Saat Ini</span>
                 </div>
-                <Badge variant="secondary" className={statusColors[status as keyof typeof statusColors]}>
-                  {status === 'Process' ? 'Proses' : status === 'Done' ? 'Selesai' : 'Batal'}
+                <Badge
+                  variant="secondary"
+                  className={statusColors[status as keyof typeof statusColors]}
+                >
+                  {status === "Process"
+                    ? "Proses"
+                    : status === "Done"
+                    ? "Selesai"
+                    : "Batal"}
                 </Badge>
               </div>
             </div>
@@ -126,6 +139,9 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
 
         <ScrollArea className="space-y-4 max-h-[400px]">
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Jatuh Tempo</Label>
+            </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium">Status Pengiriman</Label>
               <Select value={status} onValueChange={setStatus}>
@@ -166,15 +182,11 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
         </ScrollArea>
 
         <div className="mt-4">
-          <Button 
-            onClick={handleSubmit} 
-            disabled={loading} 
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
-} 
+}

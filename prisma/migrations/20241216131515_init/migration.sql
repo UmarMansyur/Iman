@@ -387,7 +387,7 @@ CREATE TABLE `delivery_trackings` (
     `sales_man` VARCHAR(191) NULL,
     `recipient` VARCHAR(191) NULL,
     `invoice_id` INTEGER NOT NULL,
-    `desc` VARCHAR(191) NOT NULL,
+    `desc` VARCHAR(191) NULL,
     `location_id` INTEGER NOT NULL,
     `latitude` DOUBLE NULL,
     `longitude` DOUBLE NULL,

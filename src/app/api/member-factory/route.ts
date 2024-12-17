@@ -18,7 +18,17 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(members);
+    const result = members.map((item: any) => {
+      return {
+        id: item.user.id,
+        name: item.user.username,
+        address: item.user.address,
+        role_id: item.role_id,
+        thumbnail: item.user.thumbnail,
+      };
+    });
+
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
