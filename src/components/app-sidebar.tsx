@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/user-store";
+import { title } from "process";
 
 // This is sample data.
 const data = {
@@ -220,6 +221,21 @@ const data = {
       title: "Dashboard",
       url: "/distributor/dashboard",
       icon: Home,
+    },
+    {
+      title: "Data Produk",
+      url: "/distributor/data-produk",
+      icon: PackageSearch,
+      items: [
+        {
+          title: "Data Produk",
+          url: "/distributor/data-produk",
+        },
+        {
+          title: "Data Stok",
+          url: "/distributor/data-stok",
+        },
+      ]
     },
     {
       title: "Pre Order",

@@ -26,6 +26,7 @@ import {
   CreditCard,
   FileText,
   User,
+  CalendarIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,38 +35,54 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
-import { id } from "date-fns/locale";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { UseBaseMutationResult, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function DeliveryStatusDialog({
   invoice,
-  fetchData,
 }: {
   invoice: any;
-  fetchData: () => void;
 }) {
   const [open, setOpen] = useState(false);
+
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(
-    invoice.deliveryTracking[0]?.status || "Process"
+
+  const [status] = useState(
+    invoice?.deliveryTracking[0]?.status || "Process"
   );
+
+  const [selectStatus, setSelectStatus] = useState("");
+
   const [sales_name, setSalesName] = useState(
-    invoice.deliveryTracking[0]?.sales_man || ""
+    invoice?.deliveryTracking[0]?.sales_man || ""
   );
-  const [desc, setDesc] = useState(invoice.deliveryTracking[0]?.desc || "");
+
+  const [desc, setDesc] = useState(invoice?.deliveryTracking[0]?.desc || "");
+
+  const [recipient, setRecipient] = useState(
+    invoice?.deliveryTracking[0]?.recipient || ""
+  );
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/invoice/${invoice.id}/delivery-status`,
+        `/api/invoice/${invoice?.id}/delivery-status`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            status,
+            status: selectStatus,
             sales_name,
+            recipient,
             desc,
+            maturity_date: date,
           }),
         }
       );
@@ -74,7 +91,6 @@ export default function DeliveryStatusDialog({
       if (!response.ok) throw new Error(data.error);
 
       toast.success("Status pengiriman berhasil diubah");
-      fetchData();
       setOpen(false);
     } catch (error: any) {
       toast.error(error.message);
@@ -82,6 +98,21 @@ export default function DeliveryStatusDialog({
       setLoading(false);
     }
   };
+
+
+  const useHandleSubmit = (): UseBaseMutationResult => {
+    const queryClient = useQueryClient();
+    return useMutation({
+      mutationFn: () => handleSubmit(),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      },
+    })
+  }
+
+  const { mutate } = useHandleSubmit();
+
+
 
   const statusColors = {
     Process: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
@@ -104,7 +135,9 @@ export default function DeliveryStatusDialog({
     }).format(amount);
   };
 
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(
+    invoice?.maturity_date ? new Date(invoice?.maturity_date) : undefined
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -143,7 +176,7 @@ export default function DeliveryStatusDialog({
                       <FileText className="w-4 h-4 mr-2" />
                       <span className="text-sm">Nomor Invoice</span>
                     </div>
-                    <p className="font-medium">{invoice.invoice_code}</p>
+                    <p className="font-medium">{invoice?.invoice_code}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
@@ -151,7 +184,7 @@ export default function DeliveryStatusDialog({
                       <span className="text-sm">Tanggal Pesanan</span>
                     </div>
                     <p className="font-medium">
-                      {new Date(invoice.created_at).toLocaleDateString(
+                      {new Date(invoice?.created_at).toLocaleDateString(
                         "id-ID",
                         {
                           day: "numeric",
@@ -171,14 +204,14 @@ export default function DeliveryStatusDialog({
                       <User className="w-4 h-4 mr-2" />
                       <span className="text-sm">Distributor</span>
                     </div>
-                    <p className="font-medium">{invoice.buyer.name}</p>
+                    <p className="font-medium">{invoice?.buyer.name}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
                       <MapPin className="w-4 h-4 mr-2" />
                       <span className="text-sm">Alamat Pengiriman</span>
                     </div>
-                    <p className="font-medium">{invoice.buyer.address}</p>
+                    <p className="font-medium">{invoice?.buyer.address}</p>
                   </div>
                 </div>
 
@@ -190,14 +223,16 @@ export default function DeliveryStatusDialog({
                       <Building className="w-4 h-4 mr-2" />
                       <span className="text-sm">Pabrik</span>
                     </div>
-                    <p className="font-medium">{invoice.factory.name}</p>
+                    <p className="font-medium">{invoice?.factory.name}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
                       <CreditCard className="w-4 h-4 mr-2" />
                       <span className="text-sm">Metode Pembayaran</span>
                     </div>
-                    <p className="font-medium">{invoice.payment_method.name}</p>
+                    <p className="font-medium">
+                      {invoice?.payment_method.name}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -215,7 +250,7 @@ export default function DeliveryStatusDialog({
                     Total Pesanan
                   </span>
                   <p className="text-xl font-semibold">
-                    {formatCurrency(invoice.total)}
+                    {formatCurrency(invoice?.total)}
                   </p>
                 </div>
 
@@ -238,7 +273,7 @@ export default function DeliveryStatusDialog({
             </Card>
           </div>
 
-          <Card>
+          <Card className="mt-4">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold">
                 Perbarui Status
@@ -246,22 +281,45 @@ export default function DeliveryStatusDialog({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label>Tanggal Pengiriman</Label>
-                <ShadcnCalendar
-                  mode="single"
-                  selected={date}
-                  locale={id}
-                  className="rounded-md border"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date
+                        ? date.toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "Pilih tanggal pengiriman"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <ShadcnCalendar
+                      mode="single"
+                      selected={date}
+                      onSelect={(newDate) => {
+                        if (newDate) {
+                          setDate(newDate);
+                        }
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-3">
                 <Label>Status Pengiriman</Label>
-                <Select value={status} onValueChange={setStatus}>
+                <Select value={selectStatus} onValueChange={setSelectStatus} defaultValue={status}>
                   <SelectTrigger className="w-full h-10">
                     <SelectValue placeholder="Pilih status pengiriman" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Process">Sedang Diproses</SelectItem>
+                    {status === "Process" && (
+                      <SelectItem value="Process">Sedang Diproses</SelectItem>
+                    )}
                     <SelectItem value="Sent">Sedang Dikirim</SelectItem>
                     <SelectItem value="Done">Pengiriman Selesai</SelectItem>
                     <SelectItem value="Cancel">
@@ -271,26 +329,56 @@ export default function DeliveryStatusDialog({
                 </Select>
               </div>
 
-              <div className="space-y-3">
-                <Label>Nama Pengirim</Label>
-                <Input
-                  value={sales_name}
-                  onChange={(e) => setSalesName(e.target.value)}
-                  placeholder="Nama Pengirim"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label>Keterangan</Label>
-                <Textarea
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  placeholder="Contoh: Paket sedang dalam perjalanan menuju alamat tujuan"
-                  className="min-h-[100px] resize-none"
-                />
-              </div>
+              {selectStatus === "Sent" && (
+                <div className="space-y-3">
+                  <Label>Nama Pengirim</Label>
+                  <Input
+                    value={sales_name}
+                    onChange={(e) => setSalesName(e.target.value)}
+                    placeholder="Nama Pengirim"
+                  />
+                </div>
+              )}
+
+              {selectStatus === "Sent" && (
+                <div className="space-y-3">
+                  <Label>Keterangan</Label>
+                  <Textarea
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                    placeholder="Contoh: Paket sedang dalam perjalanan menuju alamat tujuan"
+                    className="min-h-[100px] resize-none"
+                  />
+                </div>
+              )}
+
+              {selectStatus === "Done" && (
+                <div className="space-y-3">
+                  <Label>Nama Penerima</Label>
+                  <Input
+                    value={recipient}
+                    onChange={(e) => setRecipient(e.target.value)}
+                    placeholder="Nama Penerima"
+                  />
+                </div>
+              )}
+
+              {
+                selectStatus === "Cancel" && (
+                  <div className="space-y-3">
+                    <Label>Keterangan Pembatalan</Label>
+                    <Textarea
+                      value={desc}
+                      onChange={(e) => setDesc(e.target.value)}
+                      placeholder="Contoh: Pengiriman dibatalkan karena alamat tidak ditemukan"
+                      className="min-h-[100px] resize-none"
+                    />
+                  </div>
+                )
+              }
 
               <Button
-                onClick={handleSubmit}
+                onClick={mutate}
                 disabled={loading}
                 className="w-full h-10"
               >

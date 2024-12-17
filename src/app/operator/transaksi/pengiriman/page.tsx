@@ -115,9 +115,9 @@ export default function TransactionPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Transaksi Produk</h4>
+            <h4 className="text-base font-semibold mb-0">Data Pengiriman</h4>
             <p className="text-xs text-muted-foreground">
-              Transaksi produk yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
+              Silahkan ubah status pengiriman dengan mengklik tombol titik tiga pada kolom aksi, kemudian pilih menu ubah status pengiriman. Status stok akan berubah saat status pengiriman menjadi sedang dikirim
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -140,7 +140,7 @@ export default function TransactionPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns(queryParams.page, queryParams.limit, fetchTransactions)}
+              columns={columns(queryParams.page, queryParams.limit)}
               data={data?.data || []}
               pagination={data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 }}
               sorting={(sortBy, sortOrder) => {

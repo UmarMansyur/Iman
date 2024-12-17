@@ -26,7 +26,7 @@ const statusText = {
   Cancel: "Batal",
 };
 
-export const columns = (page: number, limit: number, fetchData: () => void): ColumnDef<any>[] => [
+export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
     header: "No",
@@ -118,7 +118,7 @@ export const columns = (page: number, limit: number, fetchData: () => void): Col
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DetailDialog invoice={row.original} />
-            <DeliveryStatusDialog invoice={row.original} fetchData={fetchData} />
+            <DeliveryStatusDialog invoice={row.original}/>
           </DropdownMenuContent>
         </DropdownMenu>
       );

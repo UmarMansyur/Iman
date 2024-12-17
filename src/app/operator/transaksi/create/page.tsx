@@ -109,14 +109,7 @@ export default function CreateTransaction() {
           "&role_id=3"
       );
       const data = await response.json();
-      const result = data.map((item: any) => {
-        return {
-          id: item.user.id,
-          name: item.user.username,
-          address: item.user.address,
-        };
-      });
-      setDistributor(result);
+      setDistributor(data);
     }
   }
 
@@ -444,7 +437,7 @@ export default function CreateTransaction() {
         setDesc("");
         setLocationPrice(0);
         setTotalCart(0);
-        router.push(`/operator/transaksi/edit/${result.data.id}`);
+        router.push(`/operator/transaksi`);
         return;
       }
       throw new Error(result.message || "Terjadi kesalahan saat menambahkan transaksi");
@@ -850,7 +843,7 @@ export default function CreateTransaction() {
                         <Input
                           placeholder="Masukkan nama distributor/pembeli"
                           value={buyerName}
-                          onChange={(e: any) => setBuyerName(e)}
+                          onChange={(e: any) => setBuyerName(e.target.value)}
                         />
                       </div>
                     ) : (
@@ -927,7 +920,7 @@ export default function CreateTransaction() {
                 <Textarea
                   placeholder="Masukkan alamat lengkap"
                   value={buyerAddress}
-                  onChange={(e: any) => setBuyerAddress(e)}
+                  onChange={(e: any) => setBuyerAddress(e.target.value)}
                   disabled={!newBuyer}
                 />
               </div>
