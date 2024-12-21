@@ -1,18 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
-import { Trash2, Loader2 } from "lucide-react";
-import {
-  Select,
-  SelectItem,
-  SelectContent,
-  SelectGroup,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import MainPage from "@/components/main";
 import {
   Card,
@@ -21,645 +10,539 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { useUserStore } from "@/store/user-store";
-import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@radix-ui/react-dropdown-menu";
+import { useEffect, useState } from "react";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { id } from "date-fns/locale";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { ShoppingCart, Trash } from "lucide-react";
+import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
-// Add these utility functions at the top of your file
-const formatNumber = (num: number): string => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-};
-
-const unformatNumber = (str: string): number => {
-  return parseFloat(str.replace(/,/g, "")) || 0;
-};
-
-// Tambahkan fungsi untuk mendapatkan tanggal 1 bulan ke depan
-const getOneMonthFromNow = () => {
-  const date = new Date();
-  date.setMonth(date.getMonth() + 1);
-  return format(date, "yyyy-MM-dd");
-};
-
-export default function InvoiceForm() {
+import { Textarea } from "@/components/ui/textarea";
+export default function CreateTransaction() {
   const router = useRouter();
-  const { user: session } = useUserStore();
-  const [details, setDetails] = useState<
-    Array<{
-      desc: string;
-      product_id: number;
-      amount: number;
-      price: number;
-      discount: number;
-      sub_total: number;
-    }>
-  >([]);
-
-  const handleAddDetail = () => {
-    setDetails([
-      ...details,
-      {
-        desc: "",
-        product_id: 0,
-        amount: 0,
-        price: 0,
-        discount: 0,
-        sub_total: 0,
-      },
-    ]);
-  };
-
-  const handleRemoveDetail = (index: number) => {
-    setDetails(details.filter((_, i) => i !== index));
-  };
-
-  const handleDetailChange = (index: number, field: string, value: any) => {
-    const newDetails = [...details];
-
-    if (field === "desc") {
-      const selectedProduct: any = products.find((p: any) => p.id.toString() === value);
-      newDetails[index] = {
-        ...newDetails[index],
-        desc: selectedProduct?.name || "",
-        product_id: parseInt(value),
-        price: selectedProduct?.price || 0,
-      };
-    } else if (
-      field === "amount" ||
-      field === "price" ||
-      field === "discount"
-    ) {
-      const numericValue = unformatNumber(value);
-      newDetails[index] = { ...newDetails[index], [field]: numericValue };
-    } else {
-      newDetails[index] = { ...newDetails[index], [field]: value };
-    }
-
-    newDetails[index].sub_total =
-      newDetails[index].amount *
-      newDetails[index].price *
-      (1 - newDetails[index].discount / 100);
-
-    setDetails(newDetails);
-
-    const newTotal = newDetails.reduce(
-      (sum, detail) => sum + detail.sub_total,
-      0
-    );
-    setTotal(newTotal);
-  };
-
-  const [invoiceData, setInvoiceData] = useState({
-    maturity_date: getOneMonthFromNow(),
-    desc: "",
-    down_payment: 0,
-    payment_method_id: "",
-    payment_proof: "",
-    notes: "",
-    location: "",
-    location_cost: 0,
-  });
-
-  const calculateTotals = () => {
-    const itemAmount = details.reduce((sum, detail) => sum + detail.amount, 0);
-    const subTotal = details.reduce((sum, detail) => sum + detail.sub_total, 0);
-    const totalBeforeFees = subTotal;
-    const total = totalBeforeFees + invoiceData.location_cost;
-    const remainingBalance = total - invoiceData.down_payment;
-
-    return { itemAmount, subTotal, total, remainingBalance };
-  };
-
+  const [isProduct, setIsProduct] = useState(true);
+  const [isDistributor, setIsDistributor] = useState("0");
+  const [newAddress, setNewAddress] = useState(false);
+  const [buyer, setBuyer] = useState([]);
+  const [location, setLocation] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState([]);
+  const [paymentMethodId, setPaymentMethodId] = useState<any>();
+  const [product, setProduct] = useState<any[]>([]);
+  const [priceProduct, setPriceProduct] = useState<any>();
+  const [product_id, setProductId] = useState<any>();
+  const [amountBal, setAmountBal] = useState<any>();
+  const [amountPack, setAmountPack] = useState<any>();
+  const [jumlah, setJumlah] = useState(0);
+  const [diskon, setDiskon] = useState(0);
+  const [totalHarga, setTotalHarga] = useState(0);
+  const [priceProductBall, setPriceProductBall] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [totalCart, setTotalCart] = useState(0);
+  const [cart, setCart] = useState<any[]>([]);
+  const [desc, setDesc] = useState("");
+  const [distributor, setDistributor] = useState([]);
+  const [distributorSelected, setDistributorSelected] = useState<any>();
+  const [newBuyer, setNewBuyer] = useState(false);
+  const [locationPrice, setLocationPrice] = useState<any>();
+  const [buyerAddress, setBuyerAddress] = useState("");
+  const [buyerName, setBuyerName] = useState("");
+  const [harga, setHarga] = useState(0);
+  const [downPayment, setDownPayment] = useState(0);
+  const [buyerId, setBuyerId] = useState<any>();
+  const [notes, setNotes] = useState<string>("");
+  const [selectLocation, setSelectLocation] = useState<any>();
+  const [file, setFile] = useState<any>();
   const { user } = useUserStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const resetForm = () => {
-    setDetails([]);
-    setInvoiceData({
-      maturity_date: getOneMonthFromNow(),
-      desc: "",
-      down_payment: 0,
-      payment_method_id: "",
-      payment_proof: "",
-      notes: "",
-      location: "",
-      location_cost: 0,
-    });
-    setTotal(0);
-    
-    // Reset file input
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
-  };
+  async function getProduct() {
+    const response = await fetch(
+      "/api/product?page=1&limit=10000&factory_id=" + user?.factory_selected?.id
+    );
+    const data = await response.json();
+    setProduct(data.products);
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const { itemAmount, subTotal, total, remainingBalance } = calculateTotals();
-    const formData = {
-      ...invoiceData,
-      item_amount: itemAmount,
-      sub_total: subTotal,
-      total: total,
-      remaining_balance: remainingBalance,
-      detailInvoices: details,
-      payment_status: "Paid",
-      factory_id: session?.factory_selected?.id,
-      user_id: user?.id,
-      cost: 0,
-    };
+  async function getBuyer() {
+    const response = await fetch(
+      "/api/buyer?factory_id=" + user?.factory_selected?.id
+    );
+    const data = await response.json();
+    setBuyer(data);
+  }
 
-    const formData2 = new FormData();
-    formData2.append("factory_id", user?.factory_selected?.id.toString() || "");
-    formData2.append("user_id", user?.id.toString() || "");
-    formData2.append("amount", formData.total.toString() || "");
-    formData2.append("buyer", user?.username || "");
-    formData2.append("sales_man", "");
-    formData2.append("recipient", "");
-    formData2.append("maturity_date", formData.maturity_date || "");
-    formData2.append("item_amount", formData.item_amount.toString() || "");
-    formData2.append("discon_member", "0");
-    formData2.append("buyer_address", "");
-    formData2.append("down_payment", formData.down_payment.toString() || "");
-    formData2.append("total", formData.total.toString() || "");
-    formData2.append("sub_total", formData.sub_total.toString() || "");
-    formData2.append("remaining_balance", formData.remaining_balance.toString() || "");
-    formData2.append("payment_status", "Pending");
-    formData2.append("payment_method_id", formData.payment_method_id.toString() || "");
-    formData2.append("notes", formData.notes || "");
-    formData2.append("detail_invoices", JSON.stringify(formData.detailInvoices));
-    formData2.append("location", "");
-    formData2.append("desc", "0");
-    formData2.append("latitude", "0");
-    formData2.append("longitude", "0");
-    formData2.append("cost", "0");
-    formData2.append("status", "Pending");
-    formData2.append("file", invoiceData.payment_proof);
+  async function getLocation() {
+    const response = await fetch(
+      "/api/location?factory_id=" + user?.factory_selected?.id
+    );
+    const data = await response.json();
+    setLocation(data.data);
+  }
 
-    try {
-      const response = await fetch("/api/pre-order", {
-        method: "POST",
-        body: formData2,
-      });
+  async function getPaymentMethod() {
+    const response = await fetch("/api/payment");
+    const data = await response.json();
+    setPaymentMethod(data.payments);
+  }
 
+  async function getDistributor() {
+    if (user?.factory_selected?.id) {
+      const response = await fetch(
+        "/api/member-factory?factory_id=" +
+          user?.factory_selected?.id +
+          "&role_id=3"
+      );
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
-
-      if (response.ok) {
-        toast.success(data.message);
-        resetForm();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Terjadi kesalahan, silahkan coba lagi");
-    } finally {
-      setIsSubmitting(false);
+      setDistributor(data);
     }
-  };
+  }
 
-  const [total, setTotal] = useState(0);
-
-  const [products, setProducts] = useState<any>([]);
-  const [paymentMethods, setPaymentMethods] = useState<any>([]);
+  async function getData() {
+    await getProduct();
+    await getBuyer();
+    await getLocation();
+    await getDistributor();
+    await getPaymentMethod();
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const factoryId = session?.factory_selected?.id;
-        const productsResponse = await fetch(
-          `/api/product?limit=10000&factory_id=${factoryId}`
-        );
-        const productsData = await productsResponse.json();
-        setProducts(productsData.products || []);
+    if (user?.factory_selected) {
+      getData();
+    }
+  }, [user?.factory_selected]);
 
-        // Fetch payment methods
-        const paymentResponse = await fetch("/api/payment");
-        const paymentData = await paymentResponse.json();
-        setPaymentMethods(paymentData.payments || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+  useEffect(() => {
+    setTotalCart(calculateTotalCart(cart));
+  }, [cart]);
+
+  const calculateTotalCart = (cartItems: any[]) => {
+    return cartItems.reduce((acc, item) => acc + item.total_harga, 0);
+  };
+
+  const handleAddToCart = () => {
+    if (!product_id) {
+      toast.error("Pilih produk terlebih dahulu");
+      return;
+    }
+
+    if (jumlah === 0) {
+      toast.error(
+        "Anda belum memasukkan jumlah pada produk yang telah dipilih!"
+      );
+      return;
+    }
+
+    const data = {
+      product_id: isProduct ? product_id : null,
+      desc: isProduct
+        ? product.find((item: any) => item.id === product_id)?.name
+        : desc,
+      jumlah: jumlah,
+      harga: isProduct ? priceProductBall : harga,
+      total: totalPrice,
+      diskon: diskon,
+      total_harga: totalHarga,
+      total_pack: amountPack,
+      total_bal: amountBal,
+      is_product: isProduct,
+    };
+    setCart([...cart, data]);
+    setProductId(null);
+    setJumlah(0);
+    setDiskon(0);
+    setTotalHarga(0);
+    setTotalPrice(0);
+    setAmountPack(0);
+    setAmountBal(0);
+    setDesc("");
+  };
+
+  const handleSelectProduct = (item: any) => {
+    const selectedProduct: any = product.find(
+      (product: any) => product.id == item
+    );
+    setPriceProduct(selectedProduct?.price);
+    setProductId(selectedProduct?.id);
+    setTotalHarga(0);
+    setTotalPrice(0);
+    setPriceProductBall(selectedProduct?.price * 200);
+  };
+
+  const handleChangeJumlah = (e: any) => {
+    const value = e.target.value;
+    if (isNaN(value) || value === "") {
+      setJumlah(0);
+      setAmountPack(0);
+      setAmountBal(0);
+      setTotalHarga(0);
+      setTotalPrice(0);
+      return;
+    }
+
+    const jumlah = parseInt(value);
+    if (jumlah < 0) {
+      setJumlah(0);
+      setAmountPack(0);
+      setAmountBal(0);
+      setTotalHarga(0);
+      setTotalPrice(0);
+      return;
+    }
+
+    const packAmount = jumlah * 200;
+    const subTotal = packAmount * priceProduct;
+
+    setAmountPack(packAmount);
+    setAmountBal(jumlah);
+    setTotalHarga(subTotal);
+    setTotalPrice(subTotal);
+    setJumlah(jumlah);
+    return;
+  };
+  const handleRemoveFromCart = (index: number) => {
+    const newCart = cart.filter((_, i) => i !== index);
+    setCart(newCart);
+  };
+
+  const handleSubmitButton = async () => {
+    const data = {
+      detail_invoices: cart,
+      total: totalCart,
+      down_payment: downPayment,
+      factory_id: user?.factory_selected?.id,
+      user_id: user?.id,
+      payment_method_id: paymentMethodId,
+      sub_total: totalCart,
+      payment_status: "Paid",
+      location_selected: selectLocation,
+      notes: notes,
     };
 
-    fetchData();
-  }, [session]);
+
+  };
+
+  const handleSelectPaymentMethod = (value: any) => {
+    setPaymentMethodId(value);
+  };
+
+  const handleResetForm = () => {
+    setCart([]);
+    setTotalCart(0);
+    setDownPayment(0);
+    setNotes("");
+    setBuyerName("");
+    setBuyerAddress("");
+    setBuyerId(null);
+  };
 
   return (
     <MainPage>
-      <Card>
+      <Card className="w-full mx-auto">
         <CardHeader>
-          <CardTitle>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Pre Order</h3>
-            </div>
-          </CardTitle>
+          <CardTitle>Pre Order</CardTitle>
           <CardDescription>
-            Masukkan detail pre order untuk menambah pre order. Pre-order dapat dilakukan dengan uang muka. Selanjutnya, admin kami akan menghubungi anda untuk konfirmasi lebih lanjut.
+            Setelah anda memasukkan data produk yang ingin dibeli, maka anda
+            dapat melakukan pembayaran uang muka dan upload bukti pembayaran.
+            Mohon menunggu konfirmasi dari admin kami untuk melakukan
+            pengiriman.
           </CardDescription>
         </CardHeader>
-        <CardContent className="relative">
-          <div className="absolute top-0 right-0 text-sm text-gray-500 mr-4 mt-2">
-            <span className="text-red-500">*</span> Wajib diisi
+        <CardContent className="space-y-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Nama Produk</Label>
+                <Select onValueChange={handleSelectProduct}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Produk" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.map((item: any) => (
+                      <SelectItem value={item.id} key={item.id}>
+                        {item.name} - {item.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Jumlah Bal</Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah bal"
+                  value={
+                    jumlah ? new Intl.NumberFormat("id-ID").format(jumlah) : ""
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    handleChangeJumlah({ target: { value } });
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Harga Produk/Pack</Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan harga produk"
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(priceProduct || 0)
+                      .slice(0, -3) || ""
+                  }
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Harga Produk/Bal</Label>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  disabled
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(priceProductBall || 0)
+                      .slice(0, -3) || 0
+                  }
+                />
+              </div>
+              <div className="flex col-span-2 flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Sub Total Harga (Bal)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Total Harga"
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(totalHarga || 0)
+                      .slice(0, -3) || 0
+                  }
+                  className="bg-muted"
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={handleResetForm}>
+                Reset
+              </Button>
+              <Button onClick={handleAddToCart}>
+                <ShoppingCart className="w-4 h-4" />
+                <span>Tambah Keranjang</span>
+              </Button>
+            </div>
           </div>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              {/* Basic Invoice Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="down_payment">
-                    Uang Muka <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    inputMode="numeric"
-                    required
-                    placeholder="Masukkan jumlah uang muka"
-                    value={formatNumber(invoiceData.down_payment)}
-                    onChange={(e) => setInvoiceData({
-                      ...invoiceData,
-                      down_payment: unformatNumber(e.target.value),
-                    })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment_proof">
-                    Bukti Pembayaran <span className="text-red-500">*</span>
-                  </Label>
-                  <Input 
-                    type="file"
-                    required 
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setInvoiceData({
-                          ...invoiceData,
-                          payment_proof: file as any
-                        });
-                      }
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment_method">
-                    Metode Pembayaran <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    required
-                    value={invoiceData.payment_method_id || ""}
-                    onValueChange={(value) =>
-                      setInvoiceData((prev) => ({
-                        ...prev,
-                        payment_method_id: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Metode Pembayaran">
-                        {paymentMethods.find(
-                          (method: any) =>
-                            method.id == invoiceData.payment_method_id
-                        )?.name || "Pilih Metode Pembayaran"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {paymentMethods.map((method: any) => (
-                          <SelectItem
-                            key={method.id}
-                            value={method.id.toString()}
-                          >
-                            {method.name}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="maturity_date">
-                    Tanggal Jatuh Tempo <span className="text-red-500">*</span>
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-gray-50",
-                          !invoiceData.maturity_date && "text-muted-foreground"
-                        )}
-                        disabled={true}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {invoiceData.maturity_date ? (
-                          format(new Date(invoiceData.maturity_date), "PPP", {
-                            locale: id,
-                          })
-                        ) : (
-                          <span>Pilih tanggal</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          invoiceData.maturity_date
-                            ? new Date(invoiceData.maturity_date)
-                            : undefined
-                        }
-                        onSelect={(date) =>
-                          setInvoiceData((prev) => ({
-                            ...prev,
-                            maturity_date: date
-                              ? format(date, "yyyy-MM-dd")
-                              : "",
-                          }))
-                        }
-                        disabled={true}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="catatan">Catatan: </Label>
-                  <Textarea
-                    id="catatan"
-                    name="catatan"
-                    value={invoiceData.notes}
-                    onChange={(e) =>
-                      setInvoiceData({ ...invoiceData, notes: e.target.value })
-                    }
-                    placeholder="Keterangan pembelian, jangan lupa untuk menambahkan alamat pengiriman"
-                  />
-                </div>
-              </div>
-
-              {/* Detail Items Section */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label>Detail Item</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
-                    onClick={handleAddDetail}
-                  >
-                    + Tambah Item
-                  </Button>
-                </div>
-
-                <div className="relative overflow-x-auto">
-                  {details.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <div className="text-gray-500">
-                        <svg
-                          className="mx-auto h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium">Keranjang Kosong</h3>
-                        <p className="mt-1 text-sm text-gray-400">
-                          Mulai dengan menambahkan item ke keranjang
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <table className="w-full text-sm text-left">
-                      <thead className="text-xs uppercase bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2">
-                            Deskripsi <span className="text-red-500">*</span>
-                          </th>
-                          <th className="px-4 py-2">
-                            Jumlah <span className="text-red-500">*</span>
-                          </th>
-                          <th className="px-4 py-2">
-                            Harga <span className="text-red-500">*</span>
-                          </th>
-                          <th className="px-4 py-2">Diskon (%)</th>
-                          <th className="px-4 py-2">Sub Total</th>
-                          <th className="px-4 py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {details.map((detail, index) => (
-                          <tr key={index} className="border-b">
-                            <td className="px-4 py-2">
-                              <div>
-                                <Select
-                                  value={detail.product_id.toString()}
-                                  onValueChange={(value) =>
-                                    handleDetailChange(index, "desc", value)
-                                  }
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Pilih Produk" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      {products.map((product: any) => (
-                                        <SelectItem
-                                          key={product.id}
-                                          value={product.id.toString()}
-                                        >
-                                          {product.name} - {product.type}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2">
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.amount)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "amount",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.price)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "price",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                                disabled
-                                className="bg-gray-50"
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.discount)}
-                                onChange={(e) =>
-                                  handleDetailChange(
-                                    index,
-                                    "discount",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <Input
-                                type="text"
-                                value={formatNumber(detail.sub_total)}
-                                disabled
-                                className="bg-gray-50"
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveDetail(index)}
-                              >
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-              {/* Summary Section */}
-              <div className="border-t mt-2 pt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Sub Total:</span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(total)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Uang Muka:
-                        </span>
-                        <span className="font-semibold">
-                          - {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(invoiceData.down_payment)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-lg border-t pt-2">
-                        <span className="font-medium">Total:</span>
-                        <span className="font-bold text-blue-600">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(
-                            total +
-                              invoiceData.location_cost -
-                              invoiceData.down_payment
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label>Sisa Pembayaran</Label>
-                    <div
-                      className={`p-2 rounded-md font-semibold text-right ${
-                        total +
-                          invoiceData.location_cost -
-                          invoiceData.down_payment >
-                        0
-                          ? "bg-red-50 text-red-600"
-                          : "bg-green-50 text-green-600"
-                      }`}
-                    >
+          <div className=" rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted">
+                  <TableHead className="text-center w-16">No</TableHead>
+                  <TableHead>Nama Produk</TableHead>
+                  <TableHead className="text-center">Jumlah</TableHead>
+                  <TableHead className="text-end">Harga Produk/Bal</TableHead>
+                  <TableHead className="text-end">Total</TableHead>
+                  <TableHead className="text-center w-20">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cart.map((item: any, index: number) => (
+                  <TableRow key={index}>
+                    <TableCell className=" text-center">{index + 1}</TableCell>
+                    <TableCell className="">{item.desc}</TableCell>
+                    <TableCell className=" text-center">
+                      {item.jumlah}
+                    </TableCell>
+                    <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
-                      }).format(
-                        total +
-                          invoiceData.location_cost -
-                          invoiceData.down_payment
-                      )}
-                    </div>
-                  </div>
+                      })
+                        .format(item.harga)
+                        .slice(0, -3)}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                      })
+                        .format(item.total_harga)
+                        .slice(0, -3)}
+                    </TableCell>
+                    <TableCell className=" text-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveFromCart(index)}
+                      >
+                        <Trash></Trash>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Total Amount */}
+          <div className="bg-primary text-primary-foreground p-6 rounded-lg">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span>Total Belanja</span>
+                <span>
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })
+                    .format(totalCart)
+                    .slice(0, -3)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Biaya Pengiriman</span>
+                <span>
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })
+                    .format(locationPrice || 0)
+                    .slice(0, -3)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Uang Muka</span>
+                <span>
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })
+                    .format(downPayment || 0)
+                    .slice(0, -3)}
+                </span>
+              </div>
+              <div className="flex flex-col text-xl font-bold pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span>Total</span>
+                  <span>
+                    {new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(totalCart - downPayment)
+                      .slice(0, -3)}
+                  </span>
                 </div>
+                {totalCart - downPayment < 0 && (
+                  <div className="flex justify-between items-center text-lg mt-2">
+                    <span>Kembalian</span>
+                    <span>
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                      })
+                        .format(Math.abs(totalCart - downPayment))
+                        .slice(0, -3)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-2 mt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-              >
-                Batal
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  'Simpan'
-                )}
-              </Button>
+          <div className="grid grid-cols-3 gap-10">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Jenis Pembayaran</Label>
+                <Select onValueChange={handleSelectPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Pembayaran" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentMethod.map((item: any) => (
+                      <SelectItem value={item.id} key={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </form>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Jumlah Pembayaran Uang Muka
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah pembayaran uang muka"
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(downPayment || 0)
+                      .slice(0, -3) || 0
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setDownPayment(parseInt(value));
+                  }}
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Upload Bukti Pembayaran
+                </Label>
+                <Input type="file" placeholder="Masukkan file pembayaran" />
+              </div>
+            </div>
+            <div className="space-y-4 col-span-3">
+              <Label className="font-medium text-sm">Catatan</Label>
+              <div>
+                <Textarea
+                  className="w-full"
+                  placeholder="Masukkan catatan"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={handleResetForm}>
+              Reset
+            </Button>
+            <Button type="button" onClick={handleSubmitButton} size="lg">
+              Simpan Transaksi
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </MainPage>

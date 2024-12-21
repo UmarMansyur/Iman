@@ -11,6 +11,8 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "../detail-dialog";
 import DeliveryStatusDialog from "./delivery-status-dialog";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const statusColors = {
   Process: "bg-yellow-100 text-yellow-400 hover:bg-yellow-100/80 dark:bg-yellow-400 dark:text-yellow-300 border-0",
@@ -103,6 +105,17 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
       <div>
         {new Date(row.original.maturity_date).toLocaleDateString("id-ID")}
       </div>
+    ),
+  },
+  {
+    accessorKey: "print",
+    header: "Cetak",
+    cell: ({ row }) => (
+      <Link href={`/operator/transaksi/pengiriman/print/${row.original.id}`}>
+        <Button variant="outline">
+          Cetak
+        </Button>
+      </Link>
     ),
   },
   {
