@@ -11,7 +11,12 @@ export default function Unaauthorized() {
 
   const gotoHome = () => {
     if(!user){
-      router.replace("/login");
+      // clear sessiono
+      fetch("/api/auth/login", {
+        method: "DELETE",
+      }).then(() => {
+        router.replace("/login");
+      });
       return;
     }
 

@@ -231,8 +231,10 @@ export default function CreateTransaction() {
       payment_status: "Paid",
       location_selected: selectLocation,
       notes: notes,
+      proof_of_payment: file,
     };
 
+    console.log(data);
 
   };
 
@@ -520,7 +522,7 @@ export default function CreateTransaction() {
                 <Label className="font-medium text-sm">
                   Upload Bukti Pembayaran
                 </Label>
-                <Input type="file" placeholder="Masukkan file pembayaran" />
+                <Input type="file" placeholder="Masukkan file pembayaran" accept="image/*" multiple={false} max={1} onChange={(e) => setFile(e.target.files?.[0] || null)} />
               </div>
             </div>
             <div className="space-y-4 col-span-3">
