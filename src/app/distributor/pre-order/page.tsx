@@ -32,15 +32,8 @@ import {
 import { ShoppingCart, Trash } from "lucide-react";
 import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 export default function CreateTransaction() {
-  const router = useRouter();
-  const [isProduct, setIsProduct] = useState(true);
-  const [isDistributor, setIsDistributor] = useState("0");
-  const [newAddress, setNewAddress] = useState(false);
-  const [buyer, setBuyer] = useState([]);
-  const [location, setLocation] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState([]);
   const [paymentMethodId, setPaymentMethodId] = useState<any>();
   const [product, setProduct] = useState<any[]>([]);
@@ -55,18 +48,8 @@ export default function CreateTransaction() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalCart, setTotalCart] = useState(0);
   const [cart, setCart] = useState<any[]>([]);
-  const [desc, setDesc] = useState("");
-  const [distributor, setDistributor] = useState([]);
-  const [distributorSelected, setDistributorSelected] = useState<any>();
-  const [newBuyer, setNewBuyer] = useState(false);
-  const [locationPrice, setLocationPrice] = useState<any>();
-  const [buyerAddress, setBuyerAddress] = useState("");
-  const [buyerName, setBuyerName] = useState("");
-  const [harga, setHarga] = useState(0);
   const [downPayment, setDownPayment] = useState(0);
-  const [buyerId, setBuyerId] = useState<any>();
   const [notes, setNotes] = useState<string>("");
-  const [selectLocation, setSelectLocation] = useState<any>();
   const [file, setFile] = useState<any>();
   const { user } = useUserStore();
 
@@ -78,45 +61,15 @@ export default function CreateTransaction() {
     setProduct(data.products);
   }
 
-  async function getBuyer() {
-    const response = await fetch(
-      "/api/buyer?factory_id=" + user?.factory_selected?.id
-    );
-    const data = await response.json();
-    setBuyer(data);
-  }
-
-  async function getLocation() {
-    const response = await fetch(
-      "/api/location?factory_id=" + user?.factory_selected?.id
-    );
-    const data = await response.json();
-    setLocation(data.data);
-  }
-
   async function getPaymentMethod() {
     const response = await fetch("/api/payment");
     const data = await response.json();
     setPaymentMethod(data.payments);
   }
 
-  async function getDistributor() {
-    if (user?.factory_selected?.id) {
-      const response = await fetch(
-        "/api/member-factory?factory_id=" +
-          user?.factory_selected?.id +
-          "&role_id=3"
-      );
-      const data = await response.json();
-      setDistributor(data);
-    }
-  }
 
   async function getData() {
     await getProduct();
-    await getBuyer();
-    await getLocation();
-    await getDistributor();
     await getPaymentMethod();
   }
 
@@ -148,18 +101,15 @@ export default function CreateTransaction() {
     }
 
     const data = {
-      product_id: isProduct ? product_id : null,
-      desc: isProduct
-        ? product.find((item: any) => item.id === product_id)?.name
-        : desc,
+      product_id: product_id,
+      desc: product.find((item: any) => item.id === product_id)?.name,
       jumlah: jumlah,
-      harga: isProduct ? priceProductBall : harga,
+      harga: priceProductBall,
       total: totalPrice,
       diskon: diskon,
       total_harga: totalHarga,
       total_pack: amountPack,
       total_bal: amountBal,
-      is_product: isProduct,
     };
     setCart([...cart, data]);
     setProductId(null);
@@ -169,7 +119,6 @@ export default function CreateTransaction() {
     setTotalPrice(0);
     setAmountPack(0);
     setAmountBal(0);
-    setDesc("");
   };
 
   const handleSelectProduct = (item: any) => {
@@ -220,22 +169,31 @@ export default function CreateTransaction() {
   };
 
   const handleSubmitButton = async () => {
-    const data = {
-      detail_invoices: cart,
-      total: totalCart,
-      down_payment: downPayment,
-      factory_id: user?.factory_selected?.id,
-      user_id: user?.id,
-      payment_method_id: paymentMethodId,
-      sub_total: totalCart,
-      payment_status: "Paid",
-      location_selected: selectLocation,
-      notes: notes,
-      proof_of_payment: file,
-    };
+    const formData = new FormData();
+    formData.append("detail_invoices", JSON.stringify(cart));
+    formData.append("proof_of_payment", file);
+    formData.append("payment_method_id", paymentMethodId);
+    formData.append("total", totalCart.toString());
+    formData.append("down_payment", downPayment.toString());
+    formData.append("factory_id", user!.factory_selected!.id);
+    formData.append("user_id", user!.id);
+    formData.append("payment_status", "Pending");
+    formData.append("notes", notes);
+    formData.append("remaining_balance", (totalCart - downPayment).toString());
+    
 
-    console.log(data);
+    const response = await fetch("/api/pre-order", {
+      method: "POST",
+      body: formData,
+    });
 
+    const responseData = await response.json();
+    if(response.ok) {
+      toast.success("Transaksi berhasil disimpan");
+      handleResetForm();
+    } else {
+      toast.error(responseData.message);
+    }
   };
 
   const handleSelectPaymentMethod = (value: any) => {
@@ -247,9 +205,6 @@ export default function CreateTransaction() {
     setTotalCart(0);
     setDownPayment(0);
     setNotes("");
-    setBuyerName("");
-    setBuyerAddress("");
-    setBuyerId(null);
   };
 
   return (
@@ -422,17 +377,6 @@ export default function CreateTransaction() {
                     currency: "IDR",
                   })
                     .format(totalCart)
-                    .slice(0, -3)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Biaya Pengiriman</span>
-                <span>
-                  {new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                  })
-                    .format(locationPrice || 0)
                     .slice(0, -3)}
                 </span>
               </div>

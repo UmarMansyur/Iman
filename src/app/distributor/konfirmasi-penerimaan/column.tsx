@@ -29,6 +29,11 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Pembeli"/>
     ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.buyer.name}
+      </div>
+    ),
   },
   {
     accessorKey: "total",
@@ -96,15 +101,15 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const status = row.original.deliveryTracking[0]?.status;
 
-      if(status === 'Pending') {
+      if(status === 'Process') {
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Pending
+          Menunggu Proses Pengiriman
         </Badge>
       }
 
-      if(status === 'Process') { 
+      if(status === 'Sent') { 
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Proses
+          Dikirim
         </Badge>
       }
       if(status === 'Done') {
@@ -127,7 +132,12 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
     cell: ({ row }) => (
       <div>
-        {new Date(row.original.maturity_date).toLocaleDateString("id-ID")}
+        {
+          row.original.maturity_date && new Date(row.original.maturity_date).toLocaleDateString("id-ID")
+        }
+        {
+          !row.original.maturity_date && "Belum diset operator pabrik"
+        }
       </div>
     ),
   },

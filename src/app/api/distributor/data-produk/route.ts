@@ -25,6 +25,28 @@ export async function GET(req: Request) {
       throw new Error("Member factory tidak ditemukan!");
     }
 
+    const productId = await prisma.distributorStock.groupBy({
+      by: ["product_id"],
+      where: {
+        factory_id: parseInt(factory_id),
+      },
+    });
+
+    const listProduct = await prisma.product.findMany({
+      where: {
+        id: {
+          in: productId.map((item) => item.product_id),
+        },
+      },
+    });
+
+    const listProducts = listProduct.map((item) => {
+      return {
+        id: item.id,
+        name: item.name + " - " + item.type,
+      }
+    });
+
     const where: Prisma.MemberPriceProductWhereInput = {
       factory_id: parseInt(factory_id),
       user_id: parseInt(user_id),
@@ -80,7 +102,9 @@ export async function GET(req: Request) {
       totalPages: Math.ceil(total / limit),
     };
 
-    return NextResponse.json({ data, pagination });
+    const options = [...listProducts];
+
+    return NextResponse.json({ data, pagination, options});
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -88,7 +112,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { factory_id, product_id, user_id, price, sale_price } =
+    const { factory_id, product_id, user_id, price } =
       await req.json();
 
     const member_factory = await prisma.memberFactory.findFirst({
@@ -117,18 +141,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const existProduct = await prisma.product.findFirst({
+      where: {
+        id: parseInt(product_id),
+      },
+    });
+
+    if(!existProduct) {
+      throw new Error("Produk tidak ditemukan");
+    }
+
     const memberPriceProduct = await prisma.memberPriceProduct.create({
       data: {
         factory_id: parseInt(factory_id),
         member_factory_id: member_factory.id,
         product_id: parseInt(product_id),
-        price: parseInt(price),
-        sale_price: parseInt(sale_price),
+        price: existProduct.price,
+        sale_price: Number(price),
         user_id: parseInt(user_id),
       },
     });
 
-    return NextResponse.json(memberPriceProduct);
+    return NextResponse.json({
+      message: "Produk berhasil ditambahkan",
+      data: memberPriceProduct,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -185,7 +222,10 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json(memberPriceProduct);
+    return NextResponse.json({
+      message: "Produk berhasil diubah",
+      data: memberPriceProduct,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

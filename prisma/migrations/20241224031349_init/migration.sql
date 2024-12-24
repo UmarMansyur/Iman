@@ -402,10 +402,12 @@ CREATE TABLE `delivery_trackings` (
 -- CreateTable
 CREATE TABLE `distributor_stocks` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `distributor_id` INTEGER NOT NULL,
     `factory_id` INTEGER NOT NULL,
     `product_id` INTEGER NOT NULL,
     `amount` DOUBLE NOT NULL,
     `desc` VARCHAR(191) NOT NULL,
+    `type` ENUM('In', 'Out') NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -555,6 +557,9 @@ ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_invoice_id_f
 
 -- AddForeignKey
 ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_location_id_fkey` FOREIGN KEY (`location_id`) REFERENCES `locations`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `distributor_stocks` ADD CONSTRAINT `distributor_stocks_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `distributor_stocks` ADD CONSTRAINT `distributor_stocks_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

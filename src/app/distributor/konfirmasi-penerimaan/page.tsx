@@ -42,6 +42,9 @@ export default function PabrikPage() {
         search: filters.search,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
+        type_preorder: "1",
+        user_id: user?.id,
+        status_delivery: "Sent"
       });
 
       if(factoryId) {

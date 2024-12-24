@@ -51,6 +51,7 @@ model User {
   OrderMaterialUnit            OrderMaterialUnit[]
   morningShiftReportProducts   ReportProduct[]       @relation("report_product_morning_shift_user")
   afternoonShiftReportProducts ReportProduct[]       @relation("report_product_afternoon_shift_user")
+  DistributorStock             DistributorStock[]
 
   @@map("users")
 }
@@ -542,15 +543,23 @@ enum DeliveryTrackingStatus {
 }
 
 model DistributorStock {
-  id         Int      @id @default(autoincrement())
-  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id Int
-  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  product_id Int
-  amount     Float
-  desc       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id             Int             @id @default(autoincrement())
+  distributor    User            @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id Int
+  factory        Factory         @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id     Int
+  product        Product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id     Int
+  amount         Float
+  desc           String
+  type           TypeDistributor
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
 
   @@map("distributor_stocks")
+}
+
+enum TypeDistributor {
+  In
+  Out
 }

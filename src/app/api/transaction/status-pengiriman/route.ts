@@ -23,7 +23,7 @@ export async function PUT(req: Request) {
     );
   }
 
-  const statusEnum = ["Pending", "Process", "Done", "Cancel"];
+  const statusEnum = ["Pending", "Process", "Sent", "Done", "Cancel"];
   if (!statusEnum.includes(status)) {
     return NextResponse.json(
       { status: "error", message: "Status tidak valid" },
@@ -32,51 +32,59 @@ export async function PUT(req: Request) {
   }
 
   try {
-    const invoices = await prisma.invoice.findFirst({
-      include: {
-        detailInvoices: true,
-        deliveryTracking: true,
-      },
-      where: { id: parseInt(id) },
-    });
-
-    const currentStatus = invoices!.deliveryTracking[0]?.status
-    if(currentStatus === status) {
-      return NextResponse.json(
-        { status: "error", message: "Status pengiriman sudah diatur sebelumnya" },
-        { status: 400 }
-      );
-    }
-    
-    if(currentStatus === "Done") {
-      return NextResponse.json(
-        { status: "error", message: "Status pengiriman sudah selesai" },
-        { status: 400 }
-      );
-    }
-
-    if (!invoices) {
-      return NextResponse.json(
-        { status: "error", message: "Invoice tidak ditemukan" },
-        { status: 404 }
-      );
-    }
-
     const response = await prisma.$transaction(async (tx) => {
+      const invoices = await prisma.invoice.findFirst({
+        include: {
+          detailInvoices: true,
+          deliveryTracking: true,
+        },
+        where: { id: parseInt(id) },
+      });
+
+      const currentStatus = invoices!.deliveryTracking[0]?.status;
+      if (currentStatus === status) {
+        // return NextResponse.json(
+        //   { status: "error", message: "Status pengiriman sudah diatur sebelumnya" },
+        //   { status: 400 }
+        // );
+        throw new Error("Status pengiriman sudah diatur sebelumnya");
+      }
+
+      if (currentStatus === "Done") {
+        // return NextResponse.json(
+        //   { status: "error", message: "Status pengiriman sudah selesai" },
+        //   { status: 400 }
+        // );
+        throw new Error("Status pengiriman sudah selesai");
+      }
+
+      if (!invoices) {
+        // return NextResponse.json(
+        //   { status: "error", message: "Invoice tidak ditemukan" },
+        //   { status: 404 }
+        // );
+        throw new Error("Invoice tidak ditemukan");
+      }
+
       await tx.deliveryTracking.updateMany({
         where: { invoice_id: parseInt(id) },
-        data: { status: status as DeliveryTrackingStatus },
+        data: {
+          status: status as DeliveryTrackingStatus,
+          recipient: body.recipient ? body.recipient : undefined,
+        },
       });
-      if(status == "Process") {
+
+      if (status == "Process") {
         await tx.logOrderDistributor.create({
           data: {
             invoice_id: parseInt(id),
             desc: "Operator telah mengubah status pengiriman menjadi proses",
           },
         });
-  
-        const detailProductid = invoices.detailInvoices.filter((detail: any) => detail.product_id !== null).map((detail: any) => detail.product_id);
-  
+
+        const detailProductid = invoices.detailInvoices
+          .filter((detail: any) => detail.product_id !== null)
+          .map((detail: any) => detail.product_id);
 
         const existingProduct = await prisma.product.findMany({
           where: {
@@ -86,37 +94,77 @@ export async function PUT(req: Request) {
             factory_id: parseInt(factory_id),
           },
         });
-  
+
         const datas: any[] = [];
         existingProduct.forEach((product: any) => {
           datas.push({
             product_id: product.id,
-            amount: invoices.detailInvoices.find((detail: any) => detail.product_id === product.id)?.amount,
+            amount: invoices.detailInvoices.find(
+              (detail: any) => detail.product_id === product.id
+            )?.amount,
           });
         });
-  
-        if(datas.length > 0) {
+
+        if (datas.length > 0) {
           await prisma.stockProduct.createMany({
             data: datas.map((data: any) => ({
               product_id: data.product_id,
               amount: data.amount,
-              type: "Out"
+              type: "Out",
             })),
           });
         }
-  
       }
-  
-      if(status === "Done") {
+
+      if (status === "Done") {
         await tx.logOrderDistributor.create({
           data: {
             invoice_id: parseInt(id),
             desc: "Operator telah mengubah status pengiriman menjadi selesai",
           },
         });
-      }
+
+        if(invoices.is_distributor) {
+          const detailProductid = invoices.detailInvoices
+            .filter((detail: any) => detail.product_id !== null)
+            .map((detail: any) => detail.product_id);
   
-      if(status === "Cancel") {
+          const existingProduct = await prisma.product.findMany({
+            where: {
+              id: {
+                in: detailProductid,
+              },
+              factory_id: parseInt(factory_id),
+            },
+          });
+  
+          const datas: any[] = [];
+          existingProduct.forEach((product: any) => {
+            datas.push({
+              factory_id: parseInt(product.factory_id),
+              product_id: product.id,
+              amount: invoices.detailInvoices.find(
+                (detail: any) => detail.product_id === product.id
+              )?.amount,
+            });
+          });
+  
+          if (datas.length > 0) {
+            await prisma.distributorStock.createMany({
+              data: datas.map((data: any) => ({
+                distributor_id: parseInt(body.user_id),
+                product_id: data.product_id,
+                amount: data.amount,
+                desc: "Pre Order Produk Invoice " + invoices.invoice_code,
+                factory_id: parseInt(data.factory_id),
+                type: "In",
+              })),
+            });
+          }
+        }
+      }
+
+      if (status === "Cancel") {
         await prisma.logOrderDistributor.create({
           data: {
             invoice_id: parseInt(id),

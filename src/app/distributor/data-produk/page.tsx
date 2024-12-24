@@ -35,6 +35,7 @@ interface LocationData {
     total: number;
     totalPages: number;
   };
+  options: any;
 }
 
 export default function LokasiPengirimanPage() {
@@ -65,18 +66,21 @@ export default function LokasiPengirimanPage() {
       sortBy,
       sortOrder,
     });
-
-    const response = await fetch(`/api/location?${params}&factory_id=${user?.factory_selected?.id}`);
+    if(!user?.factory_selected?.id && !user?.id) {
+      throw new Error("Invalid user data");
+    }
+    
+    const response = await fetch(`/api/distributor/data-produk/?${params}&factory_id=${user?.factory_selected?.id}&user_id=${user?.id}`);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch locations");
+      throw new Error("Failed to fetch distributor product");
     }
 
     return response.json() as Promise<LocationData>;
   };
 
   const { data, isLoading, isError, error } = useQuery<LocationData>({
-    queryKey: ["locations", queryParams],
+    queryKey: ["product-distributor", queryParams],
     queryFn: fetchLocations,
     placeholderData: (previousData) => previousData,
   });
@@ -126,9 +130,9 @@ export default function LokasiPengirimanPage() {
     <MainPage>
       <Card>
         <CardHeader>
-          <CardTitle>Lokasi Pengiriman</CardTitle>
+          <CardTitle>Data Produk</CardTitle>
           <CardDescription>
-            Daftar lokasi pengiriman yang tersedia
+            Harga berikut dapat berubah jika anda telah mengubah data produk
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,7 +150,7 @@ export default function LokasiPengirimanPage() {
               </div>
             </div>
             <div>
-              <Form />
+              <Form products={data?.options}/>
             </div>
           </div>
           {isLoading ? (
@@ -155,7 +159,8 @@ export default function LokasiPengirimanPage() {
             <DataTable
               columns={columns(
                 data?.pagination.page ?? 1,
-                data?.pagination.limit ?? 10
+                data?.pagination.limit ?? 10,
+                data?.options
               )}
               data={data?.data ?? []}
               pagination={{

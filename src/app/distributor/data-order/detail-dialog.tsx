@@ -87,11 +87,11 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Pembeli</p>
-                <p className="font-medium">{invoice.buyer}</p>
+                <p className="font-medium">{invoice.buyer?.name}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Alamat</p>
-                <p className="font-medium">{invoice.buyer_address}</p>
+                <p className="font-medium">{invoice.buyer?.address}</p>
               </div>
             </div>
           </div>

@@ -95,7 +95,7 @@ export default function DeliveryStatusDialog({ invoice, fetchData }: any) {
                   <MapPin className="w-4 h-4 mr-2" />
                   <span>Alamat Pengiriman</span>
                 </div>
-                <p className="font-medium">{invoice.buyer_address}</p>
+                <p className="font-medium">{invoice.buyer?.address}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">

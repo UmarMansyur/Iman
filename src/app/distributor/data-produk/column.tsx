@@ -45,6 +45,7 @@ export const columns = (
     header: "Aksi",
     cell: ({row}) => {
       const data = row.original as any;
+      console.log(products)
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +11,6 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import DeleteButton from "@/components/delete-button";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
@@ -28,7 +26,12 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
   {
     accessorKey: "buyer",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Pembeli"/>
+      <DataTableColumnHeader column={column} title="Operator"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.buyer.name}
+      </div>
     ),
   },
   {
@@ -95,17 +98,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
   },
   {
-    accessorKey: "maturity_date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Jatuh Tempo"/>
-    ),
-    cell: ({ row }) => (
-      <div>
-        {new Date(row.original.maturity_date).toLocaleDateString("id-ID")}
-      </div>
-    ),
-  },
-  {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
@@ -117,14 +109,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            
-            <Link href={`/distributor/pre-order/${row.original.id}`}>
-              <Button variant="outline" className="w-full justify-start border-0 px-2">
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Button>
-            </Link>
-
             <DetailDialog invoice={row.original} />
             {
               row.original.payment_status === 'Pending' && (

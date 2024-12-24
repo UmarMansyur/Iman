@@ -20,16 +20,29 @@ import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 
 // Import ShadCN Select components
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 interface ProductFormState {
   id?: number;
   factory_id: string;
   product_id: string;
   price: number;
+  user_id: string;
 }
 
-export default function Form({ data, products }: { data?: any, products?: any }) {
+export default function Form({
+  data,
+  products,
+}: {
+  data?: any;
+  products?: any;
+}) {
   const { user } = useUserStore();
 
   const [state, setState] = useState<ProductFormState>({
@@ -37,18 +50,23 @@ export default function Form({ data, products }: { data?: any, products?: any })
     price: data?.price || 0,
     id: data?.id || 0,
     factory_id: user?.factory_selected?.id.toString() || "",
+    user_id: user?.id.toString() || "",
   });
 
   const createProduct = async () => {
     let response;
-
+    state.factory_id = user?.factory_selected?.id.toString() || "";
+    state.user_id = user?.id.toString() || "";
     if (state.id) {
-      response = await fetch("/api/distributor/product/" + state.id, {
+      response = await fetch("/api/distributor/data-produk", {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(state),
       });
     } else {
-      response = await fetch("/api/distributor/product/", {
+      response = await fetch("/api/distributor/data-produk/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,6 +93,7 @@ export default function Form({ data, products }: { data?: any, products?: any })
           product_id: "",
           price: 0,
           id: 0,
+          user_id: user?.id.toString() || "",
           factory_id: user?.factory_selected?.id.toString() || "",
         });
       },
@@ -121,13 +140,15 @@ export default function Form({ data, products }: { data?: any, products?: any })
           <div className="grid gap-4 py-4">
             <Label htmlFor="product_id">Pilih Produk</Label>
             <Select
-              value={state.product_id}
-              onValueChange={(value) =>
-                setState({ ...state, product_id: value })
-              }
+              onValueChange={(value) => {
+                setState({ ...state, product_id: value });
+              }}
             >
               <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Pilih Produk" />
+                <SelectValue placeholder="Pilih Produk">
+                  {products?.find((product: any) => product.id == state.product_id)
+                    ?.name || "Pilih Produk"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {products?.map((product: any) => (

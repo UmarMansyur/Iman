@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { uploadFile } from "@/lib/imagekit";
@@ -10,14 +11,6 @@ export async function POST(req: Request) {
 
     const factory_id = data.get("factory_id");
     const user_id = data.get("user_id");
-    const amount = data.get("amount");
-    const buyer = data.get("buyer");
-    const sales_man = data.get("sales_man");
-    const recipient = data.get("recipient");
-    const maturity_date = data.get("maturity_date");
-    const item_amount = data.get("item_amount");
-    const discon_member = data.get("discon_member");
-    const buyer_address = data.get("buyer_address");
     const down_payment = data.get("down_payment");
     const total = data.get("total");
     const sub_total = data.get("sub_total");
@@ -25,17 +18,11 @@ export async function POST(req: Request) {
     const payment_status = data.get("payment_status");
     const payment_method_id = data.get("payment_method_id");
     const notes = data.get("notes");
-    const location = data.get("location");
-    const desc = data.get("desc");
-    const latitude = data.get("latitude");
-    const longitude = data.get("longitude");
-    const cost = data.get("cost");
-    const status = data.get("status");
-    const bukti_pembayaran = data.get("file") as File;
+    const bukti_pembayaran = data.get("proof_of_payment") as File;
     const detail_invoices = data.get("detail_invoices");
 
     // Validasi data wajib
-    if (!factory_id || !user_id || !amount || !buyer || !payment_method_id) {
+    if (!factory_id || !user_id || !payment_method_id) {
       return NextResponse.json(
         { 
           status: "error",
@@ -66,6 +53,8 @@ export async function POST(req: Request) {
       }
     }
 
+    let buyer_id: any = null;
+    let location_id: any = null;
     // Generate kode invoice
     const invoice_code = `INV-${new Date().getFullYear()}-${
       new Date().getMonth() + 1
@@ -73,44 +62,91 @@ export async function POST(req: Request) {
 
     // Hitung total amount
     const detail_invoices_array = JSON.parse(detail_invoices as string);
-    const amount_total = detail_invoices_array.reduce(
-      (acc: number, detail: any) => acc + detail.sub_total,
-      0
-    );
-
     // Proses transaksi database
     const response = await prisma.$transaction(async (tx) => {
+
+      // Check available user
+      const existUser = await prisma.user.findFirst({
+        where: {
+          id: parseInt(user_id.toString())
+        }
+      });
+
+      if(!existUser) {
+        throw new Error("User tidak ditemukan!");
+      }
+
+      // check exist Buyer
+      const existBuyer = await prisma.buyer.findFirst({
+        where: {
+          name: existUser.username,
+          factory_id: parseInt(factory_id.toString()),
+          address: existUser.address
+        }
+      });
+
+      if(!existBuyer) {
+        const createBuyer = await prisma.buyer.create({
+          data: {
+            address: existUser.address,
+            name: existUser.username,
+            factory_id: parseInt(factory_id.toString())
+          }
+        })
+        buyer_id = createBuyer.id;
+      } else {
+        buyer_id = existBuyer.id;
+      }
+
+      const existAddress = await prisma.location.findFirst({
+        where: {
+          name: existUser.address,
+          factory_id: parseInt(factory_id.toString())
+        }
+      });
+
+      if(!existAddress) {
+        const createAddress = await prisma.location.create({
+          data: {
+            name: existUser.address,
+            cost: 0,
+            factory_id: parseInt(factory_id.toString())
+          }
+        });
+        location_id = createAddress.id;
+      } else {
+        location_id = existAddress.id;
+      }
+      // Check exist 
+
+
       // Buat invoice
       const preOrder = await tx.invoice.create({
         data: {
           factory_id: Number(factory_id),
           user_id: Number(user_id),
           invoice_code,
-          amount: Number(amount_total),
-          buyer: buyer as string,
-          sales_man: sales_man as string,
-          recipient: recipient as string,
-          maturity_date: new Date(maturity_date as string),
-          item_amount: Number(item_amount),
-          discon_member: Number(discon_member),
-          buyer_address: buyer_address as string,
+          buyer_id: Number(buyer_id),
+          item_amount: Number(detail_invoices_array.length),
           down_payment: Number(down_payment),
           total: Number(total),
-          sub_total: Number(sub_total),
+          sub_total: Number(total),
           remaining_balance: Number(remaining_balance),
           payment_status: payment_status as PaymentStatus,
           payment_method_id: Number(payment_method_id),
           notes: notes as string,
+          type_preorder: true,
+          is_distributor: true,
           proof_of_payment: fileUrl,
           detailInvoices: {
             createMany: {
               data: detail_invoices_array.map((detail: any) => ({
                 product_id: detail.product_id,
                 desc: detail.desc,
-                amount: detail.amount,
-                price: detail.price,
+                amount: detail.jumlah,
+                price: detail.harga,
                 discount: detail.discount,
-                sub_total: detail.sub_total,
+                sub_total: Number(detail.jumlah) * Number(detail.harga),
               })),
             },
           },
@@ -121,12 +157,9 @@ export async function POST(req: Request) {
       await tx.deliveryTracking.create({
         data: {
           invoice_id: preOrder.id,
-          desc: desc as string,
-          location: location as string,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
-          cost: Number(cost),
-          status: status as DeliveryTrackingStatus,
+          location_id: location_id,
+          cost: 0,
+          status: "Process",
         },
       });
 

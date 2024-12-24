@@ -44,6 +44,7 @@ export default function PabrikPage() {
         search: filters.search,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
+        type_preorder: "1",
       });
 
       if(factoryId) {
@@ -126,7 +127,7 @@ export default function PabrikPage() {
                 />
               </div>
             </div>
-            <Link href="/operator/transaksi/create">
+            <Link href="/distributor/pre-order">
               <Button className="flex items-center gap-2">
                 <PlusCircle className="w-4 h-4" />
                 Tambah Transaksi

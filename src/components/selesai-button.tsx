@@ -9,9 +9,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import { DropdownMenuItem, Label } from "@radix-ui/react-dropdown-menu";
 import { Check} from "lucide-react";
 import toast from "react-hot-toast";
+import { Input } from "./ui/input";
+import { useState } from "react";
+import { useUserStore } from "@/store/user-store";
 
 export default function SelesaiButton({
   fetchData,
@@ -20,7 +23,13 @@ export default function SelesaiButton({
   fetchData: () => Promise<void>;
   id: string;
 }) {
+  const [recipient, setRecipient] = useState("");
+  const { user } = useUserStore();
   const handleSelesai = async () => {
+    if(!recipient) {
+      toast.error("Nama penerima tidak boleh kosong");
+      return;
+    }
     const response = await fetch(`/api/transaction/status-pengiriman?id=${id}`, {
       method: "PUT",
       headers: {
@@ -28,6 +37,9 @@ export default function SelesaiButton({
       },
       body: JSON.stringify({
         status: "Done",
+        recipient: recipient,
+        user_id: user?.id,
+        factory_id: user?.factory_selected?.id
       }),
     });
     const data = await response.json();
@@ -53,12 +65,19 @@ export default function SelesaiButton({
             Apakah anda telah menerima barang? Data ini tidak dapat dibatalkan jika anda telah menerima barang.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {/* label */}
+        <form action="">
+          <Label className="text-sm font-semibold">
+            Nama Penerima: 
+          </Label>
+          <Input className="w-full" placeholder="Nama Penerima" onChange={(e) => setRecipient(e.target.value)} value={recipient || ""} />
+        </form>
         <AlertDialogFooter>
           <AlertDialogAction
             className="bg-blue-500 hover:bg-blue-600 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
             onClick={() => handleSelesai()}
           >
-            Ya, Selesai
+            Ya, Simpan
           </AlertDialogAction>
           <AlertDialogCancel>Batal</AlertDialogCancel>
         </AlertDialogFooter>
