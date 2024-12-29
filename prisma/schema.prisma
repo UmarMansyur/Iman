@@ -49,9 +49,10 @@ model User {
   MemberPriceProduct           MemberPriceProduct[]
   ReportMaterialStock          ReportMaterialStock[]
   OrderMaterialUnit            OrderMaterialUnit[]
-  morningShiftReportProducts   ReportProduct[]       @relation("report_product_morning_shift_user")
-  afternoonShiftReportProducts ReportProduct[]       @relation("report_product_afternoon_shift_user")
+  morningShiftReportProducts   ReportProduct[]          @relation("report_product_morning_shift_user")
+  afternoonShiftReportProducts ReportProduct[]          @relation("report_product_afternoon_shift_user")
   DistributorStock             DistributorStock[]
+  TransactionDistributor       TransactionDistributor[]
 
   @@map("users")
 }
@@ -140,9 +141,10 @@ model BankAccount {
 }
 
 model PaymentMethod {
-  id      Int       @id @default(autoincrement())
-  name    String
-  Invoice Invoice[]
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  Invoice                Invoice[]
+  TransactionDistributor TransactionDistributor[]
 
   @@map("payment_methods")
 }
@@ -430,37 +432,38 @@ model Buyer {
 }
 
 model Invoice {
-  id                  Int                   @id @default(autoincrement())
-  factory             Factory               @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id          Int
-  user                User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id             Int
-  is_distributor      Boolean               @default(false)
-  invoice_code        String                @unique
-  discount            Float?                @default(0)
-  ppn                 Float?                @default(0)
-  buyer               Buyer?                @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
-  buyer_id            Int?
-  maturity_date       DateTime?
-  item_amount         Float
-  discon_member       Float?                @default(0)
-  down_payment        Float                 @default(0)
-  total               Float                 @default(0)
-  sub_total           Float                 @default(0)
-  remaining_balance   Float                 @default(0)
-  payment_status      PaymentStatus         @default(Pending)
-  payment_method      PaymentMethod         @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
-  payment_method_id   Int
-  proof_of_payment    String?
-  type_preorder       Boolean               @default(false)
-  detailInvoices      DetailInvoice[]
-  deliveryTracking    DeliveryTracking[]
-  notes               String?
-  created_at          DateTime              @default(now())
-  updated_at          DateTime              @updatedAt
-  LogOrderDistributor LogOrderDistributor[]
-  reject_reason       String?
-  StockProduct        StockProduct[]
+  id                     Int                      @id @default(autoincrement())
+  factory                Factory                  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int
+  user                   User                     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                Int
+  is_distributor         Boolean                  @default(false)
+  invoice_code           String                   @unique
+  discount               Float?                   @default(0)
+  ppn                    Float?                   @default(0)
+  buyer                  Buyer?                   @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id               Int?
+  maturity_date          DateTime?
+  item_amount            Float
+  discon_member          Float?                   @default(0)
+  down_payment           Float                    @default(0)
+  total                  Float                    @default(0)
+  sub_total              Float                    @default(0)
+  remaining_balance      Float                    @default(0)
+  payment_status         PaymentStatus            @default(Pending)
+  payment_method         PaymentMethod            @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id      Int
+  proof_of_payment       String?
+  type_preorder          Boolean                  @default(false)
+  detailInvoices         DetailInvoice[]
+  deliveryTracking       DeliveryTracking[]
+  notes                  String?
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  LogOrderDistributor    LogOrderDistributor[]
+  reject_reason          String?
+  StockProduct           StockProduct[]
+  TransactionDistributor TransactionDistributor[]
 
   @@map("invoices")
 }
@@ -562,4 +565,41 @@ model DistributorStock {
 enum TypeDistributor {
   In
   Out
+}
+
+model TransactionDistributor {
+  id                           Int                            @id @default(autoincrement())
+  distributor                  User                           @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id               Int
+  buyer_id                     Int
+  buyer                        String
+  buyer_address                String
+  payment_method               PaymentMethod                  @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id            Int
+  amount                       Float
+  ppn                          Float?                         @default(0)
+  discount                     Float?                         @default(0)
+  created_at                   DateTime                       @default(now())
+  updated_at                   DateTime                       @updatedAt
+  DetailTransactionDistributor DetailTransactionDistributor[]
+  Invoice                      Invoice?                       @relation(fields: [invoiceId], references: [id])
+  invoiceId                    Int?
+
+  @@map("transaction_distributors")
+}
+
+model DetailTransactionDistributor {
+  id                         Int                    @id @default(autoincrement())
+  transactionDistributor     TransactionDistributor @relation(fields: [transaction_distributor_id], references: [id], onDelete: Cascade)
+  transaction_distributor_id Int
+  desc                       String
+  amount                     Float
+  price                      Float
+  discount                   Float?                 @default(0)
+  sale_price                 Float
+  is_product                 Boolean                @default(true)
+  created_at                 DateTime               @default(now())
+  updated_at                 DateTime               @updatedAt
+
+  @@map("detail_transaction_distributors")
 }

@@ -139,25 +139,41 @@ export default function Form({
         >
           <div className="grid gap-4 py-4">
             <Label htmlFor="product_id">Pilih Produk</Label>
-            <Select
-              onValueChange={(value) => {
-                setState({ ...state, product_id: value });
-              }}
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Pilih Produk">
-                  {products?.find((product: any) => product.id == state.product_id)
-                    ?.name || "Pilih Produk"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {products?.map((product: any) => (
-                  <SelectItem key={product.id} value={product.id}>
-                    {product.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!(data) ? (
+              <Select
+                onValueChange={(value) => {
+                  setState({ ...state, product_id: value });
+                }}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Pilih Produk">
+                    {products?.find(
+                      (product: any) => product.id == state.product_id
+                    )?.name || "Pilih Produk"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {products?.map((product: any) => (
+                    <SelectItem key={product.id} value={product.id}>
+                      {product.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id="product_id"
+                name="product_id"
+                className="col-span-3"
+                value={products?.find(
+                  (product: any) => product.id == state.product_id
+                )?.name || ""}
+                onChange={(e) =>
+                  setState({ ...state, product_id: e.target.value })
+                }
+                disabled
+              />
+            )}
           </div>
           <div className="grid gap-4 py-4">
             <Label htmlFor="cost">Harga</Label>

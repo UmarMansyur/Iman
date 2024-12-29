@@ -173,11 +173,11 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id") || "";
+    const body = await req.json();
+    const id = body.id;
 
-    const { factory_id, product_id, user_id, price, sale_price } =
-      await req.json();
+    const { factory_id, product_id, user_id, price } =
+      body;
 
     const member_factory = await prisma.memberFactory.findFirst({
       where: {
@@ -216,8 +216,7 @@ export async function PUT(req: Request) {
         factory_id: parseInt(factory_id),
         member_factory_id: member_factory.id,
         product_id: parseInt(product_id),
-        price: parseInt(price),
-        sale_price: parseInt(sale_price),
+        price: Number(price),
         user_id: parseInt(user_id),
       },
     });

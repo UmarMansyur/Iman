@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     let location_id: any= null;
     let pembeli_id: any = null;
     const response = await prisma.$transaction(async (tx) => {
-      if(new_address) {
+      if(new_address && !is_distributor) {
         const existAddress = await tx.location.findFirst({
           where: {
             name: buyer_address,
@@ -60,15 +60,17 @@ export async function POST(req: Request) {
         });
         location_id = address.id;
       } else {
-        const location = await tx.location.findFirst({
-          where: {
-            id: parseInt(location_selected),
+        if(!is_distributor) {
+          const location = await tx.location.findFirst({
+            where: {
+              id: parseInt(location_selected),
+            }
+          });
+          if(!location) {
+            throw new Error("Alamat tidak ditemukan");
           }
-        });
-        if(!location) {
-          throw new Error("Alamat tidak ditemukan");
+          location_id = location.id;
         }
-        location_id = location.id;
       }
       if(new_pembeli) {
         const buyer = await tx.buyer.create({
@@ -112,6 +114,26 @@ export async function POST(req: Request) {
           pembeli_id = buyer.id;
         } else {
           pembeli_id = existBuyer.id;
+        }
+
+        const existAddress = await tx.location.findFirst({
+          where: {
+            name: location_selected,
+            factory_id: Number(factory_id)
+          }
+        });
+
+        if(!existAddress) {
+          const createLocation = await tx.location.create({
+            data: {
+              name: user?.address,
+              factory_id: Number(factory_id),
+              cost: 0,
+            }
+          })
+          location_id = Number(createLocation.id)
+        } else {
+          location_id = Number(existAddress.id)
         }
       }
 

@@ -106,11 +106,11 @@ const PrintInvoice = ({ params }: { params: any }) => {
           </div>
           <div className="flex justify-between mb-2">
             <span>Uang Muka:</span>
-            <span>{formatCurrency(data.down_payment)}</span>
+            <span>- {formatCurrency(data.down_payment)}</span>
           </div>
           <div className="flex justify-between font-bold border-t-2 border-gray-300 pt-2">
             <span>Total:</span>
-            <span>{formatCurrency(data.total)}</span>
+            <span>{formatCurrency(data.total - data.down_payment)}</span>
           </div>
         </div>
       </div>

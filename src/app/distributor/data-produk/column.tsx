@@ -34,10 +34,10 @@ export const columns = (
     ),
     cell: ({row}) => {
       const data = row.original as any;
-      return data.price ? new Intl.NumberFormat("id-ID", {
+      return data.sale_price ? new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",
-      }).format(data.price).slice(0, -3) : "-";
+      }).format(data.sale_price).slice(0, -3) : "-";
     }
   },
   {
@@ -45,7 +45,6 @@ export const columns = (
     header: "Aksi",
     cell: ({row}) => {
       const data = row.original as any;
-      console.log(products)
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -55,7 +54,7 @@ export const columns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <Form data={data} products={products}/>
-            <DeleteButtonQuery endpoint="distributor/product" id={data?.id.toString()} queryKey="distributor-product" />
+            <DeleteButtonQuery endpoint="distributor/data-produk" id={data?.id.toString()} queryKey="product-distributor" />
           </DropdownMenuContent>
         </DropdownMenu>
       )

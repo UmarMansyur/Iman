@@ -29,7 +29,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { ShoppingCart, Trash } from "lucide-react";
+import { ShoppingCart, Trash, Loader2 } from "lucide-react";
 import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +52,7 @@ export default function CreateTransaction() {
   const [notes, setNotes] = useState<string>("");
   const [file, setFile] = useState<any>();
   const { user } = useUserStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function getProduct() {
     const response = await fetch(
@@ -169,30 +170,35 @@ export default function CreateTransaction() {
   };
 
   const handleSubmitButton = async () => {
-    const formData = new FormData();
-    formData.append("detail_invoices", JSON.stringify(cart));
-    formData.append("proof_of_payment", file);
-    formData.append("payment_method_id", paymentMethodId);
-    formData.append("total", totalCart.toString());
-    formData.append("down_payment", downPayment.toString());
-    formData.append("factory_id", user!.factory_selected!.id);
-    formData.append("user_id", user!.id);
-    formData.append("payment_status", "Pending");
-    formData.append("notes", notes);
-    formData.append("remaining_balance", (totalCart - downPayment).toString());
-    
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData();
+      formData.append("detail_invoices", JSON.stringify(cart));
+      formData.append("proof_of_payment", file);
+      formData.append("payment_method_id", paymentMethodId);
+      formData.append("total", totalCart.toString());
+      formData.append("down_payment", downPayment.toString());
+      formData.append("factory_id", user!.factory_selected!.id);
+      formData.append("user_id", user!.id);
+      formData.append("payment_status", "Pending");
+      formData.append("notes", notes);
+      formData.append("remaining_balance", (totalCart - downPayment).toString());
+      
 
-    const response = await fetch("/api/pre-order", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/pre-order", {
+        method: "POST",
+        body: formData,
+      });
 
-    const responseData = await response.json();
-    if(response.ok) {
-      toast.success("Transaksi berhasil disimpan");
-      handleResetForm();
-    } else {
-      toast.error(responseData.message);
+      const responseData = await response.json();
+      if(response.ok) {
+        toast.success("Transaksi berhasil disimpan");
+        handleResetForm();
+      } else {
+        toast.error(responseData.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -485,8 +491,20 @@ export default function CreateTransaction() {
             <Button variant="outline" onClick={handleResetForm}>
               Reset
             </Button>
-            <Button type="button" onClick={handleSubmitButton} size="lg">
-              Simpan Transaksi
+            <Button 
+              type="button" 
+              onClick={handleSubmitButton} 
+              size="lg" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : (
+                'Simpan Transaksi'
+              )}
             </Button>
           </div>
         </CardContent>
