@@ -74,7 +74,17 @@ export function TeamSwitcher() {
             </DropdownMenuLabel>
             {user?.factory.map((team) => (
               <Link
-                href={`${team.position.includes("Owner") && team.status_member === "Active" ? "/owner" : "/"}`}
+                href={`${
+                  team.status_member === "Active" 
+                    ? team.position.includes("Owner") 
+                      ? "/owner"
+                      : team.position.includes("Distributor")
+                        ? "/distributor"
+                        : team.position.includes("Operator")
+                          ? "/operator"
+                          : "/"
+                    : "/"
+                }`}
                 key={team.name}
                 className={team.status_member !== "Active" || team.status !== "Active" ? "pointer-events-none" : ""}
               >

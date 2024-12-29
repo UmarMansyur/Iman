@@ -15,6 +15,7 @@ import {
   Settings,
   ShoppingBagIcon,
   SquareKanban,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -30,7 +31,6 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/user-store";
-import { title } from "process";
 
 // This is sample data.
 const data = {
@@ -219,7 +219,7 @@ const data = {
   navDistributor: [
     {
       title: "Dashboard",
-      url: "/distributor/dashboard",
+      url: "/distributor",
       icon: Home,
     },
     {
@@ -251,6 +251,16 @@ const data = {
       title: "Konfirmasi Penerimaan",
       url: "/distributor/konfirmasi-penerimaan",
       icon: CheckCheckIcon,
+    },
+    {
+      title: "Transaksi/Penjualan Produk",
+      url: "/distributor/transaksi",
+      icon: ShoppingBagIcon,
+    },
+    {
+      title: "Pengiriman dan Pembayaran",
+      url: "/distributor/pengiriman-pembayaran",
+      icon: Truck,
     }
   ],
 };

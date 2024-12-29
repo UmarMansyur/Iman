@@ -34,6 +34,19 @@ export const columns = (
     ),
     cell: ({row}) => {
       const data = row.original as any;
+      return data.price ? new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(data.price).slice(0, -3) : "-";
+    }
+  },
+  {
+    accessorKey: "sale_price",
+    header: ({column}) => (
+      <DataTableColumnHeader column={column} title="Harga Produk" />
+    ),
+    cell: ({row}) => {
+      const data = row.original as any;
       return data.sale_price ? new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",

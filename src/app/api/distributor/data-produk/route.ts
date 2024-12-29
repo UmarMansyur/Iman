@@ -91,7 +91,7 @@ export async function GET(req: Request) {
         product_id: item.product_id,
         name: item.product.name + " - " + item.product.type,
         price: item.price,
-        sale_price: item.price,
+        sale_price: item.sale_price,
       };
     });
 

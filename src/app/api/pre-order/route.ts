@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
 import { uploadFile } from "@/lib/imagekit";
-import { DeliveryTrackingStatus, PaymentStatus } from "@prisma/client";
+import { PaymentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
