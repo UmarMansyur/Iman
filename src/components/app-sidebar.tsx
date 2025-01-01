@@ -7,7 +7,7 @@ import {
   Database,
   FileChartLine,
   Home,
-  MapPin,
+  // MapPin,
   PackageCheckIcon,
   PackageSearch,
   ScrollText,
@@ -193,6 +193,14 @@ const data = {
           title: "Pengiriman",
           url: "/operator/pengiriman",
         },
+        {
+          title: "Pelunasan",
+          url: "/operator/pelunasan",
+        },
+        {
+          title: "Laporan Order",
+          url: "/operator/laporan-order",
+        }
       ]
     },
     {
@@ -210,11 +218,11 @@ const data = {
         },
       ]
     },
-    {
-      title: "Data Lokasi Pengiriman",
-      url: "/operator/lokasi-pengiriman",
-      icon: MapPin,
-    }
+    // {
+    //   title: "Data Lokasi Pengiriman",
+    //   url: "/operator/lokasi-pengiriman",
+    //   icon: MapPin,
+    // }
   ],
   navDistributor: [
     {
@@ -237,18 +245,18 @@ const data = {
         },
       ]
     },
-    {
-      title: "Pre Order",
-      url: "/distributor/pre-order",
-      icon: SendToBack,
-    },
+    // {
+    //   title: "Pre Order",
+    //   url: "/distributor/pre-order",
+    //   icon: SendToBack,
+    // },
     {
       title: "Data Order",
       url: "/distributor/data-order",
-      icon: PackageCheckIcon,
+      icon: SendToBack,
     },
     {
-      title: "Konfirmasi Penerimaan",
+      title: "Konfirmasi Penerimaan Order",
       url: "/distributor/konfirmasi-penerimaan",
       icon: CheckCheckIcon,
     },

@@ -11,7 +11,6 @@ const PrintInvoice = ({ params }: { params: any }) => {
 
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Menangani logika sebelum jendela ditutup
       event.preventDefault();
       event.returnValue = '';
     };
@@ -37,9 +36,9 @@ const PrintInvoice = ({ params }: { params: any }) => {
   });
 
   const getInvoice = async (id: string) => {
-    const response = await fetch(`/api/transaction/${id}`);
+    const response = await fetch(`/api/distributor/transaksi/${id}`);
     const data = await response.json();
-    return data.data;
+    return data;
   };
 
   const formatCurrency = (amount: number) => {
@@ -54,7 +53,7 @@ const PrintInvoice = ({ params }: { params: any }) => {
     return (
       <div>
         Error:{" "}
-        {error instanceof Error ? error.message : "An unknown error occurred"}
+        {error instanceof Error ? error.message : "Terjadi kesalahan"}
       </div>
     );
 
@@ -63,7 +62,6 @@ const PrintInvoice = ({ params }: { params: any }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {/* beri logo */}
           {data.factory?.logo ? (
             <img src={data.factory?.logo} alt="Logo" className="w-16 h-16" />
           ) : (
@@ -71,34 +69,34 @@ const PrintInvoice = ({ params }: { params: any }) => {
               <Building2 className="w-8 h-8" />
             </div>
           )}
-          <h1 className="text-2xl font-bold">{data.factory?.name}</h1>
-          <p className="text-sm">{data.factory?.address}</p>
+          <h1 className="text-2xl font-bold mt-2">Invoice</h1>
+          <p className="text-sm text-gray-600">{data.invoice_code}</p>
         </div>
         <div className="text-right">
-          <h2 className="text-xl font-semibold">{data.invoice_code}</h2>
           <p className="text-sm">
             Tanggal: {new Date(data.created_at).toLocaleDateString("id-ID")}
           </p>
+          <p className="text-sm mt-1">Status: {data.status_payment}</p>
+          <p className="text-sm">Pengiriman: {data.status_delivery}</p>
         </div>
       </div>
 
       {/* Customer Info */}
-      <div className="mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-semibold mb-1">Informasi Pembeli:</h3>
-            <p>{data.buyer?.name}</p>
-            <p className="text-sm">{data.buyer?.address}</p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-1">Metode Pembayaran: {data.payment_method?.name}</h3>
-            <p className="font-semibold">Status: {data.payment_status}</p>
-          </div>
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div>
+          <h3 className="font-semibold mb-2">Informasi Pembeli:</h3>
+          <p className="text-sm">{data.buyer?.name}</p>
+          <p className="text-sm text-gray-600">{data.buyer?.address}</p>
+        </div>
+        <div>
+          <h3 className="font-semibold mb-2">Informasi Pengiriman:</h3>
+          <p className="text-sm">{data.location_distributor?.name}</p>
+          <p className="text-sm">Metode Pembayaran: {data.payment_method?.name}</p>
         </div>
       </div>
 
       {/* Items Table */}
-      <table className="w-full mb-6">
+      <table className="w-full mb-8">
         <thead>
           <tr className="border-b-2 border-gray-300">
             <th className="text-left py-2">Produk</th>
@@ -108,13 +106,13 @@ const PrintInvoice = ({ params }: { params: any }) => {
           </tr>
         </thead>
         <tbody>
-          {data.detailInvoices.map((item: any) => (
+          {data.DetailTransactionDistributor.map((item: any) => (
             <tr key={item.id} className="border-b border-gray-200">
               <td className="py-2">{item.desc}</td>
               <td className="text-right py-2">{item.amount}</td>
               <td className="text-right py-2">{formatCurrency(item.price)}</td>
               <td className="text-right py-2">
-                {formatCurrency(item.sub_total)}
+                {formatCurrency(item.sale_price)}
               </td>
             </tr>
           ))}
@@ -122,23 +120,35 @@ const PrintInvoice = ({ params }: { params: any }) => {
       </table>
 
       {/* Summary */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-8">
         <div className="w-64">
           <div className="flex justify-between mb-2">
             <span>Subtotal:</span>
-            <span>{formatCurrency(data.sub_total)}</span>
+            <span>{formatCurrency(data.amount)}</span>
           </div>
           <div className="flex justify-between mb-2">
-            <span>Ongkos Kirim:</span>
-            <span>{formatCurrency(data.deliveryTracking[0]?.cost || 0)}</span>
+            <span>Biaya Kirim:</span>
+            <span>{formatCurrency(data.cost_delivery)}</span>
           </div>
           <div className="flex justify-between mb-2">
             <span>Uang Muka:</span>
             <span>- {formatCurrency(data.down_payment)}</span>
           </div>
+          {data.ppn > 0 && (
+            <div className="flex justify-between mb-2">
+              <span>PPN:</span>
+              <span>{formatCurrency(data.ppn)}</span>
+            </div>
+          )}
+          {data.discount > 0 && (
+            <div className="flex justify-between mb-2">
+              <span>Diskon:</span>
+              <span>- {formatCurrency(data.discount)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold border-t-2 border-gray-300 pt-2">
-            <span>Total:</span>
-            <span>{formatCurrency(data.total - data.down_payment)}</span>
+            <span>Sisa Pembayaran:</span>
+            <span>{formatCurrency(data.remaining_balance)}</span>
           </div>
         </div>
       </div>
@@ -148,30 +158,30 @@ const PrintInvoice = ({ params }: { params: any }) => {
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <p className="font-semibold mb-12">Penerima</p>
-            <div className="border-t border-gray-300 pt-3">
+            <div className="border-t border-gray-300 pt-2">
               (_________________)
             </div>
           </div>
           <div className="text-center">
             <p className="font-semibold mb-12">Pengirim</p>
-            <div className="border-t border-gray-300 pt-3">
+            <div className="border-t border-gray-300 pt-2">
               (_________________)
             </div>
           </div>
           <div className="text-center">
             <p className="font-semibold mb-12">Hormat Kami</p>
-            <div className="border-t border-gray-300 pt-3">
-              ({data.user.username})
+            <div className="border-t border-gray-300 pt-2">
+              ({data.distributor?.username})
             </div>
           </div>
         </div>
       </div>
 
       {/* Notes */}
-      {data.notes && (
-        <div className="mt-6 border-t border-gray-300 pt-4">
-          <p className="font-semibold">Catatan:</p>
-          <p className="text-sm">{data.notes}</p>
+      {data.desc_delivery && (
+        <div className="mt-8 border-t border-gray-300 pt-4">
+          <p className="font-semibold">Catatan Pengiriman:</p>
+          <p className="text-sm">{data.desc_delivery}</p>
         </div>
       )}
     </div>

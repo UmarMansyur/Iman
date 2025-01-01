@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
+import { TransactionDistributorStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -22,7 +23,6 @@ export async function POST(req: Request) {
       desc_delivery,
     } = body;
 
-    console.log(body);
 
     let buyer_id: number;
     let location_distributor_id: number;
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       // input data locationnya
       const newLocation = await prisma.locationDistributor.create({
         data: {
-          name: buyer_name,
+          name: buyer_address,
           cost: cost,
           distributor_id: Number(distributor_id),
           factory_id: Number(factory_id),
@@ -121,6 +121,12 @@ export async function POST(req: Request) {
       });
     }
 
+    // status payment berubah menjadi Paid Off ketika melebihi total amount atau sama dengan total amount
+    let status_payments = "Paid";
+    if (totalAmount > Number(down_payment)) {
+      status_payments = "Paid Off";
+    }
+
     // Buat transaksi
     const transaction = await prisma.transactionDistributor.create({
       data: {
@@ -137,12 +143,13 @@ export async function POST(req: Request) {
         down_payment: Number(down_payment),
         remaining_balance: Number(remaining_balance),
         discount,
-        status_payment: "Pending",
+        status_payment: status_payments as TransactionDistributorStatus,
         status_delivery: "Process",
         DetailTransactionDistributor: {
           createMany: {
             data: items.map(
               (item: {
+                product_id: any;
                 desc: any;
                 amount: any;
                 price: any;
@@ -156,6 +163,7 @@ export async function POST(req: Request) {
                 discount: item.discount,
                 sale_price: item.sale_price,
                 is_product: item.is_product,
+                product_id: item.is_product ? item.product_id : null,
               })
             ),
           },
@@ -216,15 +224,6 @@ export async function GET(req: Request) {
         {
           invoice_code: {
             contains: search,
-            mode: "insensitive",
-          },
-        },
-        {
-          buyer: {
-            name: {
-              contains: search,
-              mode: "insensitive",
-            },
           },
         },
       ];

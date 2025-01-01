@@ -43,7 +43,7 @@ export const columns = (
   {
     accessorKey: "sale_price",
     header: ({column}) => (
-      <DataTableColumnHeader column={column} title="Harga Produk" />
+      <DataTableColumnHeader column={column} title="Harga Jual" />
     ),
     cell: ({row}) => {
       const data = row.original as any;

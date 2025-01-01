@@ -112,7 +112,7 @@ export default function CreateTransaction() {
       setCart([
         ...cart,
       {
-        product_id: selectedProduct,
+        product_id: isProduct ? selectedProduct : null,
         product_name: productData?.product.name,
         product_type: productData?.product.type,
         quantity: quantity,
@@ -182,7 +182,8 @@ export default function CreateTransaction() {
           price: item.price,
           discount: 0,
           sale_price: item.price,
-          is_product: isProduct
+          is_product: isProduct,
+          product_id: isProduct ? item.product_id : null,
         })),
         down_payment: downPayment,
         remaining_balance: remainingPayment + deliveryCost,

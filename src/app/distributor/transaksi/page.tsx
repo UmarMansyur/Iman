@@ -88,32 +88,6 @@ export default function TransaksiDistributorPage() {
     }
   };
 
-  // Fetch Stock Data
-  const fetchStockData = async (): Promise<any> => {
-    try {
-      if (user?.id && user?.factory_selected?.id) {
-        const response = await fetch(
-          `/api/distributor/data-stock?distributor_id=${user.id}&factory_id=${user.factory_selected.id}`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      }
-      // Menambahkan return default ketika user atau factory tidak ada
-      return {
-        summary: {
-          totalStockIn: 0,
-          availableStock: 0,
-          totalStockOut: 0,
-          totalProducts: 0,
-        },
-      };
-    } catch (error) {
-      console.error("Error fetching stock data:", error);
-      throw new Error("Gagal mengambil data stock");
-    }
-  };
 
   const { data: transaksiData, isLoading: isLoadingTransaksi } =
     useQuery<TransactionData>({
@@ -121,12 +95,6 @@ export default function TransaksiDistributorPage() {
       queryFn: fetchTransaksi,
       enabled: !!user?.id && !!user?.factory_selected?.id,
     });
-
-  const { data: stockData, isLoading: isLoadingStock } = useQuery({
-    queryKey: ["stock-distributor", user?.id, user?.factory_selected?.id],
-    queryFn: fetchStockData,
-    enabled: !!user?.id && !!user?.factory_selected?.id,
-  });
 
   const debouncedSearch = useMemo(
     () =>
@@ -155,47 +123,13 @@ export default function TransaksiDistributorPage() {
     }));
   };
 
-  if (isLoadingTransaksi || isLoadingStock) {
+  if (isLoadingTransaksi) {
     return <LoaderScreen />;
   }
 
   return (
     <MainPage>
       <div className="space-y-4">
-        {/* Stock Summary Card */}
-        <Card>
-          <CardHeader className="border-b p-4">
-            <h4 className="text-base font-semibold">Ringkasan Stok</h4>
-          </CardHeader>
-          <div className="p-4 grid grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-600">Total Stok Masuk</p>
-              <p className="text-2xl font-bold">
-                {stockData?.summary?.totalStockIn || 0}
-              </p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-green-600">Total Stok Tersedia</p>
-              <p className="text-2xl font-bold">
-                {stockData?.summary?.availableStock || 0}
-              </p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <p className="text-sm text-red-600">Total Stok Keluar</p>
-              <p className="text-2xl font-bold">
-                {stockData?.summary?.totalStockOut || 0}
-              </p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <p className="text-sm text-purple-600">Total Produk</p>
-              <p className="text-2xl font-bold">
-                {stockData?.summary?.totalProducts || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Transaction Table Card */}
         <Card>
           <CardHeader className="border-b p-4">
             <h4 className="text-base font-semibold mb-0">
@@ -212,7 +146,7 @@ export default function TransaksiDistributorPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari transaksi..."
+                  placeholder="Masukkan kode invoice"
                   className="ps-8"
                   onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}

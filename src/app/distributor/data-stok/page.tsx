@@ -12,6 +12,7 @@ interface Product {
   name: string;
   type: string;
   price: number;
+  price_per_pack: number;
 }
 
 interface StockData {
@@ -149,13 +150,11 @@ export default function DataStock() {
                     <th scope="col" className="px-6 py-3">No</th>
                     <th scope="col" className="px-6 py-3">Nama Produk</th>
                     <th scope="col" className="px-6 py-3">Tipe</th>
-                    <th scope="col" className="px-6 py-3">Harga</th>
-                    <th scope="col" className="px-6 py-3">Stok Masuk (Pack)</th>
-                    <th scope="col" className="px-6 py-3">Stok Masuk (Bal)</th>
-                    <th scope="col" className="px-6 py-3">Stok Keluar (Pack)</th>
-                    <th scope="col" className="px-6 py-3">Stok Keluar (Bal)</th>
-                    <th scope="col" className="px-6 py-3">Stok Tersedia (Pack)</th>
-                    <th scope="col" className="px-6 py-3">Stok Tersedia (Bal)</th>
+                    <th scope="col" className="px-6 py-3 text-right">Harga</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Keluar (Pack)</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Keluar (Bal)</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Tersedia (Pack)</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Tersedia (Bal)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,18 +170,16 @@ export default function DataStock() {
                         <td className="px-6 py-4">{index + 1}</td>
                         <td className="px-6 py-4">{stock.product.name}</td>
                         <td className="px-6 py-4">{stock.product.type}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-right">
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",
-                          }).format(stock.product.price)}
+                          }).format(stock.product.price_per_pack).slice(0, -3)}
                         </td>
-                        <td className="px-6 py-4">{stock.stockIn * 20}</td>
-                        <td className="px-6 py-4">{stock.stockIn}</td>
-                        <td className="px-6 py-4">{stock.stockOut * 20}</td>
-                        <td className="px-6 py-4">{stock.stockOut}</td>
-                        <td className="px-6 py-4">{stock.available_stock * 20}</td>
-                        <td className="px-6 py-4">{stock.available_stock}</td>
+                        <td className="px-6 py-4 text-right">{stock.stockOut * 20}</td>
+                        <td className="px-6 py-4 text-right">{stock.stockOut}</td>
+                        <td className="px-6 py-4 text-right">{stock.available_stock * 20}</td>
+                        <td className="px-6 py-4 text-right">{stock.available_stock}</td>
                       </tr>
                     ))
                   )}

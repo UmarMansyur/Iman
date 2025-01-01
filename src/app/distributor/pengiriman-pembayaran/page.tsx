@@ -3,17 +3,15 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Card, CardHeader } from "@/components/ui/card";
-import { PlusCircle, Search } from "lucide-react";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { useUserStore } from "@/store/user-store";
+import { Search } from "lucide-react";
 
 type TransactionFilters = {
   search: string;
@@ -146,19 +144,13 @@ export default function TransaksiDistributorPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari transaksi..."
+                  placeholder="Masukkan kode invoice"
                   className="ps-8"
                   onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}
                 />
               </div>
             </div>
-            <Link href="/distributor/transaksi/create">
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Tambah Transaksi
-              </Button>
-            </Link>
           </div>
           <div className="p-4">
             <DataTable

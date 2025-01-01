@@ -11,8 +11,10 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import DeliveryStatusDialog from "./delivery-status-dialog";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
+export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
     header: "No",
@@ -28,6 +30,11 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     accessorKey: "buyer",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Pembeli"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.buyer.name}
+      </div>
     ),
   },
   {
@@ -57,22 +64,27 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       
       if(status === 'Pending') {
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          {status}
+          Menunggu Konfirmasi Pembayaran
         </Badge>
       }
       if(status === 'Paid') {
         return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
-          {status}
+          Dibayar
+        </Badge>
+      }
+      if(status === 'Paid_Off') {
+        return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
+          Lunas
         </Badge>
       }
       if(status === 'Failed') {
         return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
+          Gagal
         </Badge>
       }
       if(status === 'Cancelled') {
         return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
+          Ditolak
         </Badge>
       }
     }
@@ -96,15 +108,15 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const status = row.original.deliveryTracking[0]?.status;
 
-      if(status === 'Pending') {
+      if(status === 'Process') {
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Pending
+          Proses
         </Badge>
       }
 
-      if(status === 'Process') { 
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Proses
+      if(status === 'Sent') { 
+        return <Badge variant="outline" className={`bg-blue-100 text-blue-800 hover:bg-blue-100/80 dark:bg-blue-800 dark:text-blue-300 border-0`}>
+          Dikirim
         </Badge>
       }
       if(status === 'Done') {
@@ -127,8 +139,21 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
     cell: ({ row }) => (
       <div>
-        {new Date(row.original.maturity_date).toLocaleDateString("id-ID")}
+        {
+          row.original.maturity_date ? new Date(row.original.maturity_date).toLocaleDateString("id-ID") : "-"
+        }
       </div>
+    ),
+  },
+  {
+    accessorKey: "print",
+    header: "Cetak",
+    cell: ({ row }) => (
+      <Link href={`/operator/transaksi/pengiriman/print/${row.original.id}`} target="_blank">
+        <Button variant="outline">
+          Cetak
+        </Button>
+      </Link>
     ),
   },
   {
@@ -144,7 +169,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DetailDialog invoice={row.original} />
-            <DeliveryStatusDialog invoice={row.original} fetchData={fetchData} />
+            <DeliveryStatusDialog invoice={row.original}/>
           </DropdownMenuContent>
         </DropdownMenu>
       );

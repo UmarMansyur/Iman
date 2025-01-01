@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
+import { TransactionDistributorStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params } : { params: any}) {
+export async function GET(req: Request, { params }: { params: any }) {
   const param = await params;
   const id = param.id;
 
   const transaction = await prisma.transactionDistributor.findUnique({
     where: {
-      id: Number(id)
+      id: Number(id),
     },
     include: {
       buyer: true,
@@ -22,21 +23,21 @@ export async function GET(req: Request, { params } : { params: any}) {
         },
       },
     },
-  })
+  });
 
   return NextResponse.json(transaction);
 }
 
-export async function PUT(req: Request, { params } : { params: any}) {
+export async function PUT(req: Request, { params }: { params: any }) {
   try {
     const param = await params;
     const id = param.id;
-    
+
     // Ambil transaksi lama untuk mendapatkan invoice_code
     const oldTransaction = await prisma.transactionDistributor.findUnique({
       where: {
-        id: Number(id)
-      }
+        id: Number(id),
+      },
     });
 
     if (!oldTransaction) {
@@ -49,8 +50,8 @@ export async function PUT(req: Request, { params } : { params: any}) {
     // Hapus transaksi lama
     await prisma.transactionDistributor.delete({
       where: {
-        id: Number(id)
-      }
+        id: Number(id),
+      },
     });
 
     const body = await req.json();
@@ -71,7 +72,6 @@ export async function PUT(req: Request, { params } : { params: any}) {
       desc_delivery,
     } = body;
 
-
     let buyer_id: number;
     let location_distributor_id: number;
 
@@ -91,7 +91,7 @@ export async function PUT(req: Request, { params } : { params: any}) {
       // input data locationnya
       const newLocation = await prisma.locationDistributor.create({
         data: {
-          name: buyer_name,
+          name: buyer_address,
           cost: cost,
           distributor_id: Number(distributor_id),
           factory_id: Number(factory_id),
@@ -151,10 +151,16 @@ export async function PUT(req: Request, { params } : { params: any}) {
     // Gunakan invoice_code dari transaksi lama
     const invoiceCode = oldTransaction.invoice_code;
 
+    // status payment berubah menjadi Paid Off ketika melebihi total amount atau sama dengan total amount
+    let status_payments = "Paid";
+    if (totalAmount > Number(down_payment)) {
+      status_payments = "Paid Off";
+    }
+
     // Buat transaksi baru dengan invoice_code lama
     const transaction = await prisma.transactionDistributor.create({
       data: {
-        invoice_code: invoiceCode, // Gunakan invoice_code lama
+        invoice_code: invoiceCode,
         distributor_id: Number(distributor_id),
         buyer_id,
         location_distributor_id,
@@ -167,7 +173,7 @@ export async function PUT(req: Request, { params } : { params: any}) {
         down_payment: Number(down_payment),
         remaining_balance: Number(remaining_balance),
         discount,
-        status_payment: "Pending",
+        status_payment: status_payments as TransactionDistributorStatus,
         status_delivery: "Process",
         DetailTransactionDistributor: {
           createMany: {
@@ -179,6 +185,7 @@ export async function PUT(req: Request, { params } : { params: any}) {
                 discount: any;
                 sale_price: any;
                 is_product: any;
+                product_id: any;
               }) => ({
                 desc: item.desc,
                 amount: item.amount,
@@ -186,6 +193,7 @@ export async function PUT(req: Request, { params } : { params: any}) {
                 discount: item.discount,
                 sale_price: item.sale_price,
                 is_product: item.is_product,
+                product_id: item.is_product ? item.product_id : null,
               })
             ),
           },
@@ -205,25 +213,38 @@ export async function PUT(req: Request, { params } : { params: any}) {
   }
 }
 
-export async function DELETE(req: Request, { params } : { params: any}) {
+export async function DELETE(req: Request, { params }: { params: any }) {
   const param = await params;
   const id = param.id;
 
   const transaction = await prisma.transactionDistributor.findFirst({
     where: {
-      id: Number(id)
-    }
+      id: Number(id),
+    },
   });
 
   if (!transaction) {
-    return NextResponse.json({ message: "Transaksi tidak ditemukan" }, { status: 404 });
+    return NextResponse.json(
+      { message: "Transaksi tidak ditemukan" },
+      { status: 404 }
+    );
   }
 
-  await prisma.transactionDistributor.delete({
-    where: {
-      id: Number(id)
-    }
+  const response = await prisma.$transaction(async (tx) => {
+    const distributorStock = await tx.distributorStock.deleteMany({
+      where: {
+        invoice_code: transaction.invoice_code,
+      },
+    });
+    const transactionDistributor = await tx.transactionDistributor.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    return { distributorStock, transactionDistributor };
   });
-
-  return NextResponse.json({ message: "Transaksi berhasil dihapus" }, { status: 200 });
+  return NextResponse.json(
+    { message: "Transaksi berhasil dihapus", data: response },
+    { status: 200 }
+  );
 }

@@ -19,8 +19,8 @@ export async function GET(request: Request) {
     const where: Record<string, any> = {};
     if (search) {
       where.OR = [
-        { product: { name: { contains: search, mode: "insensitive" } } },
-        { user: { username: { contains: search, mode: "insensitive" } } },
+        { product: { name: { contains: search } } },
+        { user: { username: { contains: search } } },
       ];
     }
     if (factoryId) {

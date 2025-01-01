@@ -46,7 +46,7 @@ export default function PabrikPage() {
         queryParams.set("factory_id", factoryId.toString());
       }
 
-      const response = await fetch(`/api/konfirmasi-pengiriman?${queryParams}`);
+      const response = await fetch(`/api/konfirmasi-pembayaran?${queryParams}`);
       const result = await response.json();
       
       setPagination(prev => ({
@@ -84,9 +84,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Konfirmasi Pengiriman</h4>
+            <h4 className="text-base font-semibold mb-0">Konfirmasi Pembayaran</h4>
             <p className="text-xs text-muted-foreground">
-              Transaksi pengiriman yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
+              Transaksi pembayaran yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">

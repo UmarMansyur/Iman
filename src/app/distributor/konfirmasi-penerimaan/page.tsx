@@ -109,9 +109,9 @@ export default function PabrikPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Transaksi Produk</h4>
+            <h4 className="text-base font-semibold mb-0">Konfirmasi Penerimaan Order</h4>
             <p className="text-xs text-muted-foreground">
-              Transaksi produk yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
+              Konfirmasi penerimaan order yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
             </p>
           </CardHeader>
           <div className="flex justify-between items-center p-4">
@@ -120,7 +120,7 @@ export default function PabrikPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari produk"
+                  placeholder="Masukkan kode invoice"
                   className="ps-8"
                   onChange={(e) => handleSearch(e.target.value)}
                   value={searchInput}

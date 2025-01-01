@@ -989,7 +989,6 @@ export default function CreateTransaction() {
                             .slice(0, -3)
                     }
                     onChange={handleChangeLocationPrice}
-                    disabled={!newAddress}
                   />
                 </div>
                 <div className="flex flex-col gap-2">

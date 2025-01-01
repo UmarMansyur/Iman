@@ -287,17 +287,18 @@ enum MaterialStockStatus {
 }
 
 model Product {
-  id                 Int                  @id @default(autoincrement())
-  factory            Factory              @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id         Int
-  name               String
-  type               ProductType
-  price              Float
-  stockProducts      StockProduct[]
-  reportProducts     ReportProduct[]
-  MemberPriceProduct MemberPriceProduct[]
-  DetailInvoice      DetailInvoice[]
-  DistributorStock   DistributorStock[]
+  id                           Int                            @id @default(autoincrement())
+  factory                      Factory                        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id                   Int
+  name                         String
+  type                         ProductType
+  price                        Float
+  stockProducts                StockProduct[]
+  reportProducts               ReportProduct[]
+  MemberPriceProduct           MemberPriceProduct[]
+  DetailInvoice                DetailInvoice[]
+  DistributorStock             DistributorStock[]
+  DetailTransactionDistributor DetailTransactionDistributor[]
 
   @@map("products")
 }
@@ -458,7 +459,7 @@ model Invoice {
   payment_status         PaymentStatus            @default(Pending)
   payment_method         PaymentMethod            @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
   payment_method_id      Int
-  proof_of_payment       String?
+  proof_of_payment       String?                  @db.Text
   type_preorder          Boolean                  @default(false)
   detailInvoices         DetailInvoice[]
   deliveryTracking       DeliveryTracking[]
@@ -561,6 +562,7 @@ model DistributorStock {
   amount         Float
   desc           String
   type           TypeDistributor
+  invoice_code   String?
   created_at     DateTime        @default(now())
   updated_at     DateTime        @updatedAt
 
@@ -636,6 +638,7 @@ model TransactionDistributor {
 enum TransactionDistributorStatus {
   Pending
   Paid
+  Paid_Off
   Failed
 }
 
@@ -649,6 +652,8 @@ model DetailTransactionDistributor {
   discount                   Float?                 @default(0)
   sale_price                 Float
   is_product                 Boolean                @default(true)
+  Product                    Product?               @relation(fields: [product_id], references: [id])
+  product_id                 Int?
   created_at                 DateTime               @default(now())
   updated_at                 DateTime               @updatedAt
 

@@ -106,7 +106,8 @@ export default function EditTransaction() {
           price: item.price,
           discount: 0,
           sale_price: item.sale_price,
-          is_product: true
+          is_product: true,
+          product_id: item.is_product ? item.product_id : null,
         })),
         total_amount: transaction.amount + deliveryCost,
         ppn: 0,
@@ -179,7 +180,8 @@ export default function EditTransaction() {
         amount: quantity,
         price: price,
         sale_price: quantity * price,
-        is_product: true
+        is_product: true,
+        product_id: productData?.product.id,
       };
     } else {
       newItem = {
@@ -187,7 +189,8 @@ export default function EditTransaction() {
         amount: quantity,
         price: price,
         sale_price: quantity * price,
-        is_product: false
+        is_product: false,
+        product_id: null,
       };
     }
 

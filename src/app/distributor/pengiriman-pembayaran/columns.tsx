@@ -1,18 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, MoreHorizontal } from "lucide-react";
-import Link from "next/link";
+import { Eye, MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
-import DeleteButtonQuery from "@/components/DeleteButton";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -21,24 +25,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import DeliveryStatusDialog from "./delivery-status-dialog";
+import PembayaranDialog from "./pembayaran";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-  }).format(value);
+  })
+    .format(value)
+    .slice(0, -3);
 };
 
 export const columns: ColumnDef<any>[] = [
@@ -50,13 +46,13 @@ export const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "buyer.name",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nama Pembeli" />
     ),
   },
   {
     accessorKey: "amount",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Total" />
     ),
     cell: ({ row }) => {
@@ -68,7 +64,7 @@ export const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "status_payment",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status Pembayaran" />
     ),
     cell: ({ row }) => {
@@ -105,41 +101,11 @@ export const columns: ColumnDef<any>[] = [
     },
   },
   {
+    // test untuk
     id: "actions",
-    header: 'Aksi',
+    header: "Aksi",
     cell: function Cell({ row }) {
       const data = row.original as any;
-      const router = useRouter();
-      const [isLoading, setIsLoading] = useState(false);
-      const form = useForm({
-        defaultValues: {
-          status_payment: data.status_payment,
-          status_delivery: data.status_delivery,
-          payment_amount: 0,
-        },
-      });
-
-      const onSubmit = async (values: any) => {
-        try {
-          setIsLoading(true);
-          const response = await fetch(`/api/distributor/transaksi/${data.id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(values),
-          });
-
-          if (!response.ok) throw new Error("Gagal mengubah status");
-
-          toast.success("Status berhasil diubah");
-          router.refresh();
-        } catch (error: any) {
-          toast.error(error.message || "Terjadi kesalahan");
-        } finally {
-          setIsLoading(false);
-        }
-      };
 
       return (
         <DropdownMenu>
@@ -159,9 +125,11 @@ export const columns: ColumnDef<any>[] = [
                 </DialogTrigger>
                 <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Detail Transaksi - {data.invoice_code}</DialogTitle>
+                    <DialogTitle>
+                      Detail Transaksi - {data.invoice_code}
+                    </DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="space-y-4">
                     <Card>
                       <CardHeader>
@@ -190,11 +158,13 @@ export const columns: ColumnDef<any>[] = [
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="font-semibold">Status Pembayaran</p>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                data.status_payment === "Paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  data.status_payment === "Paid"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
                                 {data.status_payment}
                               </span>
                             </div>
@@ -203,7 +173,7 @@ export const columns: ColumnDef<any>[] = [
                               <p>{data.payment_method.name}</p>
                             </div>
                           </div>
-                          
+
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -214,14 +184,20 @@ export const columns: ColumnDef<any>[] = [
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {data.DetailTransactionDistributor.map((item: any) => (
-                                <TableRow key={item.id}>
-                                  <TableCell>{item.desc}</TableCell>
-                                  <TableCell>{item.amount}</TableCell>
-                                  <TableCell>{formatCurrency(item.price)}</TableCell>
-                                  <TableCell>{formatCurrency(item.sale_price)}</TableCell>
-                                </TableRow>
-                              ))}
+                              {data.DetailTransactionDistributor.map(
+                                (item: any) => (
+                                  <TableRow key={item.id}>
+                                    <TableCell>{item.desc}</TableCell>
+                                    <TableCell>{item.amount}</TableCell>
+                                    <TableCell>
+                                      {formatCurrency(item.price)}
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatCurrency(item.sale_price)}
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              )}
                             </TableBody>
                           </Table>
 
@@ -236,7 +212,11 @@ export const columns: ColumnDef<any>[] = [
                             </div>
                             <div className="flex justify-between font-bold">
                               <span>Total</span>
-                              <span>{formatCurrency(data.amount + data.cost_delivery)}</span>
+                              <span>
+                                {formatCurrency(
+                                  data.amount + data.cost_delivery
+                                )}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -247,83 +227,10 @@ export const columns: ColumnDef<any>[] = [
               </Dialog>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Link href={`/distributor/transaksi/${data.id}/edit`} className="flex items-center w-full">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <DeleteButtonQuery 
-                endpoint={`/distributor/transaksi`} 
-                id={data.id}
-                queryKey="transaksi-distributor         "
-              />
+              <PembayaranDialog invoice={data} />
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="flex w-full items-center">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Ubah Status
-                  </div>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Ubah Status Transaksi</DialogTitle>
-                  </DialogHeader>
-                  
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                      <label>Status Pembayaran</label>
-                      <Select
-                        defaultValue={data.status_payment}
-                        onValueChange={(value) => form.setValue("status_payment", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih status pembayaran" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Unpaid">Belum Dibayar</SelectItem>
-                          <SelectItem value="Partial">Sebagian</SelectItem>
-                          <SelectItem value="Paid">Lunas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label>Pembayaran Pelunasan</label>
-                      <Input
-                        type="number"
-                        placeholder="Masukkan jumlah pembayaran"
-                        {...form.register("payment_amount")}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label>Status Pengiriman</label>
-                      <Select
-                        defaultValue={data.status_delivery}
-                        onValueChange={(value) => form.setValue("status_delivery", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih status pengiriman" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Menunggu</SelectItem>
-                          <SelectItem value="Processing">Diproses</SelectItem>
-                          <SelectItem value="Shipped">Dikirim</SelectItem>
-                          <SelectItem value="Delivered">Diterima</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <DeliveryStatusDialog invoice={data} />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

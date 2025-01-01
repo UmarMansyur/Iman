@@ -1,11 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, MoreHorizontal } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil } from "lucide-react";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
 import DeleteButtonQuery from "@/components/DeleteButton";
 import {
   DropdownMenu,
@@ -38,13 +45,13 @@ export const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "buyer.name",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nama Pembeli" />
     ),
   },
   {
     accessorKey: "amount",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Total" />
     ),
     cell: ({ row }) => {
@@ -56,7 +63,7 @@ export const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "status_payment",
-    header: ({column}) => (
+    header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status Pembayaran" />
     ),
     cell: ({ row }) => {
@@ -93,8 +100,19 @@ export const columns: ColumnDef<any>[] = [
     },
   },
   {
+    accessorKey: "print",
+    header: "Cetak",
+    cell: ({ row }) => (
+      <Link href={`/distributor/transaksi/print/${row.original.id}`}>
+        <Button variant="outline">
+          Cetak
+        </Button>
+      </Link>
+    ),
+  },
+  {
     id: "actions",
-    header: 'Aksi',
+    header: "Aksi",
     cell: ({ row }) => {
       const data = row.original as any;
       return (
@@ -115,9 +133,11 @@ export const columns: ColumnDef<any>[] = [
                 </DialogTrigger>
                 <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Detail Transaksi - {data.invoice_code}</DialogTitle>
+                    <DialogTitle>
+                      Detail Transaksi - {data.invoice_code}
+                    </DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="space-y-4">
                     <Card>
                       <CardHeader>
@@ -146,11 +166,13 @@ export const columns: ColumnDef<any>[] = [
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="font-semibold">Status Pembayaran</p>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                data.status_payment === "Paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  data.status_payment === "Paid"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
                                 {data.status_payment}
                               </span>
                             </div>
@@ -159,7 +181,7 @@ export const columns: ColumnDef<any>[] = [
                               <p>{data.payment_method.name}</p>
                             </div>
                           </div>
-                          
+
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -170,14 +192,20 @@ export const columns: ColumnDef<any>[] = [
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {data.DetailTransactionDistributor.map((item: any) => (
-                                <TableRow key={item.id}>
-                                  <TableCell>{item.desc}</TableCell>
-                                  <TableCell>{item.amount}</TableCell>
-                                  <TableCell>{formatCurrency(item.price)}</TableCell>
-                                  <TableCell>{formatCurrency(item.sale_price)}</TableCell>
-                                </TableRow>
-                              ))}
+                              {data.DetailTransactionDistributor.map(
+                                (item: any) => (
+                                  <TableRow key={item.id}>
+                                    <TableCell>{item.desc}</TableCell>
+                                    <TableCell>{item.amount}</TableCell>
+                                    <TableCell>
+                                      {formatCurrency(item.price)}
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatCurrency(item.sale_price)}
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              )}
                             </TableBody>
                           </Table>
 
@@ -192,7 +220,11 @@ export const columns: ColumnDef<any>[] = [
                             </div>
                             <div className="flex justify-between font-bold">
                               <span>Total</span>
-                              <span>{formatCurrency(data.amount + data.cost_delivery)}</span>
+                              <span>
+                                {formatCurrency(
+                                  data.amount + data.cost_delivery
+                                )}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -203,19 +235,20 @@ export const columns: ColumnDef<any>[] = [
               </Dialog>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Link href={`/distributor/transaksi/${data.id}/edit`} className="flex items-center w-full">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
+              <Link
+                href={`/distributor/transaksi/${data.id}/edit`}
+                className="flex items-center w-full"
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Ubah Transaksi
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <DeleteButtonQuery 
-                endpoint={`/distributor/transaksi`} 
-                id={data.id}
-                queryKey="transaksi-distributor         "
-              />
-            </DropdownMenuItem>
+            <DeleteButtonQuery
+              endpoint={`/distributor/transaksi`}
+              id={data.id}
+              queryKey="transaksi-distributor         "
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       );
