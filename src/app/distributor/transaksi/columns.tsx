@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Pencil } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Printer } from "lucide-react";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -103,11 +103,33 @@ export const columns: ColumnDef<any>[] = [
     accessorKey: "print",
     header: "Cetak",
     cell: ({ row }) => (
-      <Link href={`/distributor/transaksi/print/${row.original.id}`}>
-        <Button variant="outline">
-          Cetak
-        </Button>
-      </Link>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="rounded-md p-2 cursor-pointer">
+            <Printer className="w-4 h-4" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/distributor/transaksi/print-besar/${row.original.id}`}
+              target="_blank"
+              className="w-full px-2 hover:bg-gray-100 py-2"
+            >
+              Ukuran Besar
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/distributor/transaksi/print/${row.original.id}`}
+              target="_blank"
+              className="w-full px-2 hover:bg-gray-100 py-2"
+            >
+              Ukuran Kecil
+            </Link>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     ),
   },
   {

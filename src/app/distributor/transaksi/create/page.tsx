@@ -246,8 +246,8 @@ export default function CreateTransaction() {
 
   useEffect(() => {
     const total = cart.reduce((acc, item) => acc + item.subtotal, 0);
-    setRemainingPayment(total - downPayment);
-  }, [cart, downPayment]);
+    setRemainingPayment(total + deliveryCost - downPayment);
+  }, [cart, downPayment, deliveryCost]);
 
   return (
     <MainPage>

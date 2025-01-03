@@ -12,7 +12,11 @@ export async function GET(request: Request, { params }: { params: any }) {
       include: {
         payment_method: true,
         factory: true,
-        deliveryTracking: true,
+        deliveryTracking: {
+          include: {
+            location: true,
+          }
+        },
         user: true,
         detailInvoices: {
           include: {

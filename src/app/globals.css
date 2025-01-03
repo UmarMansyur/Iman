@@ -147,3 +147,14 @@ body {
     @apply bg-[var(--green-accent-color)];
   }
 }
+@media print {
+  .page-break-after-always {
+    page-break-after: always;
+  }
+  
+  .print-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

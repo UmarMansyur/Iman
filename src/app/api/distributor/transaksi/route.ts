@@ -163,7 +163,7 @@ export async function POST(req: Request) {
                 discount: item.discount,
                 sale_price: item.sale_price,
                 is_product: item.is_product,
-                product_id: item.is_product ? item.product_id : null,
+                product_id: item.is_product ? Number(item.product_id) : null,
               })
             ),
           },

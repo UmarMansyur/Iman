@@ -32,7 +32,7 @@ interface ProductFormState {
   id?: number;
   factory_id: string;
   product_id: string;
-  price: number;
+  sale_price: number;
   user_id: string;
 }
 
@@ -47,7 +47,7 @@ export default function Form({
 
   const [state, setState] = useState<ProductFormState>({
     product_id: data?.product_id || "",
-    price: data?.price || 0,
+    sale_price: data?.sale_price || 0,
     id: data?.id || 0,
     factory_id: user?.factory_selected?.id.toString() || "",
     user_id: user?.id.toString() || "",
@@ -63,7 +63,13 @@ export default function Form({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(state),
+        body: JSON.stringify({
+          product_id: state.product_id,
+          price: state.sale_price,
+          id: state.id,
+          factory_id: state.factory_id,
+          user_id: state.user_id,
+        }),
       });
     } else {
       response = await fetch("/api/distributor/data-produk/", {
@@ -91,7 +97,7 @@ export default function Form({
         // clear state
         setState({
           product_id: "",
-          price: 0,
+          sale_price: 0,
           id: 0,
           user_id: user?.id.toString() || "",
           factory_id: user?.factory_selected?.id.toString() || "",
@@ -181,9 +187,9 @@ export default function Form({
               id="cost"
               name="cost"
               className="col-span-3"
-              value={formatCurrency(state.price)}
+              value={formatCurrency(state.sale_price)}
               onChange={(e) =>
-                setState({ ...state, price: formatCurrencyInput(e) })
+                setState({ ...state, sale_price: formatCurrencyInput(e) })
               }
             />
           </div>

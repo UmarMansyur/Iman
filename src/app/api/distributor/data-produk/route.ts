@@ -216,7 +216,7 @@ export async function PUT(req: Request) {
         factory_id: parseInt(factory_id),
         member_factory_id: member_factory.id,
         product_id: parseInt(product_id),
-        price: Number(price),
+        sale_price: Number(price),
         user_id: parseInt(user_id),
       },
     });
