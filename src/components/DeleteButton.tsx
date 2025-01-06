@@ -68,7 +68,7 @@ export default function DeleteButtonQuery({
           onSelect={(e) => e.preventDefault()}
           className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2"
         >
-          <Trash className="w-4 h-4 mr-2" />
+          <Trash className="w-4 h-4 mr-1" />
           Hapus
         </DropdownMenuItem>
       </AlertDialogTrigger>

@@ -17,7 +17,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ActionCell } from "./components/ActionCell";
-import { PrinterCheckIcon, SearchCodeIcon } from "lucide-react";
+import { Eye, PrinterCheckIcon } from "lucide-react";
 import Link from "next/link";
 
 export const columns = (
@@ -71,6 +71,17 @@ export const columns = (
     ),
   },
   {
+    accessorKey: "price",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total Harga Pemesanan" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        Rp. {new Intl.NumberFormat("id-ID").format(row.original.price)}
+      </div>
+    ),
+  },
+  {
     accessorKey: "Item",
     header: "Item",
     cell: ({ row }) => (
@@ -111,7 +122,7 @@ export const columns = (
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm" className="bg-danger2 text-white border-none shadow-danger2/50 shadow-sm hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white">
-            <SearchCodeIcon className="w-4 h-4" />
+            <Eye className="w-4 h-4" />
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-4xl">
@@ -189,6 +200,7 @@ export const columns = (
                       <tr>
                         <th className="px-4 py-2 text-left">Material</th>
                         <th className="px-4 py-2 text-left">Jumlah</th>
+                        <th className="px-4 py-2 text-left">Jumlah Diterima</th>
                         <th className="px-4 py-2 text-left">Harga</th>
                         <th className="px-4 py-2 text-left">Total</th>
                       </tr>
@@ -206,6 +218,9 @@ export const columns = (
                               {detail.amount.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2">
+                              {detail.amount_received ? detail.amount_received.toLocaleString("id-ID") : "0"}
+                            </td>
+                            <td className="px-4 py-2">
                               Rp {detail.price.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2">
@@ -221,7 +236,7 @@ export const columns = (
                     <tfoot className="bg-gray-50">
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-4 py-2 font-medium text-right"
                         >
                           Total Keseluruhan:

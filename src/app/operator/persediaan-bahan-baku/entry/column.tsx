@@ -39,7 +39,7 @@ export const columns = (
       <div className="text-start">
         {new Date(row.original.created_at).toLocaleDateString("id-ID", {
           day: "2-digit",
-          month: "long",
+          month: "short",
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
@@ -66,6 +66,17 @@ export const columns = (
             {row.original.user?.email}
           </p>
         </div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "price",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total Harga" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        Rp. {new Intl.NumberFormat("id-ID").format(row.original.price)}
       </div>
     ),
   },

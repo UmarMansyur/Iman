@@ -170,7 +170,7 @@ export default function OrderPage() {
                   className="bg-gray-400 hover:bg-gray-500 text-white shadow-sm shadow-gray-400/50"
                   onClick={() => router.push("/operator/persediaan-bahan-baku")}
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 mr-1" />
                   Kembali
                 </Button>
               </div>
@@ -277,7 +277,7 @@ export default function OrderPage() {
                   onClick={addDetail}
                   variant="outline"
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  <ShoppingCart className="w-4 h-4 mr-1" />
                   Tambah
                 </Button>
               </div>
@@ -349,7 +349,7 @@ export default function OrderPage() {
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                     onClick={handleReset}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <RotateCcw className="w-4 h-4 mr-1" />
                     Reset
                   </Button>
                 </div>
@@ -359,9 +359,9 @@ export default function OrderPage() {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 mr-2" />
+                    <Loader2 className="w-4 h-4 mr-1" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-4 h-4 mr-1" />
                   )}
                   {isSubmitting ? "Sedang menyimpan..." : "Simpan Order"}
                 </Button>

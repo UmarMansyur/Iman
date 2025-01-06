@@ -18,6 +18,8 @@ import { Plus, Trash2, RotateCcw, ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
+import { Label } from "@/components/ui/label";
+import EmptyData from "@/components/views/empty-data";
 
 interface DetailOrder {
   material_unit_id: string;
@@ -36,6 +38,7 @@ export default function OrderPage() {
   const [currentAmount, setCurrentAmount] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [subTotal, setSubTotal] = useState(0);
 
   const formatNumber = (value: string) => {
     const number = value.replace(/\D/g, "");
@@ -55,7 +58,6 @@ export default function OrderPage() {
     const existingDetailIndex = details.findIndex(
       (detail) => detail.material_unit_id == currentMaterial
     );
-
 
     if (existingDetailIndex !== -1) {
       // Jika material sudah ada, update jumlahnya
@@ -101,7 +103,6 @@ export default function OrderPage() {
     setCurrentPrice("");
   };
 
-
   const [materials, setMaterials] = useState<any[]>([]);
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -132,7 +133,7 @@ export default function OrderPage() {
       }
 
       try {
-        const response = await fetch(`/api/order/${orderId}`);
+        const response = await fetch(`/api/entry-persediaan-bahan-baku/${orderId}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.error);
@@ -159,11 +160,15 @@ export default function OrderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    // jika details kosong, tampilkan pesan error
+    if (details.length === 0) {
+      toast.error("Masukkan jumlah bahan baku yang diterima!");
+      return;
+    }
     try {
       const orderId = params?.id;
       const payload = {
-        factory_id: 1,
+        factory_id: user?.factory_selected?.id,
         desc: description,
         user_id: user?.id,
         details: details.map((detail) => ({
@@ -173,7 +178,7 @@ export default function OrderPage() {
         })),
       };
 
-      const url = orderId ? `/api/order/${orderId}` : "/api/order";
+      const url = orderId ? `/api/entry-persediaan-bahan-baku/${orderId}` : "/api/entry-persediaan-bahan-baku";
       const method = orderId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -224,15 +229,20 @@ export default function OrderPage() {
           <CardHeader>
             <CardTitle>
               <div className="flex justify-between items-center">
+                <div>
                 <h3 className="text-lg font-semibold">
-                  {params?.id ? "Edit Data Order" : "Tambah Data Order"}
+                  {params?.id ? "Ubah Data Persediaan Bahan Baku" : "Tambah Data Persediaan Bahan Baku"}
                 </h3>
+                <p className="text-sm text-gray-500">
+                    Anda dapat merubah data persedian bahan baku yang sudah diinputkan sebelumnya dengan mengubah jumlah dan harga atau juga menghapus dan menambahkan data baru.
+                  </p>
+                </div>
                 <Button
                   type="button"
                   className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                   onClick={() => router.push("/operator/persediaan-bahan-baku")}
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 mr-1" />
                   Kembali
                 </Button>
               </div>
@@ -251,7 +261,7 @@ export default function OrderPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4 items-end">
+              <div className="grid grid-cols-5 gap-4 items-end">
                 <div className="grid gap-2">
                   <label>Material</label>
                   <Select
@@ -289,8 +299,44 @@ export default function OrderPage() {
                       if (/^\d*$/.test(value) || value === "") {
                         setCurrentAmount(formatNumber(value));
                       }
+                      setSubTotal(
+                        Number(value) * Number(currentPrice.replace(/,/g, ""))
+                      );
                     }}
                     placeholder="Jumlah"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label>Harga</label>
+                  <Input
+                    type="text"
+                    value={currentPrice}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, "");
+                      if (/^\d*$/.test(value) || value === "") {
+                        setCurrentPrice(formatNumber(value));
+                        setSubTotal(
+                          Number(currentAmount.replace(/,/g, "")) *
+                            Number(value)
+                        );
+                      }
+                    }}
+                    placeholder="Harga"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Sub Total</Label>
+                  <Input
+                    type="text"
+                    disabled
+                    value={
+                      new Intl.NumberFormat("id-ID", {
+                        style: "currency",
+                        currency: "IDR",
+                      })
+                        .format(subTotal)
+                        .slice(0, -3) || ""
+                    }
                   />
                 </div>
                 <Button
@@ -298,7 +344,7 @@ export default function OrderPage() {
                   onClick={addDetail}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-1" />
                   Tambah
                 </Button>
               </div>
@@ -310,6 +356,7 @@ export default function OrderPage() {
                       <th className="px-4 py-2 text-left">Material</th>
                       <th className="px-4 py-2 text-left">Jumlah</th>
                       <th className="px-4 py-2 text-left">Harga</th>
+                      <th className="px-4 py-2 text-left">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -332,6 +379,14 @@ export default function OrderPage() {
                           {formatNumber(detail.amount.toString())}
                         </td>
                         <td className="px-4 py-2">
+                          {new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                          })
+                            .format(detail.price)
+                            .slice(0, -3)}
+                        </td>
+                        <td className="px-4 py-2">
                           <Button
                             type="button"
                             variant="destructive"
@@ -346,7 +401,7 @@ export default function OrderPage() {
                     {!details.length && (
                       <tr>
                         <td colSpan={5} className="text-center py-10">
-                          Tidak ada data
+                          <EmptyData text="Tidak ada data" />
                         </td>
                       </tr>
                     )}
@@ -361,7 +416,7 @@ export default function OrderPage() {
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                     onClick={handleReset}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <RotateCcw className="w-4 h-4 mr-1" />
                     Reset
                   </Button>
                 </div>

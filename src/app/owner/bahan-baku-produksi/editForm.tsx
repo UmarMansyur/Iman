@@ -191,7 +191,7 @@ export default function EditMaterialStockReport({
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-start border-none">
-          <Pencil className="w-4 h-4" />
+          <Pencil className="w-4 h-4 mr-1" />
           Edit
         </Button>
       </DialogTrigger>
@@ -252,7 +252,7 @@ export default function EditMaterialStockReport({
               onClick={addDetail}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1" />
               Tambah
             </Button>
           </div>
@@ -313,7 +313,7 @@ export default function EditMaterialStockReport({
                 className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                 onClick={handleReset}
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
+                <RotateCcw className="w-4 h-4 mr-1" />
                 Reset
               </Button>
             </div>

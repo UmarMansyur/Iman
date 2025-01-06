@@ -140,7 +140,7 @@ export default function OrderPage() {
                   className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                   onClick={() => router.back()}
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 mr-1" />
                   Kembali
                 </Button>
               </div>
@@ -223,7 +223,7 @@ export default function OrderPage() {
                   onClick={addDetail}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-1" />
                   Tambah
                 </Button>
               </div>
@@ -291,7 +291,7 @@ export default function OrderPage() {
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                     onClick={handleReset}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <RotateCcw className="w-4 h-4 mr-1" />
                     Reset
                   </Button>
                 </div>

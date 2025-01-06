@@ -146,7 +146,7 @@ export default function DeliveryStatusDialog({
           variant="ghost"
           className="w-full justify-start px-2 hover:bg-secondary"
         >
-          <Truck className="w-4 h-4 mr-2" />
+          <Truck className="w-4 h-4 mr-1" />
           Ubah Status Pengiriman
         </Button>
       </DialogTrigger>
@@ -173,14 +173,14 @@ export default function DeliveryStatusDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <FileText className="w-4 h-4 mr-2" />
+                      <FileText className="w-4 h-4 mr-1" />
                       <span className="text-sm">Nomor Invoice</span>
                     </div>
                     <p className="font-medium">{invoice?.invoice_code}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <Calendar className="w-4 h-4 mr-2" />
+                      <Calendar className="w-4 h-4 mr-1" />
                       <span className="text-sm">Tanggal Pesanan</span>
                     </div>
                     <p className="font-medium">
@@ -201,14 +201,14 @@ export default function DeliveryStatusDialog({
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <User className="w-4 h-4 mr-2" />
+                      <User className="w-4 h-4 mr-1" />
                       <span className="text-sm">Distributor</span>
                     </div>
                     <p className="font-medium">{invoice?.buyer.name}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2" />
+                      <MapPin className="w-4 h-4 mr-1" />
                       <span className="text-sm">Alamat Pengiriman</span>
                     </div>
                     <p className="font-medium">{invoice?.buyer.address}</p>
@@ -220,14 +220,14 @@ export default function DeliveryStatusDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <Building className="w-4 h-4 mr-2" />
+                      <Building className="w-4 h-4 mr-1" />
                       <span className="text-sm">Pabrik</span>
                     </div>
                     <p className="font-medium">{invoice?.factory.name}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center text-muted-foreground">
-                      <CreditCard className="w-4 h-4 mr-2" />
+                      <CreditCard className="w-4 h-4 mr-1" />
                       <span className="text-sm">Metode Pembayaran</span>
                     </div>
                     <p className="font-medium">

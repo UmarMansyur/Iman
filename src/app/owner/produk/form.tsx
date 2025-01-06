@@ -64,7 +64,7 @@ export default function Form({
       <DialogTrigger asChild>
         {product ? (
           <Button variant="ghost" className="w-full flex justify-start px-2">
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-4 h-4 mr-1" />
             Edit
           </Button>
         ) : (

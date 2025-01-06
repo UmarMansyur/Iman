@@ -171,6 +171,10 @@ const data = {
       icon: SquareKanban,
       items: [
         {
+          title: "Daftar Produk",
+          url: "/operator/produk",
+        },
+        {
           title: "Stok Produk",
           url: "/operator/stok-produk",
         },

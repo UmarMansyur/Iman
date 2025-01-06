@@ -14,15 +14,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Check, Loader2, Save } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import toast from "react-hot-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/store/user-store";
+import { Check, Loader2, PencilLine } from "lucide-react";
 
 interface ActionCellProps {
   row: any;
@@ -30,79 +27,247 @@ interface ActionCellProps {
 }
 
 export function ActionCell({ row, fetchData }: ActionCellProps) {
-  const [status, setStatus] = useState(row.original.status);
-  const [save, setSave] = useState(false);
+  const [receivedAmounts, setReceivedAmounts] = useState<{[key: number]: string}>({});
+  const [data, setData] = useState<any[]>();
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUserStore();
 
-  const handleSave = async () => {
-    setSave(true);
-    try {
-      const response = await fetch(`/api/order/status/${row.original.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: status }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
-      toast.success(data.message);
-      await fetchData();
-    } catch (error) {
-      console.error('Error updating status:', error);
+  const handleChange = (e: any, id: number, amount: number) => {
+    const numericValue = e.target.value.replace(/\D/g, '');
+    let formattedValue = numericValue ? parseInt(numericValue).toLocaleString('id-ID') : '';
+    const existingData = data?.find((item: any) => item.id == id);
+
+    if(Number(numericValue) > amount) {
+      toast.error("Jumlah diterima tidak boleh lebih besar dari jumlah order");
+      formattedValue = existingData?.amount_received || '';
+      return;
     }
-    setSave(false);
+
+    if(existingData){
+      existingData.amount_received = formattedValue;
+    } else {
+      setData(data ? [...data, {
+        id: id,
+        amount_received: formattedValue
+      }] : [{
+        id: id,
+        amount_received: formattedValue
+      }]);
+    }
+    setReceivedAmounts({
+      ...receivedAmounts,
+      [id]: formattedValue
+    });
+  };
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    const response = await fetch(`/api/order/${row.original.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        items: data,
+        factory_id: user?.factory_selected?.id
+      })
+    });
+    const responseData = await response.json();
+    if(!response.ok) {
+      toast.error(responseData.error);
+    } else {
+      toast.success(responseData.message);
+      fetchData();
+    }
+    setIsLoading(false);
+
   }
 
   return (
     <div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="justify-start bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white" disabled={status === "Approved" || status === "Rejected"}>
-              <Check className="w-4 h-4" /> Validasi
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Ubah Status Order</DialogTitle>
-              <DialogDescription>
-                Pilih status baru untuk order ini
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <Label>Status</Label>
-                <Select 
-                  defaultValue={status}
-                  onValueChange={(value) => setStatus(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Menunggu</SelectItem>
-                    <SelectItem value="Approved">Diterima</SelectItem>
-                    <SelectItem value="Rejected">Ditolak</SelectItem>
-                  </SelectContent>
-                </Select>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <PencilLine className="w-4 h-4" /> 
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Penerimaan Order</DialogTitle>
+            <DialogDescription>
+              Konfirmasi penerimaan order bahan baku
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4">
+              <div className="flex justify-between">
+                <div>
+                  <Label>Operator Pemesan</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Avatar>
+                      <AvatarImage src={row.original.user?.thumbnail} />
+                      <AvatarFallback>
+                        {row.original.user?.username?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">
+                        {row.original.user?.username}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {row.original.user?.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(row.original.created_at).toLocaleDateString(
+                      "id-ID",
+                      {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    )}
+                  </div>
+                  {row.original.status === "Pending" && (
+                    <Badge
+                      variant="outline"
+                      className="bg-yellow-500 text-white border-none"
+                    >
+                      Menunggu
+                    </Badge>
+                  )}
+                  {row.original.status === "Approved" && (
+                    <Badge className="bg-blue-500 text-white border-none">Diterima</Badge>
+                  )}
+                  {row.original.status === "Rejected" && (
+                    <Badge className="bg-red-500 text-white border-none">Ditolak</Badge>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label>Keterangan</Label>
+                <p className="mt-1">{row.original.desc}</p>
+              </div>
+
+              <div>
+                <Label>Konfirmasi Penerimaan Order</Label>
+                <div className="border rounded-lg mt-2">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Material</th>
+                        <th className="px-4 py-2 text-center">Satuan</th>
+                        <th className="px-4 py-2 text-right">Jumlah Order</th>
+                        <th className="px-4 py-2 text-right w-56">Jumlah Diterima</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.original.DetailOrderMaterialUnit?.map(
+                        (detail: any, index: number) => (
+                          <tr key={index} className="border-t">
+                            <td className="px-4 py-2">
+                              {detail.materialUnit?.material?.name}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              {detail.materialUnit?.unit?.name}
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              {detail.amount.toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-2 text-right w-56">
+                              <Input type="text" className="w-full" placeholder={detail.amount_received || 'Jumlah Diterima'} value={receivedAmounts[detail.id] || ''} onChange={(e: any) => handleChange(e, detail.id, detail.amount)} />
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={handleSubmit} disabled={isLoading} type="button" aria-disabled={isLoading}>
+                  {
+                    isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Konfirmasi
+                      </>
+                    )
+                  }
+                </Button>
+              </div>
+              <div>
+                <Label>Daftar Bahan</Label>
+                <div className="border rounded-lg mt-2">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Material</th>
+                        <th className="px-4 py-2 text-left">Jumlah</th>
+                        <th className="px-4 py-2 text-left">Harga</th>
+                        <th className="px-4 py-2 text-left">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.original.DetailOrderMaterialUnit?.map(
+                        (detail: any, index: number) => (
+                          <tr key={index} className="border-t">
+                            <td className="px-4 py-2">
+                              {detail.materialUnit?.material?.name} /{" "}
+                              {detail.materialUnit?.unit?.name}
+                            </td>
+                            <td className="px-4 py-2">
+                              {detail.amount.toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-2">
+                              Rp {detail.price.toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-4 py-2">
+                              Rp{" "}
+                              {(detail.amount * detail.price).toLocaleString(
+                                "id-ID"
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                    <tfoot className="bg-gray-50">
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-4 py-2 font-medium text-right"
+                        >
+                          Total Keseluruhan:
+                        </td>
+                        <td className="px-4 py-2 font-bold">
+                          Rp{" "}
+                          {row.original.DetailOrderMaterialUnit?.reduce(
+                            (sum: number, detail: any) =>
+                              sum + detail.amount * detail.price,
+                            0
+                          ).toLocaleString("id-ID")}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                variant="default"
-                onClick={handleSave}
-                disabled={save}
-              >
-                {save ? <Loader2 className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                {save ? 'Menyimpan...' : 'Simpan'}
-              </Button>
               <DialogClose asChild>
                 <Button variant="outline">Tutup</Button>
               </DialogClose>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-} 
+}

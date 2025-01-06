@@ -3,8 +3,6 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { OrderMaterialUnitStatus, MaterialStockStatus } from "@prisma/client";
 
-
-
 // PUT - Update order
 export async function PUT(request: Request, { params }: any) {
   try {
@@ -113,17 +111,14 @@ export async function PUT(request: Request, { params }: any) {
 }
 
 // GET single order
-export async function GET(
-  request: Request,
-  { params }: { params: any }
-) {
+export async function GET(request: Request, { params }: { params: any }) {
   try {
     const paramId = await params;
     const id = paramId.id;
-    
+
     const order = await prisma.orderMaterialUnit.findUnique({
       where: {
-        id: parseInt(id)
+        id: parseInt(id),
       },
       include: {
         DetailOrderMaterialUnit: {
@@ -132,26 +127,159 @@ export async function GET(
               include: {
                 material: true,
                 unit: true,
-              }
+              },
             },
             orderMaterialUnit: true,
-          }
+          },
         },
         user: true,
         factory: true,
-      }
+      },
     });
 
     if (!order) {
-      return Response.json(
-        { error: "Order tidak ditemukan" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Order tidak ditemukan" }, { status: 404 });
     }
 
     return Response.json(order);
   } catch (error: any) {
     return Response.json(
+      { error: error.message || "Terjadi kesalahan pada server" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request, { params }: any) {
+  const paramId = await params;
+  const orderId = paramId.id;
+  const body = await request.json();
+  const { items, factory_id } = body;
+  try {
+
+    if(!items || items.length === 0) {
+      throw new Error("Masukkan jumlah bahan baku yang diterima!");
+    }
+
+    const existingOrder = await prisma.orderMaterialUnit.findUnique({
+      where: { id: parseInt(orderId) },
+      include: {
+        DetailOrderMaterialUnit: true,
+      },
+    });
+
+    if (!existingOrder) {
+      return NextResponse.json(
+        { error: "Order tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+
+    // check dulu apakah ada jumlah diterima yang lebih besar dari jumlah order pada detail order
+    for (const item of items) {
+      const detailOrder = existingOrder.DetailOrderMaterialUnit.find(
+        (detail) => detail.id === item.id
+      );
+      if (detailOrder && item.amount_received > Number(detailOrder.amount)) {
+        throw new Error("Jumlah diterima tidak boleh lebih besar dari jumlah order");
+      }
+    }
+
+    
+    const response = await prisma.$transaction(async (tx) => {
+
+      if(existingOrder.status !== OrderMaterialUnitStatus.Approved) {
+        await tx.orderMaterialUnit.update({
+          where: { id: parseInt(orderId) },
+          data: { status: OrderMaterialUnitStatus.Approved },
+        });
+      }
+
+      await tx.logOrderMaterialUnit.create({
+        data: {
+          factory_id: parseInt(factory_id),
+          desc: `Konfirmasi penerimaan order dengan id ${orderId}`,
+        },
+      });
+
+      const result = await Promise.all(
+        items.map(async (item: any) => {
+          const { id, amount_received } = item;
+
+          const existingDetailOrder = await tx.detailOrderMaterialUnit.findFirst({
+            where: {
+              id: parseInt(id),
+            },
+          });
+
+          if(!existingDetailOrder) {
+            throw new Error("Detail order tidak ditemukan");
+          }
+
+          const detailOrder = await tx.detailOrderMaterialUnit.update({
+            where: { id: parseInt(id) },
+            data: { amount_received: parseInt(amount_received) },
+          });
+
+          const existingMaterialStock = await tx.materialStock.findFirst({
+            where: {
+              material_unit_id: existingDetailOrder.material_unit_id,
+              factory_id: parseInt(factory_id),
+              order_material_unit_id: parseInt(orderId),
+            },
+          });
+
+          if(existingMaterialStock) {
+            await tx.materialStock.update({
+              where: { id: existingMaterialStock.id },
+              data: { amount: parseInt(amount_received) },
+            });
+          } else {
+            await tx.materialStock.create({
+              data: {
+                material_unit_id: existingDetailOrder.material_unit_id,
+                amount: parseInt(amount_received),
+                factory_id: parseInt(factory_id),
+                order_material_unit_id: parseInt(orderId),
+                status: "In" as MaterialStockStatus,
+              },
+            });
+          }
+          // jika ada pada hari yang sama maka update, jika tidak maka create
+          const log = await tx.logOrderDetailMaterialUnit.findFirst({
+            where: {
+              detail_order_material_unit_id: detailOrder.id,
+              created_at: {
+                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                lt: new Date(new Date().setHours(23, 59, 59, 999)),
+              },
+            },
+          });
+
+          if (log) {
+            await tx.logOrderDetailMaterialUnit.update({
+              where: { id: log.id },
+              data: { amount_received: parseInt(amount_received) },
+            });
+          } else {
+            await tx.logOrderDetailMaterialUnit.create({
+              data: {
+                detail_order_material_unit_id: detailOrder.id,
+                amount_received: parseInt(amount_received),
+                materialUnitId: parseInt(id),
+              },
+            });
+          }
+
+          return { detailOrder, log };
+        })
+      );
+      return result;
+    });
+    return NextResponse.json({ message: "Berhasil", data: response });
+  } catch (error: any) {
+    return NextResponse.json(
       { error: error.message || "Terjadi kesalahan pada server" },
       { status: 500 }
     );

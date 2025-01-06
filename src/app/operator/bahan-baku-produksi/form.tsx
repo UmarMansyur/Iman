@@ -155,7 +155,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
     <Dialog>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 mr-1" />
           Tambah Produksi Harian
         </Button>
       </DialogTrigger>
@@ -216,7 +216,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
               onClick={addDetail}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1" />
               Tambah
             </Button>
           </div>
@@ -277,7 +277,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
                 className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                 onClick={handleReset}
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
+                <RotateCcw className="w-4 h-4 mr-1" />
                 Reset
               </Button>
             </div>

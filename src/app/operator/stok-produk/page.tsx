@@ -135,13 +135,21 @@ export default function Layout() {
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
-                      }).format(product.price)}
+                      }).format(product.price).slice(0, -3)}
                     </TableCell>
                     <TableCell>{product.sold}</TableCell>
-                    <TableCell className="text-end">{convert(product.stock).pack}</TableCell>
-                    <TableCell className="text-end">{convert(product.stock).slop}</TableCell>
-                    <TableCell className="text-end">{convert(product.stock).bal}</TableCell>
-                    <TableCell className="text-end">{convert(product.stock).karton}</TableCell>
+                    <TableCell className="text-end">{new Intl.NumberFormat("id-ID", {
+                        style: "decimal",
+                      }).format(Number(`${convert(product.stock).pack}`))}</TableCell>
+                    <TableCell className="text-end">{new Intl.NumberFormat("id-ID", {
+                        style: "decimal",
+                      }).format(Number(`${convert(product.stock).slop}`))}</TableCell>
+                    <TableCell className="text-end">{new Intl.NumberFormat("id-ID", {
+                        style: "decimal",
+                      }).format(Number(`${convert(product.stock).bal}`))}</TableCell>
+                    <TableCell className="text-end">{new Intl.NumberFormat("id-ID", {
+                        style: "decimal",
+                      }).format(Number(`${convert(product.stock).karton}`))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

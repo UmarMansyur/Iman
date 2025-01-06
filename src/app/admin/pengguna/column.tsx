@@ -129,7 +129,7 @@ export const columns = (deleteUser: (id: number) => Promise<void>): ColumnDef<Us
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
               <Link href={`/admin/pengguna/update/${row.original.id}`}>
-                <Pencil className="w-4 h-4" />
+                <Pencil className="w-4 h-4 mr-1" />
                 Edit
               </Link>
             </DropdownMenuItem>

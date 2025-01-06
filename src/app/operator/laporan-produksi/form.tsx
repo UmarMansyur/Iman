@@ -22,28 +22,15 @@ interface Product {
   name: string;
   type: string;
 }
-// Generate minutes (00-59)
-const minutes = Array.from({ length: 60 }, (_, i) => 
-  i.toString().padStart(2, '0')
-);
 
-// Update the hours generation with shift-specific ranges
-const morningHours = Array.from({ length: 13 }, (_, i) => 
-  (i + 1).toString().padStart(2, '0')
-);
-
-const afternoonHours = Array.from({ length: 11 }, (_, i) => 
-  (i + 14).toString().padStart(2, '0')
-);
 
 export default function CreateProductionReport({ fetchData, products }: { fetchData: () => Promise<void>, products: Product[] }) {
-  // const [products, setProducts] = useState<Product[]>(products);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [isMorningShift, setIsMorningShift] = useState(true);
   const [shiftAmount, setShiftAmount] = useState("");
   const [selectedHour, setSelectedHour] = useState("");
-  const [selectedMinute, setSelectedMinute] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState("");
 
   const router = useRouter();
   const { user } = useUserStore();
@@ -53,23 +40,6 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       const factory_id = user?.factory_selected?.id || "";
-  //       const response = await fetch(`/api/product?factory_id=${factory_id}`);
-  //       const data = await response.json();
-  //       setProducts(data.products);
-  //     } catch (error: any) {
-  //       toast.error(error.message);
-  //     }
-  //   };
-  //   fetchProducts();
-  // }, [user]);
-
-  // // Get the appropriate hours based on selected shift
-
-  // Reset hour when shift changes if it's outside the valid range
   useEffect(() => {
     if (isMorningShift) {
       if (parseInt(selectedHour) > 13) {
@@ -90,19 +60,33 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
       if (!user?.factory_selected?.id) {
         throw new Error("Pilih pabrik terlebih dahulu");
       }
-  
-      const shiftTime = selectedHour && selectedMinute ? `${selectedHour}:${selectedMinute}` : null;
+
+      // jika jenis satuan adalah bal maka kalikan 200
+      // jika jenis satuan adalah press maka kalikan 10
+      // jika jenis karton maka kalikan 800
+      let amount = 0;
+      if (selectedUnit === "Bal") {
+        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 200;
+      } else if (selectedUnit === "Pack") {
+        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 10;
+      } else if (selectedUnit === "Karton") {
+        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 800;
+      } else if (selectedUnit === "Slop") {
+        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 10;
+      } else {
+        amount = parseFloat(shiftAmount.replace(/,/g, ""));
+      }
   
       const payload = {
         product_id: parseInt(selectedProduct),
         factory_id: user.factory_selected.id,
-        morning_shift_amount: isMorningShift ? parseFloat(shiftAmount.replace(/,/g, "")) : null,
-        morning_shift_time: isMorningShift ? shiftTime : null,
-        afternoon_shift_amount: !isMorningShift ? parseFloat(shiftAmount.replace(/,/g, "")) : null,
-        afternoon_shift_time: !isMorningShift ? shiftTime : null,
+        morning_shift_amount: isMorningShift ? amount : null,
+        morning_shift_time: isMorningShift ? "12:00:00" : null,
+        afternoon_shift_amount: !isMorningShift ? amount : null,
+        afternoon_shift_time: !isMorningShift ? "16:00:00" : null,
         type: "In",
-        morning_shift_user_id: isMorningShift ? user.id : null, // Morning shift ID
-        afternoon_shift_user_id: !isMorningShift ? user.id : null, // Afternoon shift ID
+        morning_shift_user_id: isMorningShift ? user.id : null,
+        afternoon_shift_user_id: !isMorningShift ? user.id : null,
       };
   
       const response = await fetch("/api/laporan-produksi", {
@@ -132,7 +116,7 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     <Dialog>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 mr-1" />
           Tambah Produksi Harian
         </Button>
       </DialogTrigger>
@@ -174,7 +158,25 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
               <Label>{isMorningShift ? "Pagi" : "Siang"}</Label>
             </div>
           </div>
-
+          <div className="space-y-2">
+            <Label>Pilih Jenis Satuan</Label>
+            <Select
+              value={selectedUnit}
+              onValueChange={setSelectedUnit}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Satuan">
+                  {selectedUnit}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Pack">Pack</SelectItem>
+                <SelectItem value="Bal">Bal</SelectItem>
+                <SelectItem value="Karton">Karton</SelectItem>
+                <SelectItem value="Slop">Slop</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label>Jumlah Produksi</Label>
             <Input
@@ -190,53 +192,6 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
               required
             />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Jam</Label>
-              <Select
-                value={selectedHour}
-                onValueChange={setSelectedHour}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih jam" />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-                    isMorningShift ? morningHours.map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    )) : afternoonHours.map((hour) => (
-                      <SelectItem key={hour} value={hour}>
-                        {hour}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Menit</Label>
-              <Select
-                value={selectedMinute}
-                onValueChange={setSelectedMinute}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih menit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {minutes.map((minute) => (
-                    <SelectItem key={minute} value={minute}>
-                      {minute}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <Button
             type="submit"
             className="w-full"

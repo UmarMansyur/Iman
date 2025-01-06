@@ -98,7 +98,7 @@ export default function DeliveryStatusDialog({ invoice }: any) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" className="w-full justify-start py-0 px-1 ">
-          <Truck className="w-4 h-4 mr-2" /> Ubah Status Pengiriman
+          <Truck className="w-4 h-4 mr-1" /> Ubah Status Pengiriman
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl">
@@ -113,21 +113,21 @@ export default function DeliveryStatusDialog({ invoice }: any) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">
-                  <Package className="w-4 h-4 mr-2" />
+                  <Package className="w-4 h-4 mr-1" />
                   <span>Nomor Invoice</span>
                 </div>
                 <p className="font-medium">{invoice.invoice_code}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">
-                  <MapPin className="w-4 h-4 mr-2" />
+                  <MapPin className="w-4 h-4 mr-1" />
                   <span>Alamat Pembeli</span>
                 </div>
                 <p className="font-medium">{invoice.buyer?.address}</p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">
-                  <Calendar className="w-4 h-4 mr-2" />
+                  <Calendar className="w-4 h-4 mr-1" />
                   <span>Tanggal Pesanan</span>
                 </div>
                 <p className="font-medium">
@@ -136,7 +136,7 @@ export default function DeliveryStatusDialog({ invoice }: any) {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center text-muted-foreground">
-                  <Clock className="w-4 h-4 mr-2" />
+                  <Clock className="w-4 h-4 mr-1" />
                   <span>Status Saat Ini</span>
                 </div>
                 <Badge
@@ -148,7 +148,7 @@ export default function DeliveryStatusDialog({ invoice }: any) {
               </div>
               <div>
                 <div className="flex items-center text-muted-foreground">
-                  <MapPin className="w-4 h-4 mr-2" />
+                  <MapPin className="w-4 h-4 mr-1" />
                   <span>Lokasi Pengiriman</span>
                 </div>
                 <p className="font-medium">
@@ -157,7 +157,7 @@ export default function DeliveryStatusDialog({ invoice }: any) {
               </div>
               <div>
                 <div className="flex items-center text-muted-foreground">
-                  <Truck className="w-4 h-4 mr-2" />
+                  <Truck className="w-4 h-4 mr-1" />
                   <span>Biaya Pengiriman</span>
                 </div>
                 <p className="font-medium">

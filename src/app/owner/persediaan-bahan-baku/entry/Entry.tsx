@@ -4,19 +4,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
-import { Loader2, PlusCircle, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
 export default function PabrikPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const router = useRouter()
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -120,15 +116,6 @@ export default function PabrikPage() {
                   value={searchInput}
                 />
               </div>
-            </div>
-            <div>
-              <Button 
-                  className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
-                onClick={() => router.push('/operator/persediaan-bahan-baku/entry')}
-              >
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Entry Stok Bahan Baku
-              </Button>
             </div>
           </div>
           {loadingSearch ? (

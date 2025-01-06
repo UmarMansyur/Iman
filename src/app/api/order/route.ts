@@ -22,13 +22,14 @@ export async function GET(request: Request) {
       type_preorder: type_preorder === "true" ? true : false,
     };
 
+
     const orderBy: any =
       sortBy === "user"
         ? { user_id: sortOrder }
         : sortBy === "tanggal"
         ? { created_at: sortOrder }
-        : sortBy === "total_amount"
-        ? { total_amount: sortOrder }
+        : sortBy === "price"
+        ? { price: sortOrder }
         : sortBy === "desc"
         ? { desc: sortOrder }
         : { created_at: "desc" };

@@ -53,20 +53,6 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // useEffect(() => {
-  //   const fetchProducts = async () => {
-  //     try {
-  //       const factory_id = user?.factory_selected?.id || "";
-  //       const response = await fetch(`/api/product?factory_id=${factory_id}`);
-  //       const data = await response.json();
-  //       setProducts(data.products);
-  //     } catch (error: any) {
-  //       toast.error(error.message);
-  //     }
-  //   };
-  //   fetchProducts();
-  // }, [user]);
-
   // // Get the appropriate hours based on selected shift
   const availableHours = isMorningShift ? morningHours : afternoonHours;
 
@@ -133,7 +119,7 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     <Dialog>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 mr-1" />
           Tambah Produksi Harian
         </Button>
       </DialogTrigger>

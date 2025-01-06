@@ -87,7 +87,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { desc, user_id, details, total_amount } = body;
+    const { desc, user_id, details, total_amount, factory_id } = body;
 
     // Validasi stok untuk semua material
     for (const detail of details) {
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
     // Buat laporan penggunaan
     const report = await prisma.reportMaterialStock.create({
       data: {
-        factory_id: 1, // Sesuaikan dengan factory_id yang sesuai
+        factory_id: Number(factory_id), // Sesuaikan dengan factory_id yang sesuai
         total_amount: Number(total_amount),
         desc: desc,
         user_id: Number(user_id),

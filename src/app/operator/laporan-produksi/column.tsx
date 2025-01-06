@@ -90,7 +90,7 @@ export const columns = (
   },
   {
     accessorKey: "morning_shift_amount",
-    header: "Produksi Pagi",
+    header: "Jumlah Produksi Pagi(Pack)",
     cell: ({ row }) => {
       const data = row.original as any;
       return data.morning_shift_amount ? data.morning_shift_amount.toLocaleString("id-ID") : "-";
@@ -98,7 +98,7 @@ export const columns = (
   },
   {
     accessorKey: "afternoon_shift_amount",
-    header: "Produksi Siang",
+    header: "Jumlah Produksi Siang(Pack)",
     cell: ({ row }) => {
       const data = row.original as any;
       return data.afternoon_shift_amount ? data.afternoon_shift_amount.toLocaleString("id-ID") : "-";

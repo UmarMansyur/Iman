@@ -19,6 +19,9 @@ import {
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { useTableStore } from "@/store/table-store";
 import EmptyData from "@/components/views/empty-data";
+import { Button } from "@/components/ui/button";
+import { PlusCircleIcon } from "lucide-react";
+import Link from "next/link";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -122,7 +125,13 @@ export function DataTable<TData, TValue>({
                   colSpan={7}
                   className="h-24 text-center"
                 >
-                  <EmptyData text="Keranjang kosong" />
+                  <EmptyData text="Tidak ada data Stok Bahan Baku. Silahkan entry data Stok Bahan Baku Terlebih Dahulu!" />
+                  <Link href="/operator/persediaan-bahan-baku/entry">
+                    <Button variant="outline" size="sm" className="mt-2 bg-primary2 text-white border-none shadow-primary2/50 shadow-sm hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white">
+                    <PlusCircleIcon className="w-4 h-4" />
+                    Entry Stock Bahan Baku
+                  </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             )}

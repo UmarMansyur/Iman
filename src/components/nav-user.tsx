@@ -44,9 +44,11 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg hover:text-black">
                 <AvatarImage src={user?.thumbnail} alt={user?.username} />
-                <AvatarFallback className="rounded-lg">U</AvatarFallback>
+                <AvatarFallback className="rounded-lg hover:text-black">
+                  {user?.username.charAt(0)}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user?.username}</span>

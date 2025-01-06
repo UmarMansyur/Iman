@@ -38,13 +38,15 @@ export default function Form({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+
     const formData = new FormData(e.currentTarget);
     const price = formData.get('price')?.toString().replace(/\./g, '') || '';
     formData.set('price', price);
-    
     formData.append("id", product?.id?.toString() || "");
     formData.append("factory_id", user?.factory_selected?.id?.toString() || "");
+
     const response = await createProduct(undefined, formData);
+    
     if (response?.errors) {
       setState(response.errors as ProductFormState);
       toast.error(
@@ -79,8 +81,8 @@ export default function Form({
         <DialogHeader>
           <DialogTitle>{product ? "Edit Produk" : "Tambah Produk"}</DialogTitle>
           <DialogDescription>
-            Masukkan nama baru untuk{" "}
-            {product ? "mengubah produk" : "menambah produk"}. Klik tombol
+            Masukkan data produk untuk{" "}
+            {product ? "mengubah produk" : "menambah produk baru"}. Klik tombol
             simpan untuk menyimpan {product ? "perubahan" : "produk"}.
           </DialogDescription>
         </DialogHeader>
@@ -121,7 +123,7 @@ export default function Form({
               )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price">Harga</Label>
+              <Label htmlFor="price">Harga /Pack</Label>
               <Input 
                 id="price" 
                 name="price" 

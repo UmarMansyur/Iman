@@ -153,7 +153,7 @@ export default function PenggunaPage() {
               onClick={() => router.push("/admin/pengguna/create")}
               className="bg-blue-500 hover:bg-blue-500/90 opacity-100"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1" />
               Tambah Pengguna
             </Button>
           </div>

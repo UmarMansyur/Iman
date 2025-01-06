@@ -88,19 +88,6 @@ export default function OrderPage() {
         },
       ]);
     }
-
-    // setDetails([
-    //   ...details,
-    //   {
-    //     material_unit_id: currentMaterial,
-    //     amount: Number(currentAmount.replace(/,/g, "")),
-    //     price: Number(currentPrice.replace(/,/g, "")),
-    //     total:
-    //       Number(currentAmount.replace(/,/g, "")) *
-    //       Number(currentPrice.replace(/,/g, "")),
-    //   },
-    // ]);
-
     setCurrentMaterial("");
     setCurrentAmount("");
     setCurrentPrice("");
@@ -116,6 +103,7 @@ export default function OrderPage() {
         maximumFractionDigits: 0,
       })
     );
+    console.log('currentTotal', currentTotal)
   }, [currentAmount, currentPrice]);
 
   const [materials, setMaterials] = useState<any[]>([]);
@@ -149,7 +137,7 @@ export default function OrderPage() {
       }
 
       try {
-        const response = await fetch(`/api/order/${orderId}`);
+        const response = await fetch(`/api/entry-persediaan-bahan-baku/${orderId}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.error);
@@ -249,7 +237,7 @@ export default function OrderPage() {
                   className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                   onClick={() => router.back()}
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <ArrowLeft className="w-4 h-4 mr-1" />
                   Kembali
                 </Button>
               </div>
@@ -305,6 +293,7 @@ export default function OrderPage() {
                       const value = e.target.value.replace(/,/g, "");
                       if (/^\d*$/.test(value) || value === "") {
                         setCurrentAmount(formatNumber(value));
+                        setCurrentTotal(formatNumber(value));
                       }
                     }}
                     placeholder="Jumlah"
@@ -319,6 +308,7 @@ export default function OrderPage() {
                       const value = e.target.value.replace(/,/g, "");
                       if (/^\d*$/.test(value) || value === "") {
                         setCurrentPrice(formatNumber(value));
+                        setCurrentTotal(formatNumber(value));
                       }
                     }}
                     placeholder="Harga per unit"
@@ -333,7 +323,7 @@ export default function OrderPage() {
                   onClick={addDetail}
                   className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-1" />
                   Tambah
                 </Button>
               </div>
@@ -416,7 +406,7 @@ export default function OrderPage() {
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                     onClick={handleReset}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    <RotateCcw className="w-4 h-4 mr-1" />
                     Reset
                   </Button>
                 </div>

@@ -126,7 +126,7 @@ export default function PabrikPage() {
                   className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
                 onClick={() => router.push('/operator/persediaan-bahan-baku/order')}
               >
-                <PlusCircle className="w-4 h-4 mr-2" />
+                <PlusCircle className="w-4 h-4 mr-1" />
                 Tambah Order Bahan Baku
               </Button>
             </div>

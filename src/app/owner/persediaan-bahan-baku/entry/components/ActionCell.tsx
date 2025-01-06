@@ -35,7 +35,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
             router.push(`/operator/persediaan-bahan-baku/entry/${row.original.id}`);
           }}
         >
-          <Pencil className="w-4 h-4" /> Edit
+          <Pencil className="w-4 h-4 mr-1" /> Edit
         </Button>
 
         <DeleteButton

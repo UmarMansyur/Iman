@@ -4,19 +4,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
-import { Loader2, PlusCircle, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
 export default function PabrikPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const router = useRouter()
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -45,6 +41,7 @@ export default function PabrikPage() {
         search: filters.search,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
+        type_preorder: "true",
       });
 
       if(factoryId) {
@@ -121,15 +118,7 @@ export default function PabrikPage() {
                 />
               </div>
             </div>
-            <div>
-              <Button 
-                  className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
-                onClick={() => router.push('/owner/persediaan-bahan-baku/order')}
-              >
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Tambah Order Bahan Baku
-              </Button>
-            </div>
+          
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">
