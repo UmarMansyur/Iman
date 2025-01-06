@@ -46,7 +46,6 @@ export const columns = (
         })}
       </div>
     ),
-
   },
   {
     accessorKey: "user",
@@ -77,7 +76,8 @@ export const columns = (
       <div className="text-start">
         {row.original.DetailOrderMaterialUnit?.map((item: any) => (
           <div key={item.id}>
-            {item.materialUnit?.material?.name} / {item.materialUnit?.unit?.name}
+            {item.materialUnit?.material?.name} /{" "}
+            {item.materialUnit?.unit?.name}
           </div>
         ))}
       </div>
@@ -89,7 +89,11 @@ export const columns = (
     cell: ({ row }) => (
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="bg-danger2 text-white border-none shadow-danger2/50 shadow-sm hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-danger2 text-white border-none shadow-danger2/50 shadow-sm hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white"
+          >
             <SearchCodeIcon className="w-4 h-4" />
           </Button>
         </DialogTrigger>
@@ -142,10 +146,14 @@ export const columns = (
                     </Badge>
                   )}
                   {row.original.status === "Approved" && (
-                    <Badge className="bg-blue-500 text-white border-none">Diterima</Badge>
+                    <Badge className="bg-blue-500 text-white border-none">
+                      Diterima
+                    </Badge>
                   )}
                   {row.original.status === "Rejected" && (
-                    <Badge className="bg-red-500 text-white border-none">Ditolak</Badge>
+                    <Badge className="bg-red-500 text-white border-none">
+                      Ditolak
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -156,20 +164,15 @@ export const columns = (
               </div>
 
               <div>
-                <Label>Status</Label>
-                <p className="mt-1">{row.original.status}</p>
-              </div>
-
-              <div>
                 <Label>Daftar Bahan</Label>
                 <div className="border rounded-lg mt-2">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left">Material</th>
-                        <th className="px-4 py-2 text-left">Jumlah</th>
-                        <th className="px-4 py-2 text-left">Harga</th>
-                        <th className="px-4 py-2 text-left">Total</th>
+                        <th className="px-4 py-2 text-right">Jumlah</th>
+                        <th className="px-4 py-2 text-right">Harga</th>
+                        <th className="px-4 py-2 text-right">Sub Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -177,17 +180,16 @@ export const columns = (
                         (detail: any, index: number) => (
                           <tr key={index} className="border-t">
                             <td className="px-4 py-2">
-                              {/* {JSON.stringify(detail)} */}
                               {detail.materialUnit?.material?.name} /{" "}
                               {detail.materialUnit?.unit?.name}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-right">
                               {detail.amount.toLocaleString("id-ID")}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-right">
                               Rp {detail.price.toLocaleString("id-ID")}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 text-right">
                               Rp{" "}
                               {(detail.amount * detail.price).toLocaleString(
                                 "id-ID"
@@ -205,7 +207,7 @@ export const columns = (
                         >
                           Total Keseluruhan:
                         </td>
-                        <td className="px-4 py-2 font-bold">
+                        <td className="px-4 py-2 font-bold text-right">
                           Rp{" "}
                           {row.original.DetailOrderMaterialUnit?.reduce(
                             (sum: number, detail: any) =>
@@ -223,6 +225,11 @@ export const columns = (
               <DialogClose asChild>
                 <Button variant="outline">Tutup</Button>
               </DialogClose>
+              <DialogClose asChild>
+                <a href={`/operator/persediaan-bahan-baku/order/${row.original.id}/print`} target="_blank" className="bg-yellow-500 text-white border-none shadow-yellow-500/50 shadow-sm hover:bg-yellow-600 hover:shadow-yellow-600/50 hover:text-white rounded-md px-4 py-2 flex items-center gap-2">
+                  <PrinterCheckIcon className="w-4 h-4" /> Cetak
+                </a>
+              </DialogClose>
             </DialogFooter>
           </div>
         </DialogContent>
@@ -233,7 +240,10 @@ export const columns = (
     accessorKey: "Cetak",
     header: "Cetak",
     cell: ({ row }) => (
-      <Link href={`/operator/persediaan-bahan-baku/order/${row.original.id}/print`} target="_blank">
+      <Link
+        href={`/operator/persediaan-bahan-baku/order/${row.original.id}/print`}
+        target="_blank"
+      >
         <Button
           variant="outline"
           size="sm"

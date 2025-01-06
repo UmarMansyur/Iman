@@ -60,63 +60,156 @@ async function main(): Promise<void> {
     },
   });
 
-  const djava = await prisma.factory.create({
+  const ditributor2 = await prisma.user.create({
     data: {
-      nickname: "SJ",
+      email: "inderadistribution@iman.com",
+      username: "inderadistribution",
+      password: await bcrypt.hash("distributor123.", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Indera Distribution",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  const citra = await prisma.user.create({
+    data: {
+      email: "citra@iman.com",
+      username: "citra",
+      password: await bcrypt.hash("citra", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Citra",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  const lita = await prisma.user.create({
+    data: {
+      email: "lita@iman.com",
+      username: "lita",
+      password: await bcrypt.hash("lita", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Lita",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  const yanti = await prisma.user.create({
+    data: {
+      email: "yanti@iman.com",
+      username: "yanti",
+      password: await bcrypt.hash("yanti", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Yanti",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
+  });
+
+  const prsj = await prisma.factory.create({
+    data: {
+      nickname: "PRSJ",
       user_id: admin.id,
-      name: "Safira Jaya",
-      address: "Jl. Safira Jaya",
+      name: "PR. Safira Jaya",
+      address: "Jl. Raya Trasak Pamekasan",
       status: "Active",
     },
   });
 
-  await prisma.factory.create({
+  const prpj = await prisma.factory.create({
     data: {
-      nickname: "PLT",
-      user_id: admin.id,
-      name: "Pelita",
-      address: "Jl. Pelita",
+      nickname: "PRPJ",
+      user_id: ditributor2.id,
+      name: "PR. Pelita Jaya",
+      address: "Blungbungan",
       status: "Active",
     },
   });
+
 
   await prisma.role.createMany({
     data: [
       { role: "Owner" },
       { role: "Operator" },
       { role: "Distributor" },
-      { role: "Sales" },
+      { role: "Agent" },
     ],
   });
 
   await prisma.memberFactory.createMany({
     data: [
       {
-        factory_id: djava.id,
+        factory_id: prpj.id,
+        user_id: ditributor2.id,
+        role_id: 3,
+        status: 'Active'
+      },
+      {
+        factory_id: prsj.id,
+        user_id: ditributor2.id,
+        role_id: 3,
+        status: 'Active'
+      },
+      {
+        factory_id: prsj.id,
+        user_id: citra.id,
+        role_id: 2,
+        status: 'Active'
+      },
+      {
+        factory_id: prsj.id,
+        user_id: yanti.id,
+        role_id: 2,
+        status: 'Active'
+      },
+      {
+        factory_id: prpj.id,
+        user_id: lita.id,
+        role_id: 2,
+        status: 'Active'
+      },
+      {
+        factory_id: prpj.id,
         user_id: operator.id,
         role_id: 2,
-        status: "Active"
+        status: 'Active'
       },
       {
-        factory_id: djava.id,
-        user_id: distributor.id,
-        role_id: 3,
-        status: "Active"
+        factory_id: prsj.id,
+        user_id: operator.id,
+        role_id: 2,
+        status: 'Active'
       },
       {
-        factory_id: djava.id,
+        factory_id: prsj.id,
         user_id: owner.id,
         role_id: 1,
-        status: "Active"
+        status: 'Active'
       },
+      {
+        factory_id: prpj.id,
+        user_id: owner.id,
+        role_id: 1,
+        status: 'Active'
+      }
     ],
   });
 
   await prisma.bankAccount.createMany({
     data: [
       {
-        factory_id: djava.id,
-        name: "Bank Djava",
+        factory_id: prsj.id,
+        name: "Bank prsj",
         rekening: "1234567890",
         bank_name: "Bank Negara Indonesia",
       },
@@ -125,27 +218,42 @@ async function main(): Promise<void> {
 
   await prisma.paymentMethod.createMany({
     data: [
-      { name: "Kredit" },
-      { name: "BOND" },
+      { name: "Kredit/BOND" },
+      { name: "Pembayaran 100%" },
+      { name: "Pembayaran 50%" },
+      { name: "Konsinasi" },
       { name: "Cash" },
     ],
   });
 
   await prisma.material.createMany({
     data: [
-      { name: "TSG" },
-      { name: "Filter" },
-      { name: "Bobin" },
-      { name: "Etiket" },
-      { name: "Foil Gold" },
-      { name: "Foil Silver" },
-      { name: "Inner" },
-      { name: "CPT" },
-      { name: "Lem CTP" },
-      { name: "Lem AMBRI" },
-      { name: "Pita SKM" },
-      { name: "Pita SPM" },
-      { name: "Pita SKT" },
+      { name: "TSG", factory_id: prsj.id },
+      { name: "Filter", factory_id: prsj.id },
+      { name: "Bobin", factory_id: prsj.id },
+      { name: "Etiket", factory_id: prsj.id },
+      { name: "Foil Gold", factory_id: prsj.id },
+      { name: "Foil Silver", factory_id: prsj.id },
+      { name: "Inner", factory_id: prsj.id },
+      { name: "CPT", factory_id: prsj.id },
+      { name: "Lem CTP", factory_id: prsj.id },
+      { name: "Lem AMBRI", factory_id: prsj.id },
+      { name: "Pita SKM", factory_id: prsj.id },
+      { name: "Pita SPM", factory_id: prsj.id },
+      { name: "Pita SKT", factory_id: prsj.id },
+      { name: "TSG", factory_id: prpj.id },
+      { name: "Filter", factory_id: prpj.id },
+      { name: "Bobin", factory_id: prpj.id },
+      { name: "Etiket", factory_id: prpj.id },
+      { name: "Foil Gold", factory_id: prpj.id },
+      { name: "Foil Silver", factory_id: prpj.id },
+      { name: "Inner", factory_id: prpj.id },
+      { name: "CPT", factory_id: prpj.id },
+      { name: "Lem CTP", factory_id: prpj.id },
+      { name: "Lem AMBRI", factory_id: prpj.id },
+      { name: "Pita SKM", factory_id: prpj.id },
+      { name: "Pita SPM", factory_id: prpj.id },
+      { name: "Pita SKT", factory_id: prpj.id },
     ],
   });
 
@@ -187,25 +295,25 @@ async function main(): Promise<void> {
   await prisma.product.createMany({
     data: [
       {
-        factory_id: djava.id,
+        factory_id: prsj.id,
         name: "ST Premium",
         type: "Kretek",
         price: 13000,
       },
       {
-        factory_id: djava.id,
+        factory_id: prsj.id,
         name: "ST Legend",
         type: "Kretek",
         price: 14000,
       },
       {
-        factory_id: djava.id,
+        factory_id: prsj.id,
         name: "Lucca Click",
         type: "Kretek",
         price: 10000,
       },
       {
-        factory_id: djava.id,
+        factory_id: prsj.id,
         name: "Pharlap SPM",
         type: "Kretek",
         price: 10000,
@@ -217,13 +325,21 @@ async function main(): Promise<void> {
     data: {
       product_id: 1,
       amount: 100,
-      factory_id: djava.id,
+      factory_id: prsj.id,
       morning_shift_amount: 10,
       morning_shift_time: new Date("2024-01-01 08:00:00"),
       morning_shift_user_id: operator.id,
       afternoon_shift_amount: 10,
       afternoon_shift_time: new Date("2024-01-01 15:00:00"),
       afternoon_shift_user_id: operator.id,
+      StockProduct: {
+        create: {
+          amount: 20,
+          invoice_id: null,
+          product_id: 1,
+          type: "In",
+        }
+      }
     },
   });
 
@@ -231,7 +347,7 @@ async function main(): Promise<void> {
     data: {
       material_id: 1,
       amount: 100,
-      factory_id: djava.id,
+      factory_id: prsj.id,
       unit_id: 1,
       user_id: operator.id,
     },
@@ -248,13 +364,13 @@ async function main(): Promise<void> {
     data: {
       name: "PT. Iman",
       address: "Jl. Iman",
-      factory_id: djava.id,
+      factory_id: prsj.id,
     },
   });
 
   const invoice = await prisma.invoice.create({
     data: {
-      factory_id: djava.id,
+      factory_id: prsj.id,
       user_id: admin.id,
       is_distributor: true,
       invoice_code: "INV-001",
@@ -284,7 +400,7 @@ async function main(): Promise<void> {
 
   const location = await prisma.location.create({
     data: {
-      factory_id: djava.id,
+      factory_id: prsj.id,
       name: "Jl. Delivery",
       cost: 100000,
     }

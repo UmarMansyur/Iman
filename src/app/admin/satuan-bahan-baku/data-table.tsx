@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { useTableStore } from "@/store/table-store";
+import Image from "next/image";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -121,7 +122,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Tidak ada data
+                  <Image src="/empty-box.png" alt="empty" width={100} height={100} />
                 </TableCell>
               </TableRow>
             )}

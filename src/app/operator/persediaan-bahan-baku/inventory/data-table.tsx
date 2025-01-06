@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { useTableStore } from "@/store/table-store";
+import EmptyData from "@/components/views/empty-data";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -121,7 +122,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Tidak ada data
+                  <EmptyData text="Stok bahan baku kosong, silahkan isi stok bahan baku terlebih dahulu!" />
                 </TableCell>
               </TableRow>
             )}

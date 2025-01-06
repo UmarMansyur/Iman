@@ -2,6 +2,7 @@
 import { Package2, ShoppingCart, Receipt, DollarSign } from "lucide-react";
 import MainPage from "@/components/main";
 import CardDashboard from "@/components/card-dashboard";
+import { useUserStore } from "@/store/user-store";
 
 export default function Layout() {
   const datas = [
@@ -39,11 +40,13 @@ export default function Layout() {
     },
   ];
 
+  const { user } = useUserStore();
+
   return (
     <MainPage>
-      <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-      <p className="text-muted-foreground">Overview produksi dan penjualan</p>
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-4 mt-6">
+      <h2 className="text-3xl font-bold tracking-tight mb-0">Dashboard</h2>
+      <p className="text-muted-foreground">Selamat Datang {user?.username}</p>
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3 mt-1">
         {datas.map((data, index) => (
           <CardDashboard key={index} {...data} />
         ))}

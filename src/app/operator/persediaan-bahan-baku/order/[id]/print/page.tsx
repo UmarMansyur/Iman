@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 "use client";
 import React, { useEffect, useState } from "react";
+import { Building2 } from "lucide-react";
+import Image from "next/image";
 
 export default function PrintPage({
   params,
@@ -12,7 +12,7 @@ export default function PrintPage({
   const paramId = React.use(params);
   const id = paramId.id;
   const [data, setData] = useState<any>(null);
-  // Fungsi untuk mengambil data pesanan
+
   async function fetchData(orderId: string) {
     try {
       const response = await fetch(`/api/order/${orderId}`);
@@ -28,9 +28,8 @@ export default function PrintPage({
   }, [id]);
 
   useEffect(() => {
-    if (data) {
+    if (data?.DetailOrderMaterialUnit?.length > 0) {
       window.print();
-      // close the window after print
       window.close();
     }
   }, [data]);
@@ -40,55 +39,112 @@ export default function PrintPage({
   }
 
   return (
-    <div className="p-8 font-sans bg-white text-gray-800">
-      {/* Header Nota */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold uppercase">Nota Pesanan</h1>
-        <p className="text-sm">
-          {
-            data.factory.address
-          }
-        </p>
-        <hr className="border-gray-300 my-4" />
+    <div className="min-h-[210mm] w-[140mm] mx-auto bg-white p-4 font-mono text-sm">
+      {/* Header */}
+      <div className="text-center mb-4">
+        {/* beri logo */}
+        {
+          data.factory.logo ? (
+            <div className="flex justify-center items-center">
+              <Image src={data.factory.logo} alt="Logo" width={100} height={100} />
+            </div>
+          ) : (
+            <div className="flex justify-center items-center">
+              <Building2 className="w-10 h-10" />
+            </div>
+          )
+        } 
+        <h1 className="text-xl font-bold uppercase">{data.factory.name}</h1>
+        <p>{data.factory.address}</p>
       </div>
 
-      {/* Informasi Nota */}
-      <div className="mb-6">
-        <p><strong>Nomor Pesanan:</strong> INV-{new Date(data.created_at).toLocaleString().split(',')[0].replace(/[-:]/g, '')}-{data.id}</p>
-        <p><strong>Status:</strong> {data.status}</p>
-        <p><strong>Operator:</strong> {data.user.username}</p>
-        <p><strong>Waktu Dibuat:</strong> {new Date(data.created_at).toLocaleString()}</p>
-        <p><strong>Deskripsi:</strong> {data.desc}</p>
-        <hr className="border-gray-300 my-4" />
-      </div>
-
-      {/* Tabel Rincian Material */}
-      <table className="w-full table-fixed text-sm border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-2 py-1 text-left">Bahan Baku</th>
-            <th className="border border-gray-300 px-2 py-1 text-left">Satuan</th>
-            <th className="border border-gray-300 px-2 py-1 text-right">Jumlah</th>
-            <th className="border border-gray-300 px-2 py-1 text-right">Harga Satuan</th>
-            <th className="border border-gray-300 px-2 py-1 text-right">Total</th>
-          </tr>
-        </thead>
+      {/* Invoice Info */}
+      <table className="w-full mb-4 border-dashed border">
         <tbody>
-          {data.DetailOrderMaterialUnit.map((detail: any, index: number) => (
-            <tr key={detail.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-              <td className="border border-gray-300 px-2 py-1">{detail.materialUnit.material.name}</td>
-              <td className="border border-gray-300 px-2 py-1">{detail.materialUnit.unit.name}</td>
-              <td className="border border-gray-300 px-2 py-1 text-right">{detail.amount}</td>
-              <td className="border border-gray-300 px-2 py-1 text-right">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(detail.price).slice(0, -3)}</td>
-              <td className="border border-gray-300 px-2 py-1 text-right">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(detail.amount * detail.price).slice(0, -3)}</td>
-            </tr>
-          ))}
+          <tr>
+            <td className="border-dashed border px-2 py-1">No. Invoice</td>
+            <td className="border-dashed border px-2 py-1">: INV-{new Date(data.created_at).toLocaleString().split(',')[0].replace(/[-:]/g, '')}-{data.id}</td>
+            <td className="border-dashed border px-2 py-1">Tanggal</td>
+            <td className="border-dashed border px-2 py-1">: {new Date(data.created_at).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td className="border-dashed border px-2 py-1">Status</td>
+            <td className="border-dashed border px-2 py-1">: {
+              data.status === 'Approved' ? 'Disetujui' :
+              data.status === 'Pending' ? 'Menunggu' : 'Ditolak'
+            }</td>
+            <td className="border-dashed border px-2 py-1">Petugas</td>
+            <td className="border-dashed border px-2 py-1">: {data.user.username}</td>
+          </tr>
+          <tr>
+            <td className="border-dashed border px-2 py-1">Deskripsi</td>
+            <td className="border-dashed border px-2 py-1" colSpan={3}>: {data.desc}</td>
+          </tr>
         </tbody>
       </table>
 
-      <div className="text-right mt-6">
-        <p className="text-lg font-bold">Total Harga Item: {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(data.price).slice(0, -3)}</p>
+      {/* Items Table */}
+      <table className="w-full text-sm border-dashed border-collapse mb-4">
+        <thead>
+          <tr>
+            <th className="border-dashed border px-2 py-1 text-left">Bahan Baku</th>
+            <th className="border-dashed border px-2 py-1">Satuan</th>
+            <th className="border-dashed border px-2 py-1 text-right">Qty</th>
+            <th className="border-dashed border px-2 py-1 text-right">Harga</th>
+            <th className="border-dashed border px-2 py-1 text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.DetailOrderMaterialUnit.map((detail: any) => (
+            <tr key={detail.id}>
+              <td className="border-dashed border px-2 py-1">{detail.materialUnit.material.name}</td>
+              <td className="border-dashed border px-2 py-1 text-center">{detail.materialUnit.unit.name}</td>
+              <td className="border-dashed border px-2 py-1 text-right">{detail.amount}</td>
+              <td className="border-dashed border px-2 py-1 text-right">{new Intl.NumberFormat('id-ID').format(detail.price)}</td>
+              <td className="border-dashed border px-2 py-1 text-right">{new Intl.NumberFormat('id-ID').format(detail.amount * detail.price)}</td>
+            </tr>
+          ))}
+          <tr>
+            <td colSpan={4} className="border-dashed border px-2 py-1 text-right font-bold">Total:</td>
+            <td className="border-dashed border px-2 py-1 text-right font-bold">
+              {new Intl.NumberFormat('id-ID').format(data.price)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Signatures */}
+      <div className="grid grid-cols-2 gap-4 text-center mt-8">
+        <div>
+          <p className="mb-12">Penerima,</p>
+          <p>(_________________)</p>
+        </div>
+        <div>
+          <p className="mb-12">Petugas,</p>
+          <p>({data.user.username})</p>
+        </div>
       </div>
+
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: 140mm 210mm;
+            margin: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+          }
+          table {
+            border-collapse: collapse;
+          }
+          td, th {
+            border-style: dashed;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -20,7 +20,8 @@ export default function PageStockMaterial() {
           <Tabs defaultValue="inventory">
             <TabsList>
               <TabsTrigger value="inventory">Stok Bahan Baku</TabsTrigger>
-              <TabsTrigger value="order">Order Bahan Baku</TabsTrigger>
+              <TabsTrigger value="laporan-entry">Laporan Entry Bahan Baku</TabsTrigger>
+              <TabsTrigger value="order">Laporan PO Bahan Baku</TabsTrigger>
             </TabsList>
             <TabsContent value="inventory">
               <Inventory />

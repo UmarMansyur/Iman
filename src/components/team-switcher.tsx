@@ -21,7 +21,6 @@ import {
 import Link from "next/link";
 import { useUserStore } from "@/store/user-store";
 import { Factory } from "@/lib/definitions";
-import FormPabrik from "@/components/views/form-pabrik";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
@@ -124,9 +123,6 @@ export function TeamSwitcher() {
               </Link>
             ))}
             <DropdownMenuSeparator />
-            <div className="p-2">
-              <FormPabrik />
-            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

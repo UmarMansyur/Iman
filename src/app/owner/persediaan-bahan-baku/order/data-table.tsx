@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table-pagination";
 import { useTableStore } from "@/store/table-store";
+import EmptyData from "@/components/views/empty-data";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -42,7 +43,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [pageSize, setPageSize] = React.useState(pagination.limit);
   const { sorting: sortingState, setSorting } = useTableStore();
-  
+
   const table = useReactTable({
     data,
     columns,
@@ -54,7 +55,7 @@ export function DataTable<TData, TValue>({
       },
     },
     onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
+      if (typeof updater === "function") {
         const newState = updater({
           pageIndex: pagination.page - 1,
           pageSize: pageSize,
@@ -63,7 +64,8 @@ export function DataTable<TData, TValue>({
       }
     },
     onSortingChange: (updater) => {
-      const newState = typeof updater === 'function' ? updater(sortingState) : updater;
+      const newState =
+        typeof updater === "function" ? updater(sortingState) : updater;
       setSorting(newState);
       if (newState.length > 0) {
         const sort = newState[0];
@@ -85,7 +87,10 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                      <TableHead key={header.id} className="text-black text-[13px] font-bold uppercase">
+                    <TableHead
+                      key={header.id}
+                      className="text-black text-[13px] font-bold uppercase"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -121,14 +126,14 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Tidak ada data
+                  <EmptyData text="Tidak ada data PO" />
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination 
+      <DataTablePagination
         table={table}
         pageSize={pageSize}
         setPageSize={(size) => {
@@ -139,4 +144,3 @@ export function DataTable<TData, TValue>({
     </div>
   );
 }
-

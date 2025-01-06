@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -14,15 +14,22 @@ import { Mail, Lock } from "lucide-react";
 import { useActionState } from "react";
 import { login } from "../actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
+import Image from "next/image";
 
 const LoginPage = () => {
   const [state, action] = useActionState(login, undefined);
-
+  // setting headernya
+  useEffect(() => {
+    document.title = "Login - Indera Distribution";
+  }, []);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
+            <div className="flex items-center justify-center">
+              <Image src="/logo.svg" alt="logo" width={100} height={100} />
+            </div>
             Login
           </CardTitle>
           <CardDescription className="text-center">
@@ -42,7 +49,7 @@ const LoginPage = () => {
                   className="pl-10"
                   name="email"
                 />
-                { state?.errors?.email && <p className="text-red-500">{state.errors.email}</p>}
+                <small className="text-red-500">{state?.errors?.email && state.errors.email}</small>
               </div>
             </div>
             <div className="space-y-2">
@@ -56,8 +63,9 @@ const LoginPage = () => {
                   className="pl-10"
                   name="password"
                 />
-                { state?.errors?.password && <p className="text-red-500">{state.errors.password}</p>}
+                <small className="text-red-500">{state?.errors?.password && state.errors.password}</small>
               </div>
+              <small className="text-red-500">{state?.message && state.message}</small>
             </div>
             <div className="flex items-center space-x-2 my-3">
               <input
