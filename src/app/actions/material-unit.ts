@@ -11,6 +11,7 @@ export default async function createMaterialUnit(
     id: formData.get("id"),
     material_id: formData.get("material_id"),
     unit_id: formData.get("unit_id"),
+    factory_id: formData.get("factory_id")
   });
 
   if (!validatedFields.success) {
@@ -19,13 +20,30 @@ export default async function createMaterialUnit(
     };
   }
 
-  const { id, material_id, unit_id } = validatedFields.data;
+  const { id, material_id, unit_id, factory_id } = validatedFields.data;
   try {
+    const existingMaterial: any = await prisma.material.findFirst({
+      where: {
+        factory_id: parseInt(factory_id),
+        name: material_id
+      }
+    });
+
+    if (!existingMaterial) {
+      const material = await prisma.material.create({
+        data: {
+          name: material_id,
+          factory_id: parseInt(factory_id),
+        },
+      });
+      existingMaterial.id = material.id;
+    }
+
     if (id) {
       await prisma.materialUnit.update({
         where: { id: parseInt(id) },
         data: {
-          material_id: parseInt(material_id),
+          material_id: parseInt(existingMaterial.id),
           unit_id: parseInt(unit_id),
         },
       });
@@ -35,7 +53,7 @@ export default async function createMaterialUnit(
     }
     await prisma.materialUnit.create({
       data: {
-        material_id: parseInt(material_id),
+        material_id: parseInt(existingMaterial.id),
         unit_id: parseInt(unit_id),
       },
     });

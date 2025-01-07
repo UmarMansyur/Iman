@@ -16,7 +16,14 @@ import { Pencil, PlusCircle } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
 import toast from "react-hot-toast";
 import { ProductType } from "@prisma/client";
-import { Select, SelectItem, SelectContent, SelectGroup, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectItem,
+  SelectContent,
+  SelectGroup,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import createProduct from "@/app/actions/product";
 import { useUserStore } from "@/store/user-store";
 
@@ -24,15 +31,48 @@ export default function Form({
   product,
   fetchData,
 }: {
-  product?: { id: number; name: string; type: ProductType, price: number };
+  product?: { id: number; name: string; type: ProductType; price: number };
   fetchData: () => Promise<void>;
 }) {
   const [state, setState] = useState<ProductFormState>();
   const { user } = useUserStore();
+  const [selectedUnit, setSelectedUnit] = useState("Pack");
   const [loading, setLoading] = useState(false);
   const formatPrice = (value: string) => {
-    const number = value.replace(/\D/g, '');
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const number = value.replace(/\D/g, "");
+    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const convertPrice = (value: number, to: string) => {
+    let result = 0;
+    if (selectedUnit === "Bal") {
+      result = value / 200;
+    } else if (selectedUnit === "Karton") {
+      result = value / 800;
+    } else if (selectedUnit === "Slop") {
+      result = value / 10;
+    } else if (selectedUnit === "Pack") {
+      result = value;
+    }
+
+    if (to === "Pack") {
+      return result;
+    } else if (to === "Bal") {
+      return result * 200;
+    } else if (to === "Slop/Press") {
+      return result * 10;
+    } else if (to === "Karton") {
+      return result * 800;
+    } else {
+      return result;
+    }
+  };
+
+  const handleUnitChange = (value: string) => {
+    const priceInput = document.getElementById("price") as HTMLInputElement;
+    const price = convertPrice(Number(priceInput.value.replace(/\./g, "")), value);
+    setSelectedUnit(value);
+    priceInput.value = price.toLocaleString("id-ID").replace(/,/g, ".");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,13 +80,23 @@ export default function Form({
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const price = formData.get('price')?.toString().replace(/\./g, '') || '';
-    formData.set('price', price);
+    const price = formData.get("price")?.toString().replace(/\./g, "") || "";
+
+    if (selectedUnit === "Pack") {
+      formData.set("price", price);
+    } else if (selectedUnit === "Bal") {
+      formData.set("price", (Number(price) / 200).toString());
+    } else if (selectedUnit === "Slop/Press") {
+      formData.set("price", (Number(price) / 10).toString());
+    } else if (selectedUnit === "Karton") {
+      formData.set("price", (Number(price) / 800).toString());
+    }
+
     formData.append("id", product?.id?.toString() || "");
     formData.append("factory_id", user?.factory_selected?.id?.toString() || "");
 
     const response = await createProduct(undefined, formData);
-    
+
     if (response?.errors) {
       setState(response.errors as ProductFormState);
       toast.error(
@@ -94,7 +144,7 @@ export default function Form({
                 id="name"
                 name="name"
                 defaultValue={product?.name}
-                placeholder="Masukkan nama"
+                placeholder="Masukkan Nama"
                 className="col-span-3"
               />
               {state?.errors?.name && (
@@ -106,15 +156,15 @@ export default function Form({
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type">Jenis</Label>
               <Select name="type" defaultValue={product?.type}>
-               <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Pilih jenis" />
-               </SelectTrigger>
-               <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="Kretek">Kretek</SelectItem>
-                  <SelectItem value="Gabus">Gabus</SelectItem>
-                </SelectGroup>
-               </SelectContent>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Pilih Jenis" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="Kretek">Kretek</SelectItem>
+                    <SelectItem value="Gabus">Gabus</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
               </Select>
               {state?.errors?.type && (
                 <p className="text-red-500 col-span-3 col-start-2">
@@ -123,12 +173,28 @@ export default function Form({
               )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="price">Harga /Pack</Label>
-              <Input 
-                id="price" 
-                name="price" 
-                defaultValue={product?.price?.toLocaleString('id-ID').replace(/,/g, '.')}
-                placeholder="Masukkan harga" 
+              <Label htmlFor="price">Satuan Harga</Label>
+              <Select value={selectedUnit} onValueChange={handleUnitChange}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Pilih Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pack">Pack</SelectItem>
+                  <SelectItem value="Bal">Bal</SelectItem>
+                  <SelectItem value="Slop/Press">Slop/Press</SelectItem>
+                  <SelectItem value="Karton">Karton</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="price">Harga</Label>
+              <Input
+                id="price"
+                name="price"
+                defaultValue={product?.price
+                  ?.toLocaleString("id-ID")
+                  .replace(/,/g, ".")}
+                placeholder="Rp. 0"
                 className="col-span-3"
                 onChange={(e) => {
                   e.target.value = formatPrice(e.target.value);
@@ -151,7 +217,11 @@ export default function Form({
                 Batal
               </Button>
             </DialogClose>
-            <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={loading}>
+            <Button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-600"
+              disabled={loading}
+            >
               Simpan
             </Button>
           </DialogFooter>

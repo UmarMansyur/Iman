@@ -60,10 +60,6 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
       if (!user?.factory_selected?.id) {
         throw new Error("Pilih pabrik terlebih dahulu");
       }
-
-      // jika jenis satuan adalah bal maka kalikan 200
-      // jika jenis satuan adalah press maka kalikan 10
-      // jika jenis karton maka kalikan 800
       let amount = 0;
       if (selectedUnit === "Bal") {
         amount = parseFloat(shiftAmount.replace(/,/g, "")) * 200;

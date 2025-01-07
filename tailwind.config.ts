@@ -17,10 +17,10 @@ export default {
   theme: {
   	extend: {
   		colors: {
-				primary2: '#4880FF',
-				secondary2: '#FEC53D',
-				success2: '#4AD991',
-				danger2: '#FF9066',
+  			primary2: '#4880FF',
+  			secondary2: '#FEC53D',
+  			success2: '#4AD991',
+  			danger2: '#FF9066',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

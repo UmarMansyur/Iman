@@ -57,6 +57,7 @@ model User {
   LocationDistributor          LocationDistributor[]
   Notification                 Notification[]
   InvoiceJasa                  InvoiceJasa[]
+  TransactionService           TransactionService[]
 
   @@map("users")
 }
@@ -94,6 +95,7 @@ model Factory {
   Material               Material[]
   Jasa                   Jasa[]
   InvoiceJasa            InvoiceJasa[]
+  Service                Service[]
 
   @@map("factories")
 }
@@ -448,14 +450,15 @@ enum PPNStatus {
 }
 
 model Buyer {
-  id         Int       @id @default(autoincrement())
-  factory    Factory   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id Int
-  name       String
-  address    String
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  Invoice    Invoice[]
+  id                 Int                  @id @default(autoincrement())
+  factory            Factory              @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id         Int
+  name               String
+  address            String
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  Invoice            Invoice[]
+  TransactionService TransactionService[]
 
   @@map("buyers")
 }
@@ -497,16 +500,6 @@ model Invoice {
   DetailInvoiceJasa      DetailInvoiceJasa[]
 
   @@map("invoices")
-}
-
-model Service {
-  id         Int      @id @default(autoincrement())
-  name       String
-  price      Float
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@map("services")
 }
 
 model DetailInvoice {
@@ -746,4 +739,50 @@ model DetailTransactionDistributor {
   updated_at                 DateTime               @updatedAt
 
   @@map("detail_transaction_distributors")
+}
+
+model TransactionService {
+  id                       Int                        @id @default(autoincrement())
+  transaction_code         String                     @unique
+  user                     User                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                  Int
+  buyer                    Buyer                      @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id                 Int
+  amount                   Float
+  down_payment             Float?                     @default(0)
+  remaining_balance        Float?                     @db.Double
+  desc                     String
+  created_at               DateTime                   @default(now())
+  updated_at               DateTime                   @updatedAt
+  DetailTransactionService DetailTransactionService[]
+
+  @@map("transaction_services")
+}
+
+model DetailTransactionService {
+  id                     Int                @id @default(autoincrement())
+  transactionService     TransactionService @relation(fields: [transaction_service_id], references: [id], onDelete: Cascade)
+  transaction_service_id Int
+  desc                   String
+  amount                 Float
+  price                  Float
+  service                Service            @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  service_id             Int
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+
+  @@map("detail_transaction_services")
+}
+
+model Service {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  price                    Float
+  factory                  Factory                    @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
+  created_at               DateTime                   @default(now())
+  updated_at               DateTime                   @updatedAt
+  DetailTransactionService DetailTransactionService[]
+
+  @@map("services")
 }

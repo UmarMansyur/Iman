@@ -309,6 +309,7 @@ export type MaterialUnit = {
 
 export const MaterialUnitSchema = z.object({
   id: z.string().optional(),
+  factory_id: z.string(),
   material_id: z.string(),
   unit_id: z.string(),
 });
@@ -319,6 +320,7 @@ export type MaterialUnitFormState =
         id?: string[];
         material_id?: string[];
         unit_id?: string[];
+        factory_id: string[];
       };
       message?: string;
     }

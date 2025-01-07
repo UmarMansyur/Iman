@@ -9,7 +9,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Trash } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "./ui/button";
@@ -18,6 +17,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useState } from "react";
 
 export default function DeleteButtonQuery({
   endpoint,
@@ -36,17 +36,23 @@ export default function DeleteButtonQuery({
     });
   };
 
+  const [isOpen, setIsOpen] = useState(false);
   const useDelete = (): UseBaseMutationResult => {
     const queryClient = useQueryClient();
+
     return useMutation({
       mutationFn: () => handleDelete(id),
       onSuccess: () => {
+        console.log("Delete successful");
         toast.success("Data berhasil dihapus!");
         queryClient.invalidateQueries({ queryKey: [queryKey] });
+        setIsOpen(false);
+        console.log("Dialog closed:", isOpen);
       },
       onError: (error) => {
+        console.error("Delete error:", error);
         toast.error(error.message);
-      }
+      },
     });
   };
 
@@ -62,15 +68,16 @@ export default function DeleteButtonQuery({
       Hapus
     </Button>
   ) : (
-    <AlertDialog>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          onSelect={(e) => e.preventDefault()}
-          className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2"
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2 w-full justify-start hover:text-red-500"
+          onClick={() => setIsOpen(true)}
         >
           <Trash className="w-4 h-4 mr-1" />
           Hapus
-        </DropdownMenuItem>
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

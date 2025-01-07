@@ -39,9 +39,40 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
   const { user } = useUserStore();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState("Pack");
   const [selectedProduct, setSelectedProduct] = useState(
     row.original.product_id
   );
+  const convertAmount = (amount: number, to: string) => {
+    let result = 0;
+    if(selectedUnit === "Bal") {
+      result = amount * 200;
+    } else if(selectedUnit === "Karton") {
+      result = amount * 800;
+    } else if(selectedUnit === "Slop") {
+      result = amount * 10;
+    } else if(selectedUnit === "Pack") {
+      result = amount;
+    }
+
+    if(to === "Pack") {
+      return result;
+    }
+
+    if(to === "Bal") {
+      return result / 200;
+    }
+
+    if(to === "Karton") {
+      return result / 800;
+    }
+
+    if(to === "Slop") {
+      return result / 10;
+    }
+
+    return result;
+  };
 
   // Form states
   const [morningAmount, setMorningAmount] = useState(
@@ -51,53 +82,19 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     row.original.afternoon_shift_amount?.toString() || ""
   );
 
-  // Tambahkan array untuk opsi jam dan menit
-
-  const minutes = Array.from({ length: 60 }, (_, i) =>
-    i.toString().padStart(2, "0")
-  );
-
-  const morningHours = Array.from({ length: 13 }, (_, i) => 
-    (i + 1).toString().padStart(2, '0')
-  );
-  
-  const afternoonHours = Array.from({ length: 11 }, (_, i) => 
-    (i + 14).toString().padStart(2, '0')
-  );
-
-  // Pisahkan waktu menjadi jam dan menit
-  const [morningHour, setMorningHour] = useState(
-    row.original.morning_shift_time
-      ? new Date(row.original.morning_shift_time)
-          .getHours()
-          .toString()
-          .padStart(2, "0")
-      : ""
-  );
-  const [morningMinute, setMorningMinute] = useState(
-    row.original.morning_shift_time
-      ? new Date(row.original.morning_shift_time)
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")
-      : ""
-  );
-  const [afternoonHour, setAfternoonHour] = useState(
-    row.original.afternoon_shift_time
-      ? new Date(row.original.afternoon_shift_time)
-          .getHours()
-          .toString()
-          .padStart(2, "0")
-      : ""
-  );
-  const [afternoonMinute, setAfternoonMinute] = useState(
-    row.original.afternoon_shift_time
-      ? new Date(row.original.afternoon_shift_time)
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")
-      : ""
-  );
+  const handleSelectUnit = (value: string) => {
+    const morning = convertAmount(
+      parseFloat((`${morningAmount}`).replace(/,/g, "")),
+      value
+    );
+    const afternoon = convertAmount(
+      parseFloat((`${afternoonAmount}`).replace(/,/g, "")),
+      value
+    );
+    setMorningAmount(morning);
+    setAfternoonAmount(afternoon);
+    setSelectedUnit(value);
+  };
 
   const formatNumber = (value: string) => {
     const number = value.replace(/\D/g, "");
@@ -109,22 +106,15 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     setIsSubmitting(true);
 
     try {
-      const morningTime =
-        morningHour && morningMinute ? `${morningHour}:${morningMinute}` : null;
-      const afternoonTime =
-        afternoonHour && afternoonMinute
-          ? `${afternoonHour}:${afternoonMinute}`
-          : null;
-
       const payload: any = {
         morning_shift_amount: morningAmount
-          ? parseFloat(morningAmount.replace(/,/g, ""))
+          ? morningAmount
           : null,
-        morning_shift_time: morningTime,
+        morning_shift_time: "12:00:00",
         afternoon_shift_amount: afternoonAmount
-          ? parseFloat(afternoonAmount.replace(/,/g, ""))
+          ? afternoonAmount
           : null,
-        afternoon_shift_time: afternoonTime,
+        afternoon_shift_time: "16:00:00",
       };
 
       // check apakah morning_shift_user_id atau afternoon_shift_user_id ada
@@ -159,7 +149,6 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     }
   };
 
-
   return (
     <>
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -177,10 +166,13 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogTitle>Edit Laporan Produksi</DialogTitle>
           <DialogDescription>
-            Perbarui informasi laporan produksi
+            Secara default, laporan produksi akan dikonversi ke jumlah <b className="text-blue-500 font-bold">Pack</b>.
+            Tapi jangan khawatir, jika anda ingin mengubah jumlah produksi
+            dengan satuan yang lain, anda dapat mengubah satuan produksi dibawah
+            ini.
           </DialogDescription>
 
           <form onSubmit={handleUpdate} className="space-y-4">
@@ -208,6 +200,22 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Pilih Jenis Satuan</Label>
+              <Select value={selectedUnit} onValueChange={handleSelectUnit}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Satuan">
+                    {selectedUnit}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pack">Pack</SelectItem>
+                  <SelectItem value="Bal">Bal</SelectItem>
+                  <SelectItem value="Karton">Karton</SelectItem>
+                  <SelectItem value="Slop">Slop</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -221,51 +229,9 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                       setMorningAmount(formatNumber(value));
                     }
                   }}
-                  placeholder="Jumlah produksi shift pagi"
+                  disabled={row.original.morning_shift_user?.id != user?.id}
+                  placeholder={`Jumlah produksi shift pagi`}
                 />
-                <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">
-                    Waktu Shift Pagi
-                  </Label>
-                  <div className="flex gap-2 w-full">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select
-                        value={morningHour}
-                        onValueChange={setMorningHour}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Jam" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {morningHours.map((hour) => (
-                            <SelectItem key={hour} value={hour}>
-                              {hour}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select
-                        value={morningMinute}
-                        onValueChange={setMorningMinute}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Menit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {minutes.map((minute) => (
-                            <SelectItem key={minute} value={minute}>
-                              {minute}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
               </div>
               <div className="space-y-2">
                 <Label>Shift Siang</Label>
@@ -280,49 +246,6 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   }}
                   placeholder="Jumlah produksi shift siang"
                 />
-                <div className="space-y-1">
-                  <Label className="text-sm text-gray-500">
-                    Waktu Shift Siang
-                  </Label>
-                  <div className="flex gap-2 w-full">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Jam</Label>
-                      <Select
-                        value={afternoonHour}
-                        onValueChange={setAfternoonHour}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Jam" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {afternoonHours.map((hour) => (
-                            <SelectItem key={hour} value={hour}>
-                              {hour}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Menit</Label>
-                      <Select
-                        value={afternoonMinute}
-                        onValueChange={setAfternoonMinute}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Menit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {minutes.map((minute) => (
-                            <SelectItem key={minute} value={minute}>
-                              {minute}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 

@@ -5,14 +5,12 @@ import { useState, useCallback, useMemo } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Loader2, PlusCircle, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 type TransactionFilters = {
@@ -117,7 +115,7 @@ export default function TransactionPage() {
       ) : (
         <Card>
           <CardHeader className="border-b p-4 mb-2">
-            <h4 className="text-base font-semibold mb-0">Transaksi Produk</h4>
+            <h4 className="text-base font-semibold mb-0">Daftar Transaksi Produk</h4>
             <p className="text-xs text-muted-foreground">
               Transaksi produk yang telah dilakukan dapat dilihat detailnya dengan mengklik tombol detail.
             </p>
@@ -135,12 +133,6 @@ export default function TransactionPage() {
                 />
               </div>
             </div>
-            <Link href="/operator/transaksi/create">
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Tambah Transaksi
-              </Button>
-            </Link>
           </div>
           {isLoading ? (
             <div className="flex justify-center items-center h-24">

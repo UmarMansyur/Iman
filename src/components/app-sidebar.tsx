@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  Blocks,
   CheckCheckIcon,
   Combine,
   Database,
@@ -15,6 +16,7 @@ import {
   Settings,
   ShoppingBagIcon,
   SquareKanban,
+  SquarePercent,
   Truck,
   Users,
 } from "lucide-react";
@@ -156,6 +158,10 @@ const data = {
       icon: Combine,
       items: [
         {
+          title: "Daftar Bahan Baku",
+          url: "/operator/bahan-baku",
+        },
+        {
           title: "Persediaan Bahan Baku",
           url: "/operator/persediaan-bahan-baku",
         },
@@ -208,7 +214,7 @@ const data = {
       ]
     },
     {
-      title: "Manajemen Transaksi",
+      title: "Transaksi Produk",
       url: "/operator/transaksi",
       icon: ShoppingBagIcon,
       items: [  
@@ -220,13 +226,18 @@ const data = {
           title: "Pengiriman",
           url: "/operator/transaksi/pengiriman",
         },
-      ]
+      ],
     },
-    // {
-    //   title: "Data Lokasi Pengiriman",
-    //   url: "/operator/lokasi-pengiriman",
-    //   icon: MapPin,
-    // }
+    {
+      title: "Layanan Jasa",
+      url: "/operator/service",
+      icon: SquarePercent
+    },
+    {
+      title: "Transaksi Jasa",
+      url: "/operator/transaksi-jasa",
+      icon: Blocks
+    }
   ],
   navDistributor: [
     {

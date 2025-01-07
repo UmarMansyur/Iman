@@ -23,11 +23,13 @@ export const columns = (
     ),
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.created_at ? new Date(data.created_at).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }) : "-";
+      return data.created_at
+        ? new Date(data.created_at).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "-";
     },
   },
   {
@@ -39,40 +41,40 @@ export const columns = (
       return (
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0">
-            {
-              morningOperator && (
-                <Avatar className={`${afternoonOperator ? "absolute z-10" : ""}`}>
-              <AvatarImage src={morningOperator?.thumbnail} />
-              <AvatarFallback>{morningOperator?.username?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )
-            }
-            {
-              afternoonOperator && (
-                <Avatar className={`${morningOperator ? "relative left-4" : ""}`}>
-              <AvatarImage src={afternoonOperator?.thumbnail} />
-              <AvatarFallback>{afternoonOperator?.username?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )
-            }
+            {morningOperator && (
+              <Avatar className={`${afternoonOperator ? "absolute z-10" : ""}`}>
+                <AvatarImage src={morningOperator?.thumbnail} />
+                <AvatarFallback>
+                  {morningOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {afternoonOperator && (
+              <Avatar className={`${morningOperator ? "relative left-4" : ""}`}>
+                <AvatarImage src={afternoonOperator?.thumbnail} />
+                <AvatarFallback>
+                  {afternoonOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
           </div>
           <div>
-            {
-              morningOperator && (
-                <>
-                  <p>{morningOperator?.username} (Pagi)</p>
-                  <p className="text-sm text-muted-foreground">{morningOperator?.email}</p>
-                </>
-              )
-            }
-            {
-              afternoonOperator && (
-                <>
-                  <p>{afternoonOperator?.username} (Siang)</p>
-                  <p className="text-sm text-muted-foreground">{afternoonOperator?.email}</p>
-                </>
-              )
-            }
+            {morningOperator && (
+              <>
+                <p>{morningOperator?.username} (Pagi)</p>
+                <p className="text-sm text-muted-foreground">
+                  {morningOperator?.email}
+                </p>
+              </>
+            )}
+            {afternoonOperator && (
+              <>
+                <p>{afternoonOperator?.username} (Siang)</p>
+                <p className="text-sm text-muted-foreground">
+                  {afternoonOperator?.email}
+                </p>
+              </>
+            )}
           </div>
         </div>
       );
@@ -90,54 +92,80 @@ export const columns = (
   },
   {
     accessorKey: "morning_shift_amount",
-    header: "Jumlah Produksi Pagi(Pack)",
+    header: "Jumlah Produksi Pagi",
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.morning_shift_amount ? data.morning_shift_amount.toLocaleString("id-ID") : "-";
+      // buat html
+      return (
+        <>
+          {data.morning_shift_amount ? (
+            <>
+              {new Intl.NumberFormat("id-ID").format(
+                data.morning_shift_amount
+              ) +
+                " " +
+                "Pack"}
+              /
+              {new Intl.NumberFormat("id-ID").format(
+                data.morning_shift_amount / 200
+              ) +
+                " " +
+                "Bal"}
+            </>
+          ) : (
+            "-"
+          )}
+        </>
+      );
     },
   },
   {
     accessorKey: "afternoon_shift_amount",
-    header: "Jumlah Produksi Siang(Pack)",
+    header: "Jumlah Produksi Siang",
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.afternoon_shift_amount ? data.afternoon_shift_amount.toLocaleString("id-ID") : "-";
+      return (
+        <div>
+          {data.afternoon_shift_amount ? (
+            <>
+              {new Intl.NumberFormat("id-ID").format(
+                data.afternoon_shift_amount
+              ) +
+                " " +
+                "Pack"}
+              /
+              {new Intl.NumberFormat("id-ID").format(
+                data.afternoon_shift_amount / 200
+              ) +
+                " " +
+                "Bal"}
+            </>
+          ) : (
+            "-"
+          )}
+        </div>
+      );
     },
   },
   {
     accessorKey: "total_amount",
     header: "Total Produksi",
     cell: ({ row }) => {
-      const data = row.original as any;
-      const totalAmount = (data.morning_shift_amount || 0) + (data.afternoon_shift_amount || 0);
-      return totalAmount ? totalAmount.toLocaleString("id-ID") : "-";
-    },
-  },
-  {
-    accessorKey: "morning_shift_time",
-    header: "Waktu Pelaporan Pagi",
-    cell: ({ row }) => {
-      const data = row.original as any;
-      return data.morning_shift_time ? new Date(data.morning_shift_time).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) : "-";
-    },
-  },
-  {
-    accessorKey: "afternoon_shift_time",
-    header: "Waktu Pelaporan Siang",
-    cell: ({ row }) => {
-      const data = row.original as any;
-      return data.afternoon_shift_time ? new Date(data.afternoon_shift_time).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) : "-";
+      const data = row.original as any; 
+      const totalAmount =
+        (data.morning_shift_amount || 0) +
+        (data.afternoon_shift_amount || 0) +
+        " Pack" + " /" +
+        (data.morning_shift_amount / 200 || 0) + " Bal" + " /" +
+        (data.afternoon_shift_amount / 200 || 0) + " Bal"
+      return totalAmount ? totalAmount : "-";
     },
   },
   {
     accessorKey: "action",
     header: "Aksi",
-    cell: ({ row }) => <ActionCell row={row} fetchData={fetchData} products={products} />, 
+    cell: ({ row }) => (
+      <ActionCell row={row} fetchData={fetchData} products={products} />
+    ),
   },
 ];

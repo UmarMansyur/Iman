@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 
 export default function Form({
   materialUnit,
@@ -46,7 +47,7 @@ export default function Form({
   const [state, setState] = useState<MaterialUnitFormState>();
   const { user } = useUserStore();
   const [unitOpen, setUnitOpen] = useState(false);
-  const [material, setMaterial] = useState<Material | null>(null);
+  const [material, setMaterial] = useState<string | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,7 +55,7 @@ export default function Form({
     const formData = new FormData(e.currentTarget);
     formData.append("id", materialUnit?.id.toString() || "");
     formData.append("factory_id", user?.factory_selected?.id?.toString() || "");
-    formData.append("material_id", material?.id.toString() || "");
+    formData.append("material_id", material || "");
     formData.append("unit_id", selectedUnit?.id.toString() || "");
     const response = await createMaterialUnit(undefined, formData);
     if (response?.errors) {
@@ -114,7 +115,7 @@ export default function Form({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="material">Bahan Baku</Label>
-              <input type="text" name="material_id" id="material_id" className="col-span-3" value={material?.name || ""} onChange={(e: any) => setMaterial(e.target.value)}/>
+              <Input type="text" name="material_id" id="material_id" className="col-span-3" value={material || ""} onChange={(e: any) => setMaterial(e.target.value)}/>
               {state?.errors?.material_id && <p className="text-red-500 text-sm">{state.errors.material_id.join(", ")}</p>}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

@@ -12,6 +12,8 @@ import { useUserStore } from "@/store/user-store";
 import MainPage from "@/components/main";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Form from './form';
+import toast from "react-hot-toast";
+import { redirect } from "next/navigation";
 
 export default function LaporanProduksiPage() {
   const [data, setData] = useState<any>([]);
@@ -73,11 +75,15 @@ export default function LaporanProduksiPage() {
   };
 
   const [products, setProducts] = useState<any>([]);
-
+  
   const fetchProducts = async () => {
     if (!user) return;
     const response = await fetch("/api/product?limit=1000&factoryId=" + user?.factory_selected?.id);
     const result = await response.json();
+    if(result.products.length === 0) {
+      toast.error("Belum ada produk yang diinputkan");
+      redirect('/owner/produk');
+    }
     setProducts(result.products);
   };
 

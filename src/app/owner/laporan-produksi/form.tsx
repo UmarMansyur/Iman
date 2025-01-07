@@ -37,7 +37,6 @@ const afternoonHours = Array.from({ length: 11 }, (_, i) =>
 );
 
 export default function CreateProductionReport({ fetchData, products }: { fetchData: () => Promise<void>, products: Product[] }) {
-  // const [products, setProducts] = useState<Product[]>(products);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [isMorningShift, setIsMorningShift] = useState(true);
   const [shiftAmount, setShiftAmount] = useState("");
@@ -53,10 +52,8 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // // Get the appropriate hours based on selected shift
   const availableHours = isMorningShift ? morningHours : afternoonHours;
 
-  // Reset hour when shift changes if it's outside the valid range
   useEffect(() => {
     if (isMorningShift) {
       if (parseInt(selectedHour) > 13) {
