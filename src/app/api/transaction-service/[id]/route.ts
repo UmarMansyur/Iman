@@ -171,6 +171,7 @@ export async function GET(req: Request, { params }: { params: any }) {
       where: { transaction_code: paramsId },
       include: {
         buyer: true,
+        factory: true,
         DetailTransactionService: {
           include: {
             service: true

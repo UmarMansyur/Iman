@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/db";
+import { deleteFile } from "@/lib/imagekit";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: any }) {
@@ -247,6 +248,14 @@ export async function DELETE(req: Request, { params }: { params: any }) {
   const id = paramId.id;
 
   try {
+    const existInvoice = await prisma.invoice.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if(existInvoice?.proof_of_payment) {
+      await deleteFile(existInvoice?.proof_of_payment);
+    }
+
     await prisma.invoice.delete({
       where: { id: parseInt(id) },
     });

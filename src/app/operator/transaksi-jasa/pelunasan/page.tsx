@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -13,21 +14,20 @@ import {
 } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { debounce } from "lodash";
-import Form from "./form";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoaderScreen from "@/components/views/loader";
 import { useUserStore } from "@/store/user-store";
 
 // Type definitions for better type safety
-interface LocationFilters {
+interface ServiceFilters {
   search: string;
   sortBy: string;
   sortOrder: "asc" | "desc";
 }
 
-interface LocationData {
+interface ServiceData {
   data: any[];
   pagination: {
     page: number;
@@ -35,14 +35,13 @@ interface LocationData {
     total: number;
     totalPages: number;
   };
-  options: any;
 }
 
 export default function LokasiPengirimanPage() {
   // Separate state for local input and query parameters
   const [searchInput, setSearchInput] = useState("");
   const [queryParams, setQueryParams] = useState<
-    LocationFilters & {
+    ServiceFilters & {
       page: number;
       limit: number;
     }
@@ -56,8 +55,7 @@ export default function LokasiPengirimanPage() {
 
   const { user } = useUserStore();
 
-  // Improved fetch function with proper error handling
-  const fetchLocations = async () => {
+  const fetchServices = async () => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
     const params = new URLSearchParams({
       page: page.toString(),
@@ -66,22 +64,34 @@ export default function LokasiPengirimanPage() {
       sortBy,
       sortOrder,
     });
-    if(!user?.factory_selected?.id && !user?.id) {
-      throw new Error("Invalid user data");
+
+    if (user?.factory_selected?.id) {
+      const response = await fetch(
+        `/api/transaction-service?${params}&factory_id=${user?.factory_selected?.id}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch services");
+      }
+
+      return response.json() as Promise<ServiceData>;
+    } else {
+      return { data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 1 } };
     }
-    
-    const response = await fetch(`/api/distributor/data-produk/?${params}&factory_id=${user?.factory_selected?.id}&user_id=${user?.id}`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch distributor product");
-    }
-    return response.json() as Promise<LocationData>;
   };
 
-  const { data, isLoading, isError, error } = useQuery<LocationData>({
-    queryKey: ["product-distributor", queryParams],
-    queryFn: fetchLocations,
+  const { data, isLoading, isError, error } = useQuery<ServiceData>({
+    queryKey: ["transaction-service", queryParams],
+    queryFn: fetchServices,
     placeholderData: (previousData) => previousData,
   });
+  
+  const query = useQueryClient();
+  useEffect(() => {
+    if (user?.factory_selected?.id) {
+      query.invalidateQueries({ queryKey: ["transaction-service"] });
+    }
+  }, [user?.factory_selected?.id]);
 
   // Create a memoized debounced search function
   const debouncedSearch = useMemo(
@@ -116,7 +126,7 @@ export default function LokasiPengirimanPage() {
     }));
   };
 
-  if (isError) {
+  if (isError)
     return (
       <div>
         Error:{" "}
@@ -124,17 +134,13 @@ export default function LokasiPengirimanPage() {
       </div>
     );
 
-  }
-
-
-
   return (
     <MainPage>
       <Card>
         <CardHeader>
-          <CardTitle>Data Produk</CardTitle>
+          <CardTitle>Daftar Transaksi Layanan Jasa</CardTitle>
           <CardDescription>
-            Harga berikut dapat berubah jika anda telah mengubah data produk
+            Daftar transaksi layanan jasa yang tersedia
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -144,15 +150,12 @@ export default function LokasiPengirimanPage() {
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari produk..."
+                  placeholder="Cari layanan jasa..."
                   className="pl-8"
                   onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}
                 />
               </div>
-            </div>
-            <div>
-              <Form products={data?.options}/>
             </div>
           </div>
           {isLoading ? (
@@ -161,8 +164,7 @@ export default function LokasiPengirimanPage() {
             <DataTable
               columns={columns(
                 data?.pagination.page ?? 1,
-                data?.pagination.limit ?? 10,
-                data?.options
+                data?.pagination.limit ?? 10
               )}
               data={data?.data ?? []}
               pagination={{

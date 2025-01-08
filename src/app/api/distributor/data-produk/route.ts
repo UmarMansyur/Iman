@@ -112,7 +112,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { factory_id, product_id, user_id, price } =
+    const { factory_id, product_id, user_id, sale_price } =
       await req.json();
 
     const member_factory = await prisma.memberFactory.findFirst({
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
         member_factory_id: member_factory.id,
         product_id: parseInt(product_id),
         price: existProduct.price,
-        sale_price: Number(price),
+        sale_price: Number(sale_price),
         user_id: parseInt(user_id),
       },
     });
@@ -176,7 +176,7 @@ export async function PUT(req: Request) {
     const body = await req.json();
     const id = body.id;
 
-    const { factory_id, product_id, user_id, price } =
+    const { factory_id, product_id, user_id, sale_price } =
       body;
 
     const member_factory = await prisma.memberFactory.findFirst({
@@ -216,7 +216,7 @@ export async function PUT(req: Request) {
         factory_id: parseInt(factory_id),
         member_factory_id: member_factory.id,
         product_id: parseInt(product_id),
-        sale_price: Number(price),
+        sale_price: Number(sale_price),
         user_id: parseInt(user_id),
       },
     });

@@ -2,14 +2,7 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Printer } from "lucide-react";
-import DeleteButtonQuery from "@/components/DeleteButton";
-import Link from "next/link";
+import Detail from "./components/detail";
 export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
@@ -90,7 +83,23 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
           })
             .format(data.remaining_balance)
             .slice(0, -3)
-        : "-";
+        : "Rp. 0";
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const data = row.original as any;
+      return data.status === "Pending"
+        ? "Menunggu Konfirmasi"
+        : data.status === "Paid"
+        ? "Dibayar Sebagian"
+        : data.status === "Canceled"
+        ? "Dibatalkan"
+        : data.status === "Paid_Off"
+        ? "Lunas"
+        : "";
     },
   },
   {
@@ -112,72 +121,12 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     },
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const data = row.original as any;
-      return data.status === "Pending"
-        ? "Menunggu Konfirmasi"
-        : data.status === "Paid"
-        ? "Dibayar"
-        : data.status === "Canceled"
-        ? "Dibatalkan"
-        : data.status === "Paid_Off"
-        ? "Lunas"
-        : "";
-    },
-  },
-  {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
       const data = row.original as any;
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="rounded-md p-2 cursor-pointer">
-              <MoreHorizontal className="w-4 h-4" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {/* cetak kecil */}
-            <Link
-              href={"/operator/transaksi-jasa/print-kecil/" + data.transaction_code}
-              className="hover:bg-gray-100"
-              target="_blank"
-            >
-              <div className="flex p-2 items-center hover:bg-gray-50">
-                <Printer className="w-4 h-4 mr-3"></Printer>
-                <span>Cetak Kecil</span>
-              </div>
-            </Link>
-            {/* cetak besar */}
-            <Link
-              href={"/operator/transaksi-jasa/print-besar/" + data.transaction_code}
-              className="hover:bg-gray-100"
-              target="_blank"
-            >
-              <div className="flex p-2 items-center hover:bg-gray-50">
-                <Printer className="w-4 h-4 mr-3"></Printer>
-                <span>Cetak Besar</span>
-              </div>
-            </Link>
-            <Link
-              href={"/operator/transaksi-jasa/edit/" + data.transaction_code}
-              className="hover:bg-gray-100"
-            >
-              <div className="flex p-2 items-center hover:bg-gray-50">
-                <Pencil className="w-4 h-4 mr-3"></Pencil>
-                <span>Edit</span>
-              </div>
-            </Link>
-            <DeleteButtonQuery
-              endpoint="transaction-service"
-              id={data?.id.toString()}
-              queryKey="transaction-service"
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Detail data={data} />
       );
     },
   },

@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import toast from "react-hot-toast";
+import { redirect } from "next/navigation";
 
 export default function CreateTransaction() {
   const { user } = useUserStore();
@@ -219,7 +220,16 @@ export default function CreateTransaction() {
       setRemainingPayment(0);
       setPaymentMethod("");
       setSelectedBuyer("");
-
+      setSelectedProduct(undefined);
+      setIsProduct(true);
+      setCart([]);
+      setPaymentMethod("");
+      setSelectedBuyer("");
+      setSelectedProduct(undefined);
+      setIsProduct(true);
+      setCart([]);
+      setDeliveryCost(0);
+      redirect("/distributor/transaksi");
     } catch (error: any) {
       toast.error(error.message || "Terjadi kesalahan");
     } finally {

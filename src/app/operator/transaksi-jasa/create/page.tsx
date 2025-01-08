@@ -135,6 +135,10 @@ export default function TransaksiJasa() {
       setFilteredService([]);
     }
   };
+  
+  const handleCancel = () => {
+    redirect("/operator/transaksi-jasa");
+  };
 
   const fetchDataBuyer = async () => {
     try {
@@ -803,7 +807,7 @@ export default function TransaksiJasa() {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 mt-6">
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" onClick={handleCancel}>
               Batal
             </Button>
             <Button type="button" onClick={handleSave}>

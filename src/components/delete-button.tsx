@@ -9,10 +9,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import { Trash } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "./ui/button";
+import { useState } from "react";
 
 export default function DeleteButton({
   fetchData,
@@ -25,6 +25,7 @@ export default function DeleteButton({
   id: string;
   disabled?: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
   const handleDelete = async () => {
     const response = await fetch(`/api/${endpoint}?id=${id}`, {
       method: "DELETE",
@@ -34,6 +35,7 @@ export default function DeleteButton({
     } else {
       toast.error("Data gagal dihapus");
     }
+    setIsOpen(false);
     fetchData();
   };
   return disabled ? (
@@ -42,15 +44,16 @@ export default function DeleteButton({
       Hapus
     </Button>
   ) : (
-    <AlertDialog>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          onSelect={(e) => e.preventDefault()}
+        <Button
+          variant="ghost"
           className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2"
+          onClick={() => setIsOpen(true)}
         >
           <Trash className="w-4 h-4 mr-1" />
           Hapus
-        </DropdownMenuItem>
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Dialog,
@@ -11,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, PlusCircle } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatCurrencyInput } from "@/lib/number";
@@ -34,6 +35,7 @@ interface ProductFormState {
   product_id: string;
   sale_price: number;
   user_id: string;
+  unit: string;
 }
 
 export default function Form({
@@ -44,6 +46,12 @@ export default function Form({
   products?: any;
 }) {
   const { user } = useUserStore();
+  const [product, setProduct] = useState<any>(null);
+  const fetchProduct = async (id: string) => {
+    const response = await fetch(`/api/product/${id}`);
+    const data = await response.json();
+    setProduct(data);
+  }
 
   const [state, setState] = useState<ProductFormState>({
     product_id: data?.product_id || "",
@@ -51,12 +59,37 @@ export default function Form({
     id: data?.id || 0,
     factory_id: user?.factory_selected?.id.toString() || "",
     user_id: user?.id.toString() || "",
+    unit: "pack",
   });
+
+  // jika ada product, maka ambil data product
+  useEffect(() => {
+    if (data) {
+      fetchProduct(data.product_id);
+    }
+  }, [data]);
+
+  const convertToPackPrice = (price: number, unit: string): number => {
+    switch (unit) {
+      case "slop":
+        return price / 10;
+      case "bal":
+        return price / 200;
+      case "karton":
+        return price / 800;
+      default:
+        return price;
+    }
+  };
 
   const createProduct = async () => {
     let response;
     state.factory_id = user?.factory_selected?.id.toString() || "";
     state.user_id = user?.id.toString() || "";
+    
+    // Convert price to pack price before saving
+    const packPrice = convertToPackPrice(state.sale_price, state.unit);
+
     if (state.id) {
       response = await fetch("/api/distributor/data-produk", {
         method: "PUT",
@@ -64,11 +97,8 @@ export default function Form({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          product_id: state.product_id,
-          price: state.sale_price,
-          id: state.id,
-          factory_id: state.factory_id,
-          user_id: state.user_id,
+          ...state,
+          sale_price: packPrice,
         }),
       });
     } else {
@@ -77,7 +107,12 @@ export default function Form({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(state),
+        body: JSON.stringify({
+          product_id: state.product_id,
+          sale_price: packPrice,
+          factory_id: state.factory_id,
+          user_id: state.user_id,
+        }),
       });
     }
     const data = await response.json();
@@ -101,6 +136,7 @@ export default function Form({
           id: 0,
           user_id: user?.id.toString() || "",
           factory_id: user?.factory_selected?.id.toString() || "",
+          unit: "pack",
         });
       },
       onError: (error: any) => {
@@ -131,9 +167,9 @@ export default function Form({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Tambah Satuan</DialogTitle>
+          <DialogTitle>Tambah Produk</DialogTitle>
           <DialogDescription>
-            Masukkan nama untuk menambah satuan baru. Klik tombol simpan untuk
+            Masukkan nama untuk menambah produk baru. Klik tombol simpan untuk
             menyimpan data.
           </DialogDescription>
         </DialogHeader>
@@ -149,6 +185,7 @@ export default function Form({
               <Select
                 onValueChange={(value) => {
                   setState({ ...state, product_id: value });
+                  fetchProduct(value);
                 }}
               >
                 <SelectTrigger className="col-span-3">
@@ -164,6 +201,13 @@ export default function Form({
                       {product.name}
                     </SelectItem>
                   ))}
+                  {
+                    products?.length < 0 && (
+                      <SelectItem value="0">
+                        Belum ada produk
+                      </SelectItem>
+                    )
+                  }
                 </SelectContent>
               </Select>
             ) : (
@@ -181,11 +225,38 @@ export default function Form({
               />
             )}
           </div>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="cost">Harga</Label>
+          <div className="grid gap-4">
+            <Label htmlFor="cost">Harga Beli/Pack (Pabrik)</Label>
             <Input
               id="cost"
               name="cost"
+              className="col-span-3"
+              value={formatCurrency(product?.price || 0)}
+              disabled
+            />
+          </div>
+          <div className="grid gap-4 my-3">
+            <Label htmlFor="unit">Satuan</Label>
+            <Select
+              value={state.unit}
+              onValueChange={(value) => setState({ ...state, unit: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih Satuan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pack">Pack</SelectItem>
+                <SelectItem value="slop">Slop/Press (10 Pack)</SelectItem>
+                <SelectItem value="bal">Bal (200 Pack)</SelectItem>
+                <SelectItem value="karton">Karton (800 Pack)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-4 my-3">
+            <Label htmlFor="sale_price">Harga per {state.unit}</Label>
+            <Input
+              id="sale_price"
+              name="sale_price"
               className="col-span-3"
               value={formatCurrency(state.sale_price)}
               onChange={(e) =>

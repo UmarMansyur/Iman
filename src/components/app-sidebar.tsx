@@ -210,14 +210,14 @@ const data = {
         {
           title: "Laporan Order",
           url: "/operator/laporan-order",
-        }
-      ]
+        },
+      ],
     },
     {
       title: "Transaksi Produk",
       url: "/operator/transaksi",
       icon: ShoppingBagIcon,
-      items: [  
+      items: [
         {
           title: "Daftar Transaksi",
           url: "/operator/transaksi",
@@ -231,7 +231,7 @@ const data = {
     {
       title: "Data Layanan Jasa",
       url: "/operator/service",
-      icon: SquarePercent
+      icon: SquarePercent,
     },
     {
       title: "Transaksi Jasa",
@@ -243,15 +243,11 @@ const data = {
           url: "/operator/transaksi-jasa",
         },
         {
-          title: "Konfirmasi Pembayaran",
-          url: "/operator/transaksi-jasa/konfirmasi-pembayaran",
-        },
-        {
           title: "Pelunasan",
           url: "/operator/transaksi-jasa/pelunasan",
-        }
-      ]
-    }
+        },
+      ],
+    },
   ],
   navDistributor: [
     {
@@ -272,7 +268,7 @@ const data = {
           title: "Data Stok",
           url: "/distributor/data-stok",
         },
-      ]
+      ],
     },
     // {
     //   title: "Pre Order",
@@ -298,13 +294,11 @@ const data = {
       title: "Pengiriman dan Pembayaran",
       url: "/distributor/pengiriman-pembayaran",
       icon: Truck,
-    }
+    },
   ],
 };
 
-export function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { user } = useUserStore();
   const addActiveState = (items: typeof data.navAdmin) => {
@@ -331,22 +325,21 @@ export function AppSidebar({
         <NavMain title="Operator" items={addActiveState(data.navOperator)} />
       );
     }
-    if(pathname?.startsWith("/distributor")) {
-      return <NavMain title="Distributor" items={addActiveState(data.navDistributor)} />;
+    if (pathname?.startsWith("/distributor")) {
+      return (
+        <NavMain
+          title="Distributor"
+          items={addActiveState(data.navDistributor)}
+        />
+      );
     }
     return null;
   };
 
-
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        {
-          user?.factory_selected && (
-            <TeamSwitcher />
-          )
-        }
+        {user?.factory_selected && <TeamSwitcher />}
       </SidebarHeader>
       <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>

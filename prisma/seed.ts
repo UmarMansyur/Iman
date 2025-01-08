@@ -150,6 +150,18 @@ async function main(): Promise<void> {
     data: [
       {
         factory_id: prpj.id,
+        user_id: distributor.id,
+        role_id: 3,
+        status: 'Active'
+      },
+      {
+        factory_id: prsj.id,
+        user_id: distributor.id,
+        role_id: 3,
+        status: 'Active'
+      },
+      {
+        factory_id: prpj.id,
         user_id: ditributor2.id,
         role_id: 3,
         status: 'Active'
