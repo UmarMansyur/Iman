@@ -229,14 +229,28 @@ const data = {
       ],
     },
     {
-      title: "Layanan Jasa",
+      title: "Data Layanan Jasa",
       url: "/operator/service",
       icon: SquarePercent
     },
     {
       title: "Transaksi Jasa",
       url: "/operator/transaksi-jasa",
-      icon: Blocks
+      icon: Blocks,
+      items: [
+        {
+          title: "Daftar Transaksi Jasa",
+          url: "/operator/transaksi-jasa",
+        },
+        {
+          title: "Konfirmasi Pembayaran",
+          url: "/operator/transaksi-jasa/konfirmasi-pembayaran",
+        },
+        {
+          title: "Pelunasan",
+          url: "/operator/transaksi-jasa/pelunasan",
+        }
+      ]
     }
   ],
   navDistributor: [

@@ -347,17 +347,6 @@ CREATE TABLE `invoices` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `services` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(191) NOT NULL,
-    `price` DOUBLE NOT NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` DATETIME(3) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `detail_invoices` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `product_id` INTEGER NULL,
@@ -549,6 +538,57 @@ CREATE TABLE `detail_transaction_distributors` (
     `sale_price` DOUBLE NOT NULL,
     `is_product` BOOLEAN NOT NULL DEFAULT true,
     `product_id` INTEGER NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `transaction_services` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `factory_id` INTEGER NOT NULL,
+    `transaction_code` VARCHAR(191) NOT NULL,
+    `user_id` INTEGER NOT NULL,
+    `buyer_id` INTEGER NOT NULL,
+    `amount` DOUBLE NOT NULL,
+    `payment_method_id` INTEGER NOT NULL,
+    `down_payment` DOUBLE NULL DEFAULT 0,
+    `maturity_date` DATETIME(3) NULL,
+    `remaining_balance` DOUBLE NULL,
+    `desc` VARCHAR(191) NOT NULL,
+    `proof_of_payment` VARCHAR(191) NULL,
+    `status` ENUM('Pending', 'Paid_Off', 'Paid', 'Unpaid') NOT NULL DEFAULT 'Paid',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `transaction_services_transaction_code_key`(`transaction_code`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `detail_transaction_services` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `transaction_service_id` INTEGER NOT NULL,
+    `desc` VARCHAR(191) NOT NULL,
+    `amount` DOUBLE NOT NULL,
+    `price` DOUBLE NOT NULL,
+    `discount` DOUBLE NULL DEFAULT 0,
+    `subtotal` DOUBLE NOT NULL,
+    `subtotal_discount` DOUBLE NOT NULL,
+    `service_id` INTEGER NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `services` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `price` DOUBLE NOT NULL,
+    `factory_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -776,3 +816,24 @@ ALTER TABLE `detail_transaction_distributors` ADD CONSTRAINT `detail_transaction
 
 -- AddForeignKey
 ALTER TABLE `detail_transaction_distributors` ADD CONSTRAINT `detail_transaction_distributors_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transaction_services` ADD CONSTRAINT `transaction_services_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transaction_services` ADD CONSTRAINT `transaction_services_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transaction_services` ADD CONSTRAINT `transaction_services_buyer_id_fkey` FOREIGN KEY (`buyer_id`) REFERENCES `buyers`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transaction_services` ADD CONSTRAINT `transaction_services_payment_method_id_fkey` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_transaction_services` ADD CONSTRAINT `detail_transaction_services_transaction_service_id_fkey` FOREIGN KEY (`transaction_service_id`) REFERENCES `transaction_services`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_transaction_services` ADD CONSTRAINT `detail_transaction_services_service_id_fkey` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `services` ADD CONSTRAINT `services_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

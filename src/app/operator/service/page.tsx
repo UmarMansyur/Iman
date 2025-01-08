@@ -148,7 +148,6 @@ export default function LokasiPengirimanPage() {
               <Form service={undefined} />
             </div>
           </div>
-          {isLoading } asdf
           {isLoading ? (
             <LoaderScreen />
           ) : (

@@ -96,6 +96,7 @@ model Factory {
   Jasa                   Jasa[]
   InvoiceJasa            InvoiceJasa[]
   Service                Service[]
+  TransactionService     TransactionService[]
 
   @@map("factories")
 }
@@ -157,6 +158,7 @@ model PaymentMethod {
   name                   String
   Invoice                Invoice[]
   TransactionDistributor TransactionDistributor[]
+  TransactionService     TransactionService[]
 
   @@map("payment_methods")
 }
@@ -743,20 +745,34 @@ model DetailTransactionDistributor {
 
 model TransactionService {
   id                       Int                        @id @default(autoincrement())
+  factory                  Factory                    @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
   transaction_code         String                     @unique
   user                     User                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id                  Int
   buyer                    Buyer                      @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
   buyer_id                 Int
   amount                   Float
+  payment_method           PaymentMethod              @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id        Int
   down_payment             Float?                     @default(0)
+  maturity_date            DateTime?
   remaining_balance        Float?                     @db.Double
   desc                     String
+  proof_of_payment         String?
+  status                   TransactionServiceStatus   @default(Paid)
   created_at               DateTime                   @default(now())
   updated_at               DateTime                   @updatedAt
   DetailTransactionService DetailTransactionService[]
 
   @@map("transaction_services")
+}
+
+enum TransactionServiceStatus {
+  Pending
+  Paid_Off
+  Paid
+  Unpaid
 }
 
 model DetailTransactionService {
@@ -766,6 +782,9 @@ model DetailTransactionService {
   desc                   String
   amount                 Float
   price                  Float
+  discount               Float?             @default(0)
+  subtotal               Float
+  subtotal_discount      Float
   service                Service            @relation(fields: [service_id], references: [id], onDelete: Cascade)
   service_id             Int
   created_at             DateTime           @default(now())

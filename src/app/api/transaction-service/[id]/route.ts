@@ -5,8 +5,10 @@ import { TransactionServiceStatus } from "@prisma/client";
 import { uniqueId } from "lodash";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function PUT(req: Request, { params }: { params: any }) {
   try {
+    const paramsId = await params.id;
+    const id = parseInt(paramsId);
     const data = await req.json();
     const {
       buyer,
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
       desc,
       user_id,
     } = data;
-
+    
     let buyerId: number;
     const result = await prisma.$transaction(async (tx) => {
       const existingBuyer: any = await tx.buyer.findFirst({
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
           address: address,
         },
       });
-
+  
       if (!existingBuyer) {
         const newBuyer = await tx.buyer.create({
           data: {
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
       } else {
         buyerId = existingBuyer.id;
       }
-
+  
       const existingServices = await tx.service.findMany({
         where: {
           name: {
@@ -51,26 +53,26 @@ export async function POST(req: Request) {
           factory_id: parseInt(factory_id),
         },
       });
-
+  
       const transaction_code = "TS-" + uniqueId() + Date.now();
-
-      const transactionService = await tx.transactionService.create({
+  
+      const transactionService = await tx.transactionService.update({
+        where: { id: id },
         data: {
           user_id: parseInt(user_id),
           transaction_code: transaction_code,
           buyer_id: buyerId,
-          amount: cart.reduce(
-            (acc: number, item: any) => acc + item.subtotal,
-            0
-          ),
+          amount: cart.reduce((acc: number, item: any) => acc + item.subtotal, 0),
           desc: desc,
           down_payment: down_payment,
           payment_method_id: parseInt(payment_method),
           maturity_date: new Date(due_date),
-          factory_id: parseInt(factory_id),
-          remaining_balance:
-            cart.reduce((acc: number, item: any) => acc + item.subtotal, 0) -
-            down_payment,
+          remaining_balance: cart.reduce((acc: number, item: any) => acc + item.subtotal, 0) - down_payment,
+        },
+      });
+      await tx.detailTransactionService.deleteMany({
+        where: {
+          transaction_service_id: id,
         },
       });
       await Promise.all(
@@ -98,7 +100,7 @@ export async function POST(req: Request) {
                 price: item.price,
               },
             });
-
+  
             await tx.detailTransactionService.create({
               data: {
                 service_id: newService.id,
@@ -113,69 +115,74 @@ export async function POST(req: Request) {
           }
         })
       );
-
+  
       return {
         transaction_code: transaction_code,
       };
     });
-
-    return NextResponse.json({
-      message: "Transaksi jasa berhasil dibuat",
-      data: result,
-    });
+  
+    return NextResponse.json({ message: "Transaksi jasa berhasil dibuat", data: result });
   } catch (error: any) {
-    console.log(error.message);
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get("limit") || "10");
-  const page = parseInt(searchParams.get("page") || "1");
-  const search = searchParams.get("search") || "";
-  const user_id = searchParams.get("user_id") || "";
-  const skip = (page - 1) * limit;
-  const factory_id = searchParams.get("factory_id") || "";
-  const status = searchParams.get("status") || ("" as TransactionServiceStatus);
-  const where: any = {
-    OR: [
-      { buyer: { name: { contains: search } } },
-      { transaction_code: { contains: search } },
-    ],
-    factory_id: factory_id ? parseInt(factory_id) : undefined,
-    user_id: user_id ? parseInt(user_id) : undefined,
-  };
+export async function PATCH(req: Request, { params }: { params: any }) {
+  const paramsId = await params.id;
+  const id = parseInt(paramsId);
+  const data = await req.json();
+  const { status, proof_of_payment } = data;
+  
+  const existingTransactionService: any = await prisma.transactionService.findUnique({
+    where: { id: id },
+  });
 
-  if (status) {
-    where.status = status;
+  if(existingTransactionService.status === "Paid_Off") {
+    return NextResponse.json({ message: "Transaksi jasa sudah selesai" }, { status: 400 });
   }
 
-  const total = await prisma.transactionService.count({ where });
-  const data = await prisma.transactionService.findMany({
-    where,
-    skip,
-    take: limit,
-    include: {
-      DetailTransactionService: {
-        include: {
-          service: true,
-        },
-      },
-      buyer: true,
-      payment_method: true,
-      user: true,
-    },
+  let remaining_balance = existingTransactionService.remaining_balance;
+
+  if(status === "Paid_Off") {
+    remaining_balance = 0;
+  }
+
+  await prisma.transactionService.update({
+    where: { id: id },
+    data: { status: status as TransactionServiceStatus, proof_of_payment: proof_of_payment, remaining_balance: remaining_balance },
   });
 
-  return NextResponse.json({
-    message: "Transaksi jasa berhasil diambil",
-    data: data,
-    pagination: {
-      page: page,
-      limit: limit,
-      total: total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
+  return NextResponse.json({ message: "Status transaksi jasa berhasil diubah" });
 }
+
+export async function DELETE(req: Request, { params }: { params: any }) {
+  const paramsId = await params.id;
+  const id = parseInt(paramsId);
+  await prisma.transactionService.delete({
+    where: { id: id },
+  });
+  return NextResponse.json({ message: "Transaction service deleted successfully" });
+}
+
+export async function GET(req: Request, { params }: { params: any }) {
+  const paramsId = await params.transaction_code;
+  try {
+    const transactionService = await prisma.transactionService.findFirst({
+      where: { transaction_code: paramsId },
+      include: {
+        buyer: true,
+        DetailTransactionService: {
+          include: {
+            service: true
+          }
+        },
+        payment_method: true,
+        user: true
+      }
+    });
+    return NextResponse.json(transactionService);
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 404 });
+  }
+}
+
