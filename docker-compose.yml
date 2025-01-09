@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: node_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=mariadb
+      - DB_USER=root
+      - DB_PASSWORD=Khana123.
+      - DB_NAME=iman
+      - DB_PORT=3306
+      - DATABASE_URL=mysql://root:Khana123.@mariadb:3306/iman
+      - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY="public_zvbKR1yVvHfTs10j2TnNH/t9rNU="
+      - NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/8zmr0xxik"
+      -  NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY="private_cnF5s+oz55nNIPEwVLf0mZrI4z8="
+      - SESSION_SECRET="asdflkasdorueowurowoasdlfjklasdfjlkajdslfk"
+      - NEXTAUTH_URL="http://localhost:3000"
+      - NEXTAUTH_SECRET="asdflkasdorueowurowoasdlfjklasdfjlkajdslfk"
+      - BASE_URL="http://localhost:3000"
+      - RESEND_API_KEY="re_N4GHPZJz_M5rw3Mg27BYfdtvY6xrxLYwz"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - mariadb
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  mariadb:
+    container_name: mariadb_container
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=Khana123.
+      - MYSQL_DATABASE=iman
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  phpmyadmin:
+    container_name: phpmyadmin_container
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_USER=root
+      - PMA_PASSWORD=Khana123.
+    depends_on:
+      - mariadb
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mariadb_data:
+    driver: local

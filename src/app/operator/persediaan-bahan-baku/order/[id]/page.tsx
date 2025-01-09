@@ -103,7 +103,6 @@ export default function OrderPage() {
         maximumFractionDigits: 0,
       })
     );
-    console.log('currentTotal', currentTotal)
   }, [currentAmount, currentPrice]);
 
   const [materials, setMaterials] = useState<any[]>([]);
