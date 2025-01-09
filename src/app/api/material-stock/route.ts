@@ -128,10 +128,11 @@ export async function PUT(request: Request) {
       
       // Prevent negative stock
       if (newAmount < 0) {
-        return NextResponse.json(
-          { message: "Stok tidak mencukupi untuk pengurangan" },
-          { status: 400 }
-        );
+        // return NextResponse.json(
+        //   { message: "Stok tidak mencukupi untuk pengurangan" },
+        //   { status: 400 }
+        // );
+        throw new Error("Stok tidak mencukupi untuk pengurangan");
       }
     }
 
