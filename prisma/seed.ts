@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Prisma, PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+// import { Prisma, PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
+import prisma from "@/lib/db";
 import * as bcrypt from "bcrypt";
 
 async function main(): Promise<void> {
@@ -136,7 +137,6 @@ async function main(): Promise<void> {
     },
   });
 
-
   await prisma.role.createMany({
     data: [
       { role: "Owner" },
@@ -152,68 +152,68 @@ async function main(): Promise<void> {
         factory_id: prpj.id,
         user_id: distributor.id,
         role_id: 3,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: distributor.id,
         role_id: 3,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prpj.id,
         user_id: ditributor2.id,
         role_id: 3,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: ditributor2.id,
         role_id: 3,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: citra.id,
         role_id: 2,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: yanti.id,
         role_id: 2,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prpj.id,
         user_id: lita.id,
         role_id: 2,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prpj.id,
         user_id: operator.id,
         role_id: 2,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: operator.id,
         role_id: 2,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prsj.id,
         user_id: owner.id,
         role_id: 1,
-        status: 'Active'
+        status: "Active",
       },
       {
         factory_id: prpj.id,
         user_id: owner.id,
         role_id: 1,
-        status: 'Active'
-      }
+        status: "Active",
+      },
     ],
   });
 
@@ -303,7 +303,6 @@ async function main(): Promise<void> {
     ],
   });
 
-
   await prisma.product.createMany({
     data: [
       {
@@ -333,27 +332,42 @@ async function main(): Promise<void> {
     ],
   });
 
-  await prisma.reportProduct.create({
-    data: {
-      product_id: 1,
-      amount: 100,
-      factory_id: prsj.id,
-      morning_shift_amount: 10,
-      morning_shift_time: new Date("2024-01-01 08:00:00"),
-      morning_shift_user_id: operator.id,
-      afternoon_shift_amount: 10,
-      afternoon_shift_time: new Date("2024-01-01 15:00:00"),
-      afternoon_shift_user_id: operator.id,
-      StockProduct: {
-        create: {
-          amount: 20,
-          invoice_id: null,
-          product_id: 1,
-          type: "In",
-        }
-      }
-    },
-  });
+  for (let i = 1; i <= 5000; i++) {
+    // random quantity tidak boleh ganjil
+    let randomQuantity = Math.floor(Math.random() * 100) + 1;
+    if (randomQuantity % 2 !== 0) {
+      randomQuantity++;
+    }
+    await prisma.reportProduct.create({
+      data: {
+        product_id: 1,
+        amount: randomQuantity,
+        factory_id: Math.floor(Math.random() * 2) + 1,
+        morning_shift_amount: randomQuantity / 2,
+        morning_shift_time: new Date(
+          Math.floor(
+            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+          ) + new Date(2025, 0, 1).getTime()
+        ),
+        morning_shift_user_id: operator.id,
+        afternoon_shift_amount: randomQuantity / 2,
+        afternoon_shift_time: new Date(
+          Math.floor(
+            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+          ) + new Date(2025, 0, 1).getTime()
+        ),
+        afternoon_shift_user_id: operator.id,
+        StockProduct: {
+          create: {
+            amount: randomQuantity,
+            invoice_id: null,
+            product_id: Math.floor(Math.random() * 3) + 1,
+            type: "In",
+          },
+        },
+      },
+    });
+  }
 
   await prisma.reportCost.create({
     data: {
@@ -365,71 +379,145 @@ async function main(): Promise<void> {
     },
   });
 
-  const ppns: Prisma.PPNCreateInput = await prisma.pPN.create({
+  const ppns = await prisma.pPN.create({
     data: {
       desc: "PPN 12%",
       percentage: 12,
     },
   });
 
-  const buyer = await prisma.buyer.create({
-    data: {
-      name: "PT. Iman",
-      address: "Jl. Iman",
-      factory_id: prsj.id,
-    },
-  });
+  // const buyer = await prisma.buyer.create({
+  //   data: {
+  //     name: "PT. Iman",
+  //     address: "Jl. Iman",
+  //     factory_id: prsj.id,
+  //   },
+  // });
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      factory_id: prsj.id,
-      user_id: admin.id,
-      is_distributor: true,
-      invoice_code: "INV-001",
-      buyer_id: buyer.id,
-      maturity_date: new Date("2024-01-01"),
-      item_amount: 1,
-      down_payment: 100000,
-      ppn: ppns.percentage,
-      payment_method_id: 1,
-      total: 1000000,
-      sub_total: 1000000,
-      remaining_balance: 1000000,
-      payment_status: "Pending",
-    },
-  });
+  // const invoice = await prisma.invoice.create({
+  //   data: {
+  //     factory_id: prsj.id,
+  //     user_id: admin.id,
+  //     is_distributor: true,
+  //     invoice_code: "INV-001",
+  //     buyer_id: buyer.id,
+  //     maturity_date: new Date("2024-01-01"),
+  //     item_amount: 1,
+  //     down_payment: 100000,
+  //     ppn: ppns.percentage,
+  //     payment_method_id: 1,
+  //     total: 1000000,
+  //     sub_total: 1000000,
+  //     remaining_balance: 1000000,
+  //     payment_status: "Pending",
+  //   },
+  // });
 
-  await prisma.detailInvoice.create({
-    data: {
-      product_id: 1,
-      invoice_id: invoice.id,
-      desc: "ST Premium",
-      amount: 1,
-      sub_total: 1000000,
-      is_product: true,
-    },
-  });
+  // await prisma.detailInvoice.create({
+  //   data: {
+  //     product_id: 1,
+  //     invoice_id: invoice.id,
+  //     desc: "ST Premium",
+  //     amount: 1,
+  //     sub_total: 1000000,
+  //     is_product: true,
+  //   },
+  // });
 
-  const location = await prisma.location.create({
-    data: {
-      factory_id: prsj.id,
-      name: "Jl. Delivery",
-      cost: 100000,
-    }
-  })
+  // const location = await prisma.location.create({
+  //   data: {
+  //     factory_id: prsj.id,
+  //     name: "Jl. Delivery",
+  //     cost: 100000,
+  //   }
+  // })
 
-  await prisma.deliveryTracking.create({
-    data: {
-      invoice_id: invoice.id,
-      desc: "Delivery",
-      location_id: location.id,
-      latitude: -6.2088,
-      longitude: 106.8456,
-      cost: 100000,
-      sales_man: "John Doe",
-      recipient: "PT. Iman",
-    },
-  });
+  // await prisma.deliveryTracking.create({
+  //   data: {
+  //     invoice_id: invoice.id,
+  //     desc: "Delivery",
+  //     location_id: location.id,
+  //     latitude: -6.2088,
+  //     longitude: 106.8456,
+  //     cost: 100000,
+  //     sales_man: "John Doe",
+  //     recipient: "PT. Iman",
+  //   },
+  // });
+  for (let i = 1; i <= 5000; i++) {
+    const buyer = await prisma.buyer.create({
+      data: {
+        name: `PT. Iman ${i}`,
+        address: `Jl. Iman ${i}`,
+        factory_id: prsj.id,
+      },
+    });
+
+    const invoiceCode = `INV-${i.toString().padStart(3, "0")}`;
+    const baseAmount = Math.floor(Math.random() * 100) + 1; // Random amount between 1 and 100
+    const pricePerUnit = 13000;
+    const subTotal = baseAmount * pricePerUnit;
+    const total = subTotal + subTotal * (ppns.percentage / 100);
+    const downPayment = Math.floor(total * 0.3); // 30% down payment
+    const remainingBalance = total - downPayment;
+    const paymentStatus = Math.random() < 0.5 ? "Paid" : "Pending";
+    const randomPaymentMethod = Math.floor(Math.random() * 5) + 1;
+    const invoice = await prisma.invoice.create({
+      data: {
+        factory_id: prsj.id,
+        created_at: new Date(
+          Math.floor(
+            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+          ) + new Date(2025, 0, 1).getTime()
+        ),
+        user_id: admin.id,
+        is_distributor: true,
+        invoice_code: invoiceCode,
+        buyer_id: buyer.id,
+        maturity_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        item_amount: baseAmount,
+        down_payment: downPayment,
+        ppn: ppns.percentage,
+        payment_method_id: randomPaymentMethod,
+        total: total,
+        sub_total: subTotal,
+        remaining_balance: remainingBalance,
+        payment_status: paymentStatus,
+        detailInvoices: {
+          create: {
+            product_id: 1,
+            desc: "ST Premium",
+            amount: baseAmount,
+            price: pricePerUnit,
+            sub_total: subTotal,
+            is_product: true,
+          },
+        },
+      },
+    });
+
+    // Create location and delivery tracking for each invoice
+    const location = await prisma.location.create({
+      data: {
+        factory_id: prsj.id,
+        name: `Jl. Delivery ${i}`,
+        cost: 50000 + Math.random() * 100000, // Random cost between 50000 and 150000
+      },
+    });
+
+    await prisma.deliveryTracking.create({
+      data: {
+        invoice_id: invoice.id,
+        desc: `Delivery for ${invoiceCode}`,
+        location_id: location.id,
+        latitude: -6.2088 + Math.random() * 0.1, // Slight random variation in coordinates
+        longitude: 106.8456 + Math.random() * 0.1,
+        cost: location.cost,
+        sales_man: `Sales Person ${i}`,
+        recipient: buyer.name,
+      },
+    });
+  }
 }
 
 main()

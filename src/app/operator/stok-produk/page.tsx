@@ -7,7 +7,6 @@ import {
   Receipt,
   DollarSign,
   Loader2,
-  Info,
 } from "lucide-react";
 import MainPage from "@/components/main";
 import CardDashboard from "@/components/card-product";
@@ -27,9 +26,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useUserStore } from "@/store/user-store";
-import { convert, formatNumber } from "@/lib/number";
+import { formatNumber } from "@/lib/number";
 import EmptyData from "@/components/views/empty-data";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { formatProduction } from "@/lib/utils";
 
 // Tipe data untuk produk
 interface Product {
@@ -39,6 +38,10 @@ interface Product {
   price: number;
   sold: number;
   stock: number;
+  stock_pack: number;
+  stock_press: number;
+  stock_bal: number;
+  stock_karton: number;
 }
 
 export default function Layout() {
@@ -116,13 +119,6 @@ export default function Layout() {
             <CardDescription>
               Stok produk yang tersedia merupakan hasil pelaporan dari inputan
               produksi harian.
-              <Alert className="bg-blue-500 mt-2 text-white">
-                <Info className="h-4 w-4 text-white" />
-                <AlertTitle>Catatan</AlertTitle>
-                <AlertDescription>
-                  Stok produk dibawah ini hasil konversi dari stok produk. Jadi jika ada 200 pack maka akan dikonversi jadi 2 ball.
-                </AlertDescription>
-              </Alert>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -138,34 +134,40 @@ export default function Layout() {
                   <TableHead rowSpan={2} className="font-bold text-black">
                     Nama Produk
                   </TableHead>
-                  <TableHead rowSpan={2} className="font-bold text-black">
+                  <TableHead rowSpan={2} className="font-bold text-black text-center">
                     Tipe
                   </TableHead>
-                  <TableHead rowSpan={2} className="font-bold text-black">
+                  <TableHead colSpan={2} className="font-bold text-center text-black">
                     Harga
                   </TableHead>
-                  <TableHead rowSpan={2} className="font-bold text-black">
+                  <TableHead rowSpan={2} className="font-bold text-black text-end">
                     Stok Terjual
                   </TableHead>
                   <TableHead
                     colSpan={4}
                     className="text-center font-bold text-black"
                   >
-                    Stok Tersedia(Konversi)
+                    Stok Tersedia
                   </TableHead>
                 </TableRow>
                 <TableRow>
                   <TableHead className="text-black font-bold text-end border-r border-l">
                     Pack
                   </TableHead>
-                  <TableHead className="text-black font-bold text-end border-r">
-                    Slop/Press
+                  <TableHead className="text-black font-bold text-end border-r border-l">
+                    Bal
+                  </TableHead>
+                  <TableHead className="text-black font-bold text-end border-r border-l">
+                    Karton
                   </TableHead>
                   <TableHead className="text-black font-bold text-end border-r">
                     Bal
                   </TableHead>
                   <TableHead className="text-black font-bold text-end border-r">
-                    Karton
+                    Press
+                  </TableHead>
+                  <TableHead className="text-black font-bold text-end border-r">
+                    Pack
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -176,8 +178,8 @@ export default function Layout() {
                       {index + 1}.
                     </TableCell>
                     <TableCell className="text-black">{product.name}</TableCell>
-                    <TableCell className="text-black">{product.type}</TableCell>
-                    <TableCell className="text-black">
+                    <TableCell className="text-black text-center">{product.type}</TableCell>
+                    <TableCell className="text-black text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
@@ -185,26 +187,36 @@ export default function Layout() {
                         .format(product.price)
                         .slice(0, -3)}
                     </TableCell>
-                    <TableCell>{product.sold}</TableCell>
-                    <TableCell className="text-end">
+                    <TableCell className="text-black text-end">
                       {new Intl.NumberFormat("id-ID", {
-                        style: "decimal",
-                      }).format(Number(`${convert(product.stock).pack}`))}
+                        style: "currency",
+                        currency: "IDR",
+                      })
+                        .format(product.price * 200)
+                        .slice(0, -3)}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {formatProduction(product.sold).bal} Bal - {formatProduction(product.sold).pack} Pack
                     </TableCell>
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "decimal",
-                      }).format(Number(`${convert(product.stock).slop}`))}
+                      }).format(product.stock_karton)}
                     </TableCell>
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "decimal",
-                      }).format(Number(`${convert(product.stock).bal}`))}
+                      }).format(product.stock_bal)}
                     </TableCell>
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "decimal",
-                      }).format(Number(`${convert(product.stock).karton}`))}
+                      }).format(product.stock_press)}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {new Intl.NumberFormat("id-ID", {
+                        style: "decimal",
+                      }).format(product.stock)}
                     </TableCell>
                   </TableRow>
                 ))}

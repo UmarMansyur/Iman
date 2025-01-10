@@ -23,14 +23,24 @@ import { DateRange } from "react-day-picker";
 // Tambahkan fungsi helper untuk format bulan dalam Bahasa Indonesia
 const formatDateIndonesia = (date: Date) => {
   const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
-  
+
   const day = date.getDate();
   const month = months[date.getMonth()];
   const year = date.getFullYear();
-  
+
   return `${day} ${month} ${year}`;
 };
 
@@ -59,7 +69,13 @@ export default function PabrikPage() {
 
   // Menggunakan React Query untuk fetch data
   const { data: queryData, isLoading } = useQuery({
-    queryKey: ["transactions", pagination, filters, user?.factory_selected?.id, date],
+    queryKey: [
+      "transactions",
+      pagination,
+      filters,
+      user?.factory_selected?.id,
+      date,
+    ],
     queryFn: async () => {
       if (!user) return { data: [], pagination: { total: 0, totalPages: 0 } };
 
@@ -118,26 +134,13 @@ export default function PabrikPage() {
   };
 
   const handleDateChange = (newDate: DateRange | undefined) => {
-    // Validasi input date
-    if (!newDate) {
-      setDate({
-        from: undefined,
-        to: undefined,
-      });
-    } else {
-      // Jika hanya memilih satu tanggal (from), gunakan tanggal yang sama untuk to
-      if (newDate.from && !newDate.to) {
-        setDate({
-          from: newDate.from,
-          to: newDate.from,
-        });
-      } else {
-        setDate(newDate);
-      }
+    // Langsung set date tanpa logika tambahan
+    setDate(newDate);
+
+    // Reset pagination ke halaman pertama jika ada perubahan tanggal
+    if (newDate?.from || newDate?.to) {
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }
-    
-    // Reset pagination ke halaman pertama
-    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   return (

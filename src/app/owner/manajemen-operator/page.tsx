@@ -133,6 +133,10 @@ export default function ManajemenOperatorPage() {
     return value;
   };
 
+  useEffect(() => {
+    document.title = "Manajemen Operator - Indera Distribution";
+  }, []);
+
   return (
     <MainPage>
       {loading ? (

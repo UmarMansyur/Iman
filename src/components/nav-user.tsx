@@ -5,6 +5,7 @@ import {
   Bell,
   ChevronsUpDown,
   LogOut,
+  User,
 } from "lucide-react"
 
 import {
@@ -90,6 +91,12 @@ export function NavUser() {
               <DropdownMenuItem>
                 <Bell />
                 Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/admin/setting/my-account" className="flex items-center gap-2">
+                  <User />
+                  Pengaturan Akun
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

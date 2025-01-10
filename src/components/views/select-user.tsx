@@ -99,7 +99,7 @@ export default function SelectUser({
 
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true} defaultOpen={true}>
       <PopoverTrigger asChild className="col-span-3" name="user_id">
         <Button
           variant="ghost"

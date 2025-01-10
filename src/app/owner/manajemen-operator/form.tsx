@@ -124,7 +124,7 @@ export default function Form({ operator, fetchData, data, roleData }: FormProps)
         {data ? (
           <Button variant="ghost" className="w-full flex justify-start px-2">
             <Pencil className="w-4 h-4 mr-1" />
-            Edit
+            Edit Operator
           </Button>
         ) : (
           <Button
@@ -132,7 +132,7 @@ export default function Form({ operator, fetchData, data, roleData }: FormProps)
             className="bg-blue-500 hover:bg-blue-600 flex justify-end px-4 text-white hover:text-white"
           >
             <PlusCircle className="w-4 h-4" />
-            Tambah
+            Tambah Operator
           </Button>
         )}
       </DialogTrigger>
@@ -169,7 +169,7 @@ export default function Form({ operator, fetchData, data, roleData }: FormProps)
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="unit">Role</Label>
-              <Popover open={roleOpen} onOpenChange={setRoleOpen}>
+              <Popover open={roleOpen} onOpenChange={setRoleOpen} modal={true} defaultOpen={true}>
                 <PopoverTrigger asChild className="col-span-3" name="role_id">
                   <Button
                     variant="ghost"
@@ -188,7 +188,7 @@ export default function Form({ operator, fetchData, data, roleData }: FormProps)
                         Tidak ada role yang ditemukan.
                       </CommandEmpty>
                       <CommandGroup>
-                        <ScrollArea className="h-[200px]">
+                        <ScrollArea className="h-[200px] overflow-y-auto">
                           {roleData?.map((item: Role) => (
                             <CommandItem
                               key={item.id}

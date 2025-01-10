@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
@@ -48,9 +49,15 @@ export const columns = ({
   },
   {
     accessorKey: "role",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Role" />
-    ),
+    header: "Role",
+  },
+  {
+    accessorKey: "gender",
+    header: "Jenis Kelamin",
+    cell: ({ row }) => {
+      const operator = row.original as any;
+      return operator.gender === "Male" ? "Laki-laki" : "Perempuan";
+    },
   },
   {
     accessorKey: "status",
@@ -84,7 +91,7 @@ export const columns = ({
     cell: ({ row }) => {
       const operator = row.original as Operator;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

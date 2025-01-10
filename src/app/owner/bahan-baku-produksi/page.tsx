@@ -100,6 +100,10 @@ export default function PabrikPage() {
     }));
   };
 
+  useEffect(() => {
+    document.title = "Bahan Baku Produksi - Indera Distribution";
+  }, []);
+
   return (
     <div>
       {loading ? (

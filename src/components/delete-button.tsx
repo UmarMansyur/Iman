@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,19 +28,23 @@ export default function DeleteButton({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const handleDelete = async () => {
+    setIsOpen(false);
     const response = await fetch(`/api/${endpoint}?id=${id}`, {
       method: "DELETE",
     });
+    await fetchData();
     if (response.ok) {
       toast.success("Data berhasil dihapus");
     } else {
       toast.error("Data gagal dihapus");
     }
-    setIsOpen(false);
-    fetchData();
   };
   return disabled ? (
-    <Button variant="outline" disabled className="w-full justify-start ps-3 border-none">
+    <Button
+      variant="outline"
+      disabled
+      className="w-full justify-start ps-3 border-none"
+    >
       <Trash className="w-4 h-4" />
       Hapus
     </Button>
@@ -48,7 +53,7 @@ export default function DeleteButton({
       <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2"
+          className="flex items-center gap-2 hover:bg-gray-50 rounded-md cursor-pointer text-sm text-red-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none p-2 w-full justify-start hover:text-red-500"
           onClick={() => setIsOpen(true)}
         >
           <Trash className="w-4 h-4 mr-1" />
@@ -66,7 +71,7 @@ export default function DeleteButton({
         <AlertDialogFooter>
           <AlertDialogAction
             className="bg-red-500 hover:bg-red-600 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-            onClick={() => handleDelete()}
+            onClick={handleDelete}
           >
             Ya, Hapus
           </AlertDialogAction>

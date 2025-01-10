@@ -113,6 +113,48 @@ export async function GET(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const formData = await request.formData();
+    const id = formData.get('id');
+    const username = formData.get('username') as string || "";
+    const email = formData.get('email') as string || "";
+    const password = formData.get('password') as string || "";
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        id: Number(id)
+      }
+    });
+
+    if(!existingUser) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    let hashedPassword = existingUser.password;
+
+    if(password !== "") {
+      hashedPassword = await bcrypt.hash(password as string, 10);
+    }
+
+    const payload = {
+      username,
+      email,
+      password: hashedPassword,
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(id) },
+      data: payload
+    })
+
+    const result = { ...updatedUser, password: undefined };
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}
+
 // POST create new user
 export async function POST(request: Request) {
   try {

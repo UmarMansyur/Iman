@@ -156,7 +156,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
       <DialogTrigger asChild>
         <Button>
           <Plus className="w-4 h-4 mr-1" />
-          Tambah Produksi Harian
+          Lapor Produksi Bahan Baku
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">

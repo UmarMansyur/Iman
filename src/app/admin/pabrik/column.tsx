@@ -89,7 +89,7 @@ export const columns = (fetchData: () => Promise<void>, users: { value: string; 
     cell: ({ row }) => {
       const factory = row.original as FactoryTable;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

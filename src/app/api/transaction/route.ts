@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       sub_total,
       payment_status,
       notes,
-      location_selected
+      location_selected,
     } = body;
 
     // inv tahun-bulan-id
@@ -37,17 +37,17 @@ export async function POST(req: Request) {
       "-" +
       Math.floor(100000 + Math.random() * 900000).toString();
 
-    let location_id: any= null;
+    let location_id: any = null;
     let pembeli_id: any = null;
     const response = await prisma.$transaction(async (tx) => {
-      if(new_address && !is_distributor) {
+      if (new_address && !is_distributor) {
         const existAddress = await tx.location.findFirst({
           where: {
             name: buyer_address,
             factory_id: parseInt(factory_id),
-          }
-        })
-        if(existAddress) {
+          },
+        });
+        if (existAddress) {
           throw new Error("Alamat sudah ada");
         }
 
@@ -56,43 +56,43 @@ export async function POST(req: Request) {
             name: buyer_address,
             factory_id: parseInt(factory_id),
             cost: location_price,
-          }
+          },
         });
         location_id = address.id;
       } else {
-        if(!is_distributor) {
+        if (!is_distributor) {
           const location = await tx.location.findFirst({
             where: {
               id: parseInt(location_selected),
-            }
+            },
           });
-          if(!location) {
+          if (!location) {
             throw new Error("Alamat tidak ditemukan");
           }
           location_id = location.id;
         }
       }
-      if(new_pembeli) {
+      if (new_pembeli) {
         const buyer = await tx.buyer.create({
           data: {
             name: buyer_name,
             address: buyer_address,
-            factory_id: parseInt(factory_id), 
-          }
+            factory_id: parseInt(factory_id),
+          },
         });
         pembeli_id = buyer.id;
-      } else{
+      } else {
         pembeli_id = buyer_id;
       }
 
-      if(is_distributor) {
+      if (is_distributor) {
         const user = await tx.user.findFirst({
           where: {
             id: parseInt(distributor_id),
-          }
+          },
         });
 
-        if(!user) {
+        if (!user) {
           throw new Error("User tidak ditemukan");
         }
 
@@ -100,16 +100,16 @@ export async function POST(req: Request) {
           where: {
             name: user.username,
             factory_id: parseInt(factory_id),
-          }
+          },
         });
 
-        if(!existBuyer) {
+        if (!existBuyer) {
           const buyer = await tx.buyer.create({
             data: {
               name: user.username,
               address: user.address,
               factory_id: parseInt(factory_id),
-            }
+            },
           });
           pembeli_id = buyer.id;
         } else {
@@ -119,21 +119,21 @@ export async function POST(req: Request) {
         const existAddress = await tx.location.findFirst({
           where: {
             name: location_selected,
-            factory_id: Number(factory_id)
-          }
+            factory_id: Number(factory_id),
+          },
         });
 
-        if(!existAddress) {
+        if (!existAddress) {
           const createLocation = await tx.location.create({
             data: {
               name: user?.address,
               factory_id: Number(factory_id),
               cost: 0,
-            }
-          })
-          location_id = Number(createLocation.id)
+            },
+          });
+          location_id = Number(createLocation.id);
         } else {
-          location_id = Number(existAddress.id)
+          location_id = Number(existAddress.id);
         }
       }
 
@@ -177,8 +177,8 @@ export async function POST(req: Request) {
           cost: location_price,
           status: "Process",
           location_id: location_id,
-          desc: "Menunggu Konfirmasi"
-        }
+          desc: "Menunggu Konfirmasi",
+        },
       });
 
       return invoice;
@@ -211,23 +211,67 @@ export async function GET(req: Request) {
     const skip = (page - 1) * limit;
     const factory_id = searchParams.get("factory_id") || "";
     const type_preorder = searchParams.get("type_preorder") || "";
-    const status_delivery = searchParams.get("status_delivery") || "" as DeliveryTrackingStatus
+    const status_delivery =
+      searchParams.get("status_delivery") || ("" as DeliveryTrackingStatus);
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+    const filterPayment = searchParams.get("filterPayment") || "";
+    const filterStatus = searchParams.get("filterStatus") || "";
+
     const where: any = {
       OR: [
         { buyer: { name: { contains: search } } },
-        { invoice_code: { contains: search } }
+        { invoice_code: { contains: search } },
       ],
       user_id: user_id ? parseInt(user_id) : undefined,
       type_preorder: type_preorder === "1" ? true : false,
     };
 
-    if(status_delivery) {
+    if (status_delivery) {
       where.deliveryTracking = {
-        status: status_delivery
-      }
+        status: status_delivery,
+      };
     }
 
-    if(factory_id) {
+    if (startDate && endDate) {
+      where.created_at = {
+        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+      };
+    }
+
+    if (filterPayment === "") {
+      delete where.payment_method_id;
+    } else if (filterPayment == "all") {
+      delete where.payment_method_id;
+    } else {
+      where.payment_method_id = Number(filterPayment);
+    }
+    if (filterStatus === "") {
+      delete where.payment_status;
+    } else if (filterStatus === "all") {
+      where.payment_status = {
+        in: [
+          PaymentStatus.Pending,
+          PaymentStatus.Paid,
+          PaymentStatus.Paid_Off,
+          PaymentStatus.Failed,
+          PaymentStatus.Cancelled,
+        ],
+      };
+    } else if (filterStatus === "Pending") {
+      where.payment_status = PaymentStatus.Pending;
+    } else if (filterStatus === "Paid") {
+      where.payment_status = PaymentStatus.Paid;
+    } else if (filterStatus === "Paid_Off") {
+      where.payment_status = PaymentStatus.Paid_Off;
+    } else if (filterStatus === "Failed") {
+      where.payment_status = PaymentStatus.Failed;
+    } else if (filterStatus === "Cancelled") {
+      where.payment_status = PaymentStatus.Cancelled;
+    }
+
+    if (factory_id) {
       where.factory_id = parseInt(factory_id);
     }
 
@@ -245,9 +289,9 @@ export async function GET(req: Request) {
         payment_method: true,
         deliveryTracking: {
           include: {
-            location: true
-          }
-        }
+            location: true,
+          },
+        },
       },
       take: limit,
       skip: skip,

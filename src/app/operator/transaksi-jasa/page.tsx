@@ -20,7 +20,7 @@ import { debounce } from "lodash";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoaderScreen from "@/components/views/loader";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/email/ui/button";
+import { Button } from "@/components/ui/button";
 
 // Type definitions for better type safety
 interface ServiceFilters {

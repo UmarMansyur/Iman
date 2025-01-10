@@ -2,12 +2,12 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
-import DetailDialog from "./detail-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatProduction } from "@/lib/utils";
 
 export const columns = (
   page: number,
-  limit: number
+  limit: number,
 ): ColumnDef<any>[] => [
   {
     id: "index",
@@ -15,107 +15,124 @@ export const columns = (
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "invoice_code",
+    accessorKey: "created_at",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Kode Invoice" />
-    ),
-  },
-  {
-    accessorKey: "buyer",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Pembeli" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-start">{row.original.buyer?.name || "-"}</div>
-    ),
-  },
-  {
-    accessorKey: "total",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-start">
-        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" })
-          .format(row.original.total)
-          .slice(0, -3)}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "payment_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status Pembayaran" />
+      <DataTableColumnHeader column={column} title="Tanggal" />
     ),
     cell: ({ row }) => {
-      const status = row.original.payment_status;
-      if (status === "Pending") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}
-          >
-            Menunggu Konfirmasi Pembayaran
-          </Badge>
-        );
-      }
-      if (status === "Paid") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}
-          >
-            Lunas
-          </Badge>
-        );
-      }
-      if (status === "Paid_Off") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}
-          >
-            Lunas
-          </Badge>
-        );
-      }
-      if (status === "Failed") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            Gagal
-          </Badge>
-        );
-      }
-      if (status === "Cancelled") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            Ditolak
-          </Badge>
-        );
-      }
+      const data = row.original as any;
+      return data.created_at
+        ? new Date(data.created_at).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "-";
     },
   },
   {
-    accessorKey: "payment_method",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Metode Pembayaran" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-start">{row.original.payment_method.name}</div>
-    ),
-  },
-
-  {
-    accessorKey: "action",
-    header: "Aksi",
+    accessorKey: "operators",
+    header: "Operator",
     cell: ({ row }) => {
-      return <DetailDialog invoice={row.original} />;
+      const morningOperator = row.original.morning_shift_user as any;
+      const afternoonOperator = row.original.afternoon_shift_user as any;
+      return (
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            {morningOperator && (
+              <Avatar className={`${afternoonOperator ? "absolute z-10" : ""}`}>
+                <AvatarImage src={morningOperator?.thumbnail} />
+                <AvatarFallback>
+                  {morningOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {afternoonOperator && (
+              <Avatar className={`${morningOperator ? "relative left-4" : ""}`}>
+                <AvatarImage src={afternoonOperator?.thumbnail} />
+                <AvatarFallback>
+                  {afternoonOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+          </div>
+          <div>
+            {morningOperator && (
+              <>
+                <p>{morningOperator?.username} (Pagi)</p>
+                <p className="text-sm text-muted-foreground">
+                  {morningOperator?.email}
+                </p>
+              </>
+            )}
+            {afternoonOperator && (
+              <>
+                <p>{afternoonOperator?.username} (Siang)</p>
+                <p className="text-sm text-muted-foreground">
+                  {afternoonOperator?.email}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "product",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Produk" />
+    ),
+    cell: ({ row }) => {
+      const product = row.original.product as any;
+      return product ? product.name + " - " + product.type : "-";
+    },
+  },
+  {
+    accessorKey: "morning_shift_amount",
+    header: "Jumlah Produksi Pagi",
+    cell: ({ row }) => {
+      const data = row.original as any;
+      const production = formatProduction(data.morning_shift_amount);
+      return (
+        <>
+          {data.morning_shift_amount ? (
+            <>
+              {production.pack} Pack / {production.bal}
+            </>
+          ) : (
+            "-"
+          )}
+        </>
+      );
+    },
+  },
+  {
+    accessorKey: "afternoon_shift_amount",
+    header: "Jumlah Produksi Siang",
+    cell: ({ row }) => {
+      const data = row.original as any;
+      const production = formatProduction(data.afternoon_shift_amount);
+      return (
+        <div>
+          {data.afternoon_shift_amount ? (
+            <>
+              {production.pack} Pack / {production.bal} Bal
+            </>
+          ) : (
+            "-"
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "total_amount",
+    header: "Total Produksi",
+    cell: ({ row }) => {
+      const data = row.original as any; 
+      const production = formatProduction(data.morning_shift_amount + data.afternoon_shift_amount);
+      return production.pack + " Pack / " + production.bal + " Bal";
     },
   },
 ];

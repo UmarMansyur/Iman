@@ -138,6 +138,11 @@ export async function GET(req: Request) {
   const skip = (page - 1) * limit;
   const factory_id = searchParams.get("factory_id") || "";
   const status = searchParams.get("status") || ("" as TransactionServiceStatus);
+  const filterPayment = searchParams.get("filterPayment") || "";
+  const filterStatus = searchParams.get("filterStatus") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+
   const where: any = {
     OR: [
       { buyer: { name: { contains: search } } },
@@ -147,8 +152,27 @@ export async function GET(req: Request) {
     user_id: user_id ? parseInt(user_id) : undefined,
   };
 
+  if (startDate && endDate) {
+    where.created_at = {
+      gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+      lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+    };
+  }
+
   if (status) {
     where.status = status;
+  }
+
+  if (filterPayment == "all") {
+    delete where.payment_method_id;
+  } else {
+    where.payment_method_id = parseInt(filterPayment);
+  }
+
+  if (filterStatus == "all") {
+    delete where.status;
+  } else {
+    where.status = filterStatus as TransactionServiceStatus;
   }
 
   const total = await prisma.transactionService.count({ where });

@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
 import { FactoryFormState } from "@/lib/definitions";
-import { Plus } from "lucide-react";
-import { DialogClose } from "@radix-ui/react-dialog";
+import { Loader2, Plus, Save } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -31,9 +31,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export default function Form({ fetchData, users }: { fetchData: () => Promise<void>, users: { value: string; label: string }[] }) {
   const [state, setState] = useState<FactoryFormState>();
   const [selectedUser, setSelectedUser] = useState<{ value: string; label: string }>();
-
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     const formData = new FormData(e.currentTarget);
     formData.append("user_id", selectedUser?.value || "");
     
@@ -45,6 +46,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
       setOpen(false);
     }
     await fetchData();
+    setLoading(false);
   };
 
   const [open, setOpen] = useState(false);
@@ -87,7 +89,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="creator">Owner</Label>
-              <Popover open={open} onOpenChange={setOpen}>
+              <Popover open={open} onOpenChange={setOpen} modal={true} defaultOpen={true}>
                 <PopoverTrigger asChild className="col-span-3" name="user_id">
                   <Button
                     variant="ghost"
@@ -98,7 +100,7 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
                    <ChevronsUpDown className="opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0 justify-between">
+                <PopoverContent className="w-full p-0 justify-between" onOpenAutoFocus={(e) => e.preventDefault()}>
                   <Command>
                     <CommandInput placeholder="Search framework..." />
                     <CommandList>
@@ -173,7 +175,8 @@ export default function Form({ fetchData, users }: { fetchData: () => Promise<vo
                 Batal
               </Button>
             </DialogClose>
-            <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+            <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Simpan
             </Button>
           </DialogFooter>

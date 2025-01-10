@@ -3,13 +3,19 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ActionCell } from "./components/ActionCell";
+import { formatProduction } from "@/lib/utils";
+import DeleteButton from "@/components/delete-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 
 export const columns = (
-  fetchData: () => Promise<void>,
+  fetchReports: () => Promise<void>,
   page: number,
-  limit: number,
-  products: any[]
+  limit: number
 ): ColumnDef<any>[] => [
   {
     id: "index",
@@ -23,11 +29,13 @@ export const columns = (
     ),
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.created_at ? new Date(data.created_at).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }) : "-";
+      return data.created_at
+        ? new Date(data.created_at).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "-";
     },
   },
   {
@@ -39,40 +47,40 @@ export const columns = (
       return (
         <div className="flex items-start gap-4">
           <div className="relative flex-shrink-0">
-            {
-              morningOperator && (
-                <Avatar className={`${afternoonOperator ? "absolute z-10" : ""}`}>
-              <AvatarImage src={morningOperator?.thumbnail} />
-              <AvatarFallback>{morningOperator?.username?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )
-            }
-            {
-              afternoonOperator && (
-                <Avatar className={`${morningOperator ? "relative left-4" : ""}`}>
-              <AvatarImage src={afternoonOperator?.thumbnail} />
-              <AvatarFallback>{afternoonOperator?.username?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )
-            }
+            {morningOperator && (
+              <Avatar className={`${afternoonOperator ? "absolute z-10" : ""}`}>
+                <AvatarImage src={morningOperator?.thumbnail} />
+                <AvatarFallback>
+                  {morningOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            {afternoonOperator && (
+              <Avatar className={`${morningOperator ? "relative left-4" : ""}`}>
+                <AvatarImage src={afternoonOperator?.thumbnail} />
+                <AvatarFallback>
+                  {afternoonOperator?.username?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
           </div>
           <div>
-            {
-              morningOperator && (
-                <>
-                  <p>{morningOperator?.username} (Pagi)</p>
-                  <p className="text-sm text-muted-foreground">{morningOperator?.email}</p>
-                </>
-              )
-            }
-            {
-              afternoonOperator && (
-                <>
-                  <p>{afternoonOperator?.username} (Siang)</p>
-                  <p className="text-sm text-muted-foreground">{afternoonOperator?.email}</p>
-                </>
-              )
-            }
+            {morningOperator && (
+              <>
+                <p>{morningOperator?.username} (Pagi)</p>
+                <p className="text-sm text-muted-foreground">
+                  {morningOperator?.email}
+                </p>
+              </>
+            )}
+            {afternoonOperator && (
+              <>
+                <p>{afternoonOperator?.username} (Siang)</p>
+                <p className="text-sm text-muted-foreground">
+                  {afternoonOperator?.email}
+                </p>
+              </>
+            )}
           </div>
         </div>
       );
@@ -90,18 +98,40 @@ export const columns = (
   },
   {
     accessorKey: "morning_shift_amount",
-    header: "Produksi Pagi",
+    header: "Jumlah Produksi Pagi",
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.morning_shift_amount ? data.morning_shift_amount.toLocaleString("id-ID") : "-";
+      const production = formatProduction(data.morning_shift_amount);
+      return (
+        <>
+          {data.morning_shift_amount ? (
+            <>
+              {production.pack} Pack / {production.bal}
+            </>
+          ) : (
+            "-"
+          )}
+        </>
+      );
     },
   },
   {
     accessorKey: "afternoon_shift_amount",
-    header: "Produksi Siang",
+    header: "Jumlah Produksi Siang",
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.afternoon_shift_amount ? data.afternoon_shift_amount.toLocaleString("id-ID") : "-";
+      const production = formatProduction(data.afternoon_shift_amount);
+      return (
+        <div>
+          {data.afternoon_shift_amount ? (
+            <>
+              {production.pack} Pack / {production.bal} Bal
+            </>
+          ) : (
+            "-"
+          )}
+        </div>
+      );
     },
   },
   {
@@ -109,35 +139,33 @@ export const columns = (
     header: "Total Produksi",
     cell: ({ row }) => {
       const data = row.original as any;
-      const totalAmount = (data.morning_shift_amount || 0) + (data.afternoon_shift_amount || 0);
-      return totalAmount ? totalAmount.toLocaleString("id-ID") : "-";
-    },
-  },
-  {
-    accessorKey: "morning_shift_time",
-    header: "Waktu Pelaporan Pagi",
-    cell: ({ row }) => {
-      const data = row.original as any;
-      return data.morning_shift_time ? new Date(data.morning_shift_time).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) : "-";
-    },
-  },
-  {
-    accessorKey: "afternoon_shift_time",
-    header: "Waktu Pelaporan Siang",
-    cell: ({ row }) => {
-      const data = row.original as any;
-      return data.afternoon_shift_time ? new Date(data.afternoon_shift_time).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }) : "-";
+      const production = formatProduction(
+        data.morning_shift_amount + data.afternoon_shift_amount
+      );
+      return production.pack + " Pack / " + production.bal + " Bal";
     },
   },
   {
     accessorKey: "action",
     header: "Aksi",
-    cell: ({ row }) => <ActionCell row={row} fetchData={fetchData} products={products} />, 
+    cell: ({ row }) => {
+      const report = row.original as any;
+      return (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <div className="rounded-md p-2 cursor-pointer">
+              <MoreHorizontal className="w-4 h-4" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DeleteButton
+              fetchData={fetchReports}
+              endpoint="laporan-produksi"
+              id={report.id.toString()}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];

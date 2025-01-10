@@ -1,6 +1,6 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { Settings } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -29,10 +29,10 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
-              <Settings className="w-4 h-4" />
+              <MoreHorizontal className="w-4 h-4" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">

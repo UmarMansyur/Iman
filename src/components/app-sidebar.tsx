@@ -6,12 +6,11 @@ import {
   CheckCheckIcon,
   Combine,
   Database,
-  FileChartLine,
+  FileText,
   Home,
-  // MapPin,
-  PackageCheckIcon,
   PackageSearch,
-  ScrollText,
+  PercentCircle,
+  PercentDiamond,
   SendToBack,
   Settings,
   ShoppingBagIcon,
@@ -60,28 +59,10 @@ const data = {
           url: "/admin/satuan",
         },
         {
-          title: "Bahan Baku",
-          url: "/admin/bahan-baku",
-        },
-        {
-          title: "Satuan Bahan Baku",
-          url: "/admin/satuan-bahan-baku",
-        },
-        {
           title: "Hak Akses",
           url: "/admin/hak-akses",
         },
       ],
-    },
-    {
-      title: "Data Pembelian",
-      url: "#",
-      icon: ScrollText,
-    },
-    {
-      title: "Data Penjualan",
-      url: "#",
-      icon: FileChartLine,
     },
     {
       title: "Pengaturan",
@@ -122,23 +103,33 @@ const data = {
     },
     {
       title: "Data Produk",
-      url: "/owner/produk",
+      url: "#",
       icon: PackageSearch,
+      items: [
+        {
+          title: "Daftar Produk",
+          url: "/owner/produk",
+        },
+        {
+          title: "Stok Produk",
+          url: "/owner/stok-produk",
+        },
+      ],
     },
     {
-      title: "Stok Produk",
-      url: "/owner/stok-produk",
-      icon: PackageCheckIcon,
-    },
-    {
-      title: "Laporan Produksi",
+      title: "Laporan Produksi Produk",
       url: "/owner/laporan-produksi",
-      icon: ScrollText,
+      icon: FileText,
     },
     {
-      title: "Data Order",
-      url: "/owner/data-order",
-      icon: ScrollText,
+      title: "Laporan Transaksi Produk",
+      url: "/owner/laporan-transaksi",
+      icon: PercentDiamond,
+    },
+    {
+      title: "Laporan Transaksi Jasa",
+      url: "/owner/laporan-transaksi-jasa",
+      icon: PercentCircle,
     },
     {
       title: "Manajemen Operator",
@@ -270,11 +261,6 @@ const data = {
         },
       ],
     },
-    // {
-    //   title: "Pre Order",
-    //   url: "/distributor/pre-order",
-    //   icon: SendToBack,
-    // },
     {
       title: "Data Order",
       url: "/distributor/data-order",

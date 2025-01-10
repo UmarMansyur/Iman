@@ -2,6 +2,7 @@
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 
+
 // GET Request - Fetch Reports
 export async function GET(request: Request) {
   try {
@@ -12,7 +13,9 @@ export async function GET(request: Request) {
     const sortBy = searchParams.get("sortBy") || "created_at";
     const sortOrder = searchParams.get("sortOrder") || "desc";
     const factoryId = searchParams.get("factoryId");
-
+    const filterProduct = searchParams.get("filterProduct") || "";
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -20,11 +23,26 @@ export async function GET(request: Request) {
     if (search) {
       where.OR = [
         { product: { name: { contains: search } } },
-        { user: { username: { contains: search } } },
+        { User: { username: { contains: search } } },
       ];
     }
     if (factoryId) {
       where.factory_id = parseInt(factoryId, 10);
+    }
+
+    if (filterProduct === "all") {
+      where.product_id = {
+        not: null,
+      };
+    } else if (filterProduct) {
+      where.product_id = parseInt(filterProduct, 10);
+    }
+
+    if (startDate && endDate) {
+      where.created_at = {
+        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+      };
     }
 
     const [data, total] = await Promise.all([
@@ -32,6 +50,7 @@ export async function GET(request: Request) {
         where,
         include: {
           product: true,
+          User: true,
           factory: {
             select: {
               id: true,
@@ -61,8 +80,57 @@ export async function GET(request: Request) {
       prisma.reportProduct.count({ where }),
     ]);
 
+    // get total produksi per bulan, minggu, dan hari
+    const totalProduksiBulan = await prisma.reportProduct.aggregate({
+      _sum: {
+        morning_shift_amount: true,
+        afternoon_shift_amount: true,
+      },
+      where: {
+        created_at: {
+          gte: new Date(new Date().setMonth(0, 1)),
+          lt: new Date(new Date().setMonth(11, 31)),
+        },
+      },
+    });
+
+    const totalProduksiMinggu = await prisma.reportProduct.aggregate({
+      _sum: {
+        morning_shift_amount: true,
+        afternoon_shift_amount: true,
+      },
+      where: {
+        created_at: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 6)),
+          lt: new Date(new Date().setDate(new Date().getDate() + 1)),
+        },
+      },
+    });
+
+    const totalProduksiHari = await prisma.reportProduct.aggregate({
+      _sum: {
+        morning_shift_amount: true,
+        afternoon_shift_amount: true,
+      },
+      where: {
+        created_at: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          lt: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      },
+    });
+
     return NextResponse.json({
       data,
+      total_produksi_bulan:
+        (totalProduksiBulan._sum.morning_shift_amount || 0) +
+        (totalProduksiBulan._sum.afternoon_shift_amount || 0),
+      total_produksi_minggu:
+        (totalProduksiMinggu._sum.morning_shift_amount || 0) +
+        (totalProduksiMinggu._sum.afternoon_shift_amount || 0),
+      total_produksi_hari:
+        (totalProduksiHari._sum.morning_shift_amount || 0) +
+        (totalProduksiHari._sum.afternoon_shift_amount || 0),
       pagination: {
         total,
         totalPages: Math.ceil(total / limit),
@@ -102,14 +170,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // amount adalah jumlah produk dari morning_shift_amount dan afternoon_shift_amount
     const amount = morning_shift_amount
       ? parseFloat(morning_shift_amount)
       : 0 + afternoon_shift_amount
       ? parseFloat(afternoon_shift_amount)
       : 0;
 
-    // cegah jika hari ini telah ada laporan produksi
     const existReport = await prisma.reportProduct.findFirst({
       where: {
         created_at: {
@@ -190,4 +256,14 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = parseInt(searchParams.get("id") || "0");
+  await prisma.$transaction(async (tx) => {
+    await tx.stockProduct.deleteMany({ where: { report_product_id: id } });
+    await tx.reportProduct.delete({ where: { id } });
+  });
+  return NextResponse.json({ message: "Laporan produksi berhasil dihapus" });
 }

@@ -23,6 +23,11 @@ export default function PabrikPage() {
     totalPages: 0,
   });
 
+  // document
+  useEffect(() => {
+    document.title = "Daftar Produk - Indera Distribution";
+  }, []);
+
   const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",

@@ -7,8 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Printer } from "lucide-react";
-import DeleteButtonQuery from "@/components/DeleteButton";
+import { MoreHorizontal, Printer } from "lucide-react";
 import Link from "next/link";
 export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -162,20 +161,6 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
                 <span>Cetak Besar</span>
               </div>
             </Link>
-            <Link
-              href={"/operator/transaksi-jasa/edit/" + data.transaction_code}
-              className="hover:bg-gray-100"
-            >
-              <div className="flex p-2 items-center hover:bg-gray-50">
-                <Pencil className="w-4 h-4 mr-3"></Pencil>
-                <span>Edit</span>
-              </div>
-            </Link>
-            <DeleteButtonQuery
-              endpoint="transaction-service"
-              id={data?.id.toString()}
-              queryKey="transaction-service"
-            />
           </DropdownMenuContent>
         </DropdownMenu>
       );
