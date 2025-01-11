@@ -143,7 +143,10 @@ export default function LokasiPengirimanPage() {
     }
   }, [user?.factory_selected?.id]);
 
-  // Create a memoized debounced search function
+  useEffect(() => {
+    document.title = "Laporan Transaksi Jasa - Indera Distribution";
+  }, []);
+
   const debouncedSearch = useMemo(
     () =>
       debounce((searchValue: string) => {

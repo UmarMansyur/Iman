@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 import { uploadFile } from "@/lib/imagekit";
 import bcrypt from "bcrypt";
+import { Gender } from "@prisma/client";
 export async function GET(request: Request, { params }: { params: any }) {
   const paramsId = await params;
   const id = paramsId.id;
@@ -64,7 +65,7 @@ export async function PATCH(request: Request, { params }: { params: any }) {
 
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: { username, email, password: hashedPassword, gender, date_of_birth, address, thumbnail: thumbnailUrl }
+      data: { username, email, password: hashedPassword, gender: gender as Gender, date_of_birth, address, thumbnail: thumbnailUrl }
     });
 
     const result = { ...updatedUser, password: undefined };

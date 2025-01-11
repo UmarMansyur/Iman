@@ -33,6 +33,7 @@ import { ShoppingCart, Trash, Loader2 } from "lucide-react";
 import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { redirect } from "next/navigation";
 export default function CreateTransaction() {
   const [paymentMethod, setPaymentMethod] = useState([]);
   const [paymentMethodId, setPaymentMethodId] = useState<any>();
@@ -101,9 +102,15 @@ export default function CreateTransaction() {
       return;
     }
 
+    const existProduct = cart.find((item: any) => item.product_id === product_id);
+    if(existProduct) {
+      toast.error("Produk sudah ada di keranjang");
+      return;
+    }
+
     const data = {
       product_id: product_id,
-      desc: product.find((item: any) => item.id === product_id)?.name,
+      desc: product.find((item: any) => item.id === product_id)?.name + " - " + product.find((item: any) => item.id === product_id)?.type, 
       jumlah: jumlah,
       harga: priceProductBall,
       total: totalPrice,
@@ -113,7 +120,9 @@ export default function CreateTransaction() {
       total_bal: amountBal,
     };
     setCart([...cart, data]);
-    setProductId(null);
+    setProductId(undefined);
+    setPriceProduct(0);
+    setPriceProductBall(0);
     setJumlah(0);
     setDiskon(0);
     setTotalHarga(0);
@@ -197,6 +206,7 @@ export default function CreateTransaction() {
       } else {
         toast.error(responseData.message);
       }
+      redirect("/distributor/data-order");
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +240,7 @@ export default function CreateTransaction() {
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
                 <Label className="font-medium text-sm">Nama Produk</Label>
-                <Select onValueChange={handleSelectProduct}>
+                <Select onValueChange={handleSelectProduct} value={product_id}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Produk" />
                   </SelectTrigger>
@@ -327,7 +337,7 @@ export default function CreateTransaction() {
                 <TableRow className="bg-muted">
                   <TableHead className="text-center w-16">No</TableHead>
                   <TableHead>Nama Produk</TableHead>
-                  <TableHead className="text-center">Jumlah</TableHead>
+                  <TableHead className="text-center">Jumlah(Bal)</TableHead>
                   <TableHead className="text-end">Harga Produk/Bal</TableHead>
                   <TableHead className="text-end">Total</TableHead>
                   <TableHead className="text-center w-20">Aksi</TableHead>

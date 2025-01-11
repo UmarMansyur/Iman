@@ -25,9 +25,24 @@ import { useUserStore } from "@/store/user-store";
 import { useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import toast from "react-hot-toast";
 import { redirect } from "next/navigation";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
+import {
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Search, SearchCheckIcon } from "lucide-react";
+import EmptyData from "@/components/views/empty-data";
 
 export default function CreateTransaction() {
   const { user } = useUserStore();
@@ -56,12 +71,19 @@ export default function CreateTransaction() {
   const [paymentMethodList, setPaymentMethodList] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryCost, setDeliveryCost] = useState<number>(0);
+  const [open, setOpen] = useState(false);
+  const [searchBuyer, setSearchBuyer] = useState<string>("");
+  const [filteredBuyer, setFilteredBuyer] = useState<any[]>([]);
 
   const getProduct = async () => {
     const response = await fetch(
       `/api/distributor/data-stock?distributor_id=${user?.id}&factory_id=${user?.factory_selected?.id}`
     );
     const data = await response.json();
+    if(data.data.length === 0) {
+      toast.error("Tidak ada data produk yang tersedia, Silahkan order produk terlebih dahulu");
+      redirect("/distributor/pre-order");
+    }
     setProduct(data.data);
   };
 
@@ -83,6 +105,34 @@ export default function CreateTransaction() {
     setExistingBuyers(data.data);
   };
 
+
+    // Tambahkan state untuk paginasi
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5; // Jumlah item per halaman
+  
+    // Tambahkan fungsi untuk menghitung total halaman
+    const totalPages = Math.ceil(filteredBuyer.length / itemsPerPage);
+  
+    // Fungsi untuk mendapatkan data yang ditampilkan di halaman saat ini
+    const getCurrentPageData = () => {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      return filteredBuyer.slice(startIndex, endIndex);
+    };
+
+  const handleSearchBuyer = async () => {
+    const filteredBuyer = existingBuyers.filter((buyer: any) =>
+      buyer.name.toLowerCase().includes(searchBuyer.toLowerCase())
+    );
+    setFilteredBuyer(filteredBuyer);
+  };
+
+  const handleBuyerSelect = (buyer: any) => {
+    setSelectedBuyer(buyer);
+    setBuyerType("existing");
+    setOpen(false);
+  };
+
   const formatRibuan = (number: number) => {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
@@ -91,55 +141,59 @@ export default function CreateTransaction() {
     const response = await fetch(`/api/payment?limit=1000&page=1`);
     const data = await response.json();
     setPaymentMethodList(data.payments);
-  }
+  };
 
   const addToCart = () => {
     if (!selectedProduct) return;
     const productData = product.find(
       (item: any) => item.product.id == selectedProduct
     );
-    
+
     if (quantity <= 0 || price <= 0) {
       toast.error("Jumlah dan harga harus lebih dari 0");
       return;
     }
 
     // jika sudah ada di cart maka tambahkan quantitynya
-    const existingItem = cart.find(item => item.product_id === selectedProduct);
+    const existingItem = cart.find(
+      (item) => item.product_id === selectedProduct
+    );
     if (existingItem) {
       existingItem.quantity += quantity;
       existingItem.subtotal = existingItem.quantity * price;
     } else {
       setCart([
         ...cart,
-      {
-        product_id: isProduct ? selectedProduct : null,
-        product_name: productData?.product.name,
-        product_type: productData?.product.type,
-        quantity: quantity,
-        price: price,
-        subtotal: subtotal,
-      },
-    ]);
-  }
+        {
+          product_id: isProduct ? selectedProduct : null,
+          product_name: productData?.product.name,
+          product_type: productData?.product.type,
+          quantity: quantity,
+          price: price,
+          subtotal: subtotal,
+        },
+      ]);
+    }
     setQuantity(0);
     setPrice(0);
     setSubtotal(0);
     setSelectedProduct(undefined);
   };
 
-  const handleSelectBuyer = (value: string) => {
-    const existingBuyer = existingBuyers.find((buyer: any) => buyer.id == value);
-    // alamat lengkap
-    const address = `${existingBuyer.address}, ${existingBuyer.city}, ${existingBuyer.province}`;
-    setSelectedBuyer(existingBuyer.id);
-    setBuyerForm({
-      name: existingBuyer.name,
-      address: address,
-      phone: existingBuyer.phone,
-      notes: "",
-    });
-  }
+  // const handleSelectBuyer = (value: string) => {
+  //   const existingBuyer = existingBuyers.find(
+  //     (buyer: any) => buyer.id == value
+  //   );
+  //   // alamat lengkap
+  //   const address = `${existingBuyer.address}, ${existingBuyer.city}, ${existingBuyer.province}`;
+  //   setSelectedBuyer(existingBuyer.id);
+  //   setBuyerForm({
+  //     name: existingBuyer.name,
+  //     address: address,
+  //     phone: existingBuyer.phone,
+  //     notes: "",
+  //   });
+  // };
 
   const handleSubmit = async () => {
     try {
@@ -170,14 +224,20 @@ export default function CreateTransaction() {
       const payload = {
         distributor_id: user?.id,
         payment_method_id: paymentMethod,
-        buyer_name: buyerType === "new" ? buyerForm.name : existingBuyers.find(b => b.id === selectedBuyer)?.name,
-        buyer_address: buyerType === "new" ? buyerForm.address : existingBuyers.find(b => b.id === selectedBuyer)?.address,
+        buyer_name:
+          buyerType === "new"
+            ? buyerForm.name
+            : existingBuyers.find((b) => b.id === selectedBuyer)?.name,
+        buyer_address:
+          buyerType === "new"
+            ? buyerForm.address
+            : existingBuyers.find((b) => b.id === selectedBuyer)?.address,
         factory_id: user?.factory_selected?.id,
         is_new_buyer: buyerType === "new",
         ppn: 0,
         discount: 0,
         cost: 0,
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           desc: item.product_name,
           amount: item.quantity,
           price: item.price,
@@ -188,9 +248,10 @@ export default function CreateTransaction() {
         })),
         down_payment: downPayment,
         remaining_balance: remainingPayment + deliveryCost,
-        total_amount: cart.reduce((acc, item) => acc + item.subtotal, 0) + deliveryCost,
+        total_amount:
+          cart.reduce((acc, item) => acc + item.subtotal, 0) + deliveryCost,
         cost_delivery: deliveryCost,
-        desc_delivery: buyerForm.notes || ""
+        desc_delivery: buyerForm.notes || "",
       };
 
       const response = await fetch("/api/distributor/transaksi", {
@@ -295,12 +356,15 @@ export default function CreateTransaction() {
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Produk">
-                        {
-                          selectedProduct ?
-                          product.find(
-                            (item: any) => item.product.id == selectedProduct
-                          )?.product.name + " - " + product.find(item => item.product.id == selectedProduct)?.product.type 
-                        : "Pilih Produk"}
+                        {selectedProduct
+                          ? product.find(
+                              (item: any) => item.product.id == selectedProduct
+                            )?.product.name +
+                            " - " +
+                            product.find(
+                              (item) => item.product.id == selectedProduct
+                            )?.product.type
+                          : "Pilih Produk"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -357,18 +421,16 @@ export default function CreateTransaction() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Sub Total:</Label>
-                <Input
-                  type="text"
-                  value={formatRibuan(subtotal)}
-                  disabled
-                />
+                <Input type="text" value={formatRibuan(subtotal)} disabled />
               </div>
             </div>
             <div className="flex w-full justify-between mt-3">
               <Button variant="outline" onClick={() => setCart([])}>
                 Reset
               </Button>
-              <Button type="button" onClick={addToCart}>Tambah ke Keranjang</Button>
+              <Button type="button" onClick={addToCart}>
+                Tambah ke Keranjang
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -481,7 +543,9 @@ export default function CreateTransaction() {
               <Label>Total Belanja</Label>
               <Input
                 type="text"
-                value={formatRibuan(cart.reduce((acc, item) => acc + item.subtotal, 0))}
+                value={formatRibuan(
+                  cart.reduce((acc, item) => acc + item.subtotal, 0)
+                )}
                 disabled
               />
             </div>
@@ -498,10 +562,7 @@ export default function CreateTransaction() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>Jenis Pembayaran</Label>
-              <Select 
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-              >
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Jenis Pembayaran" />
                 </SelectTrigger>
@@ -538,7 +599,10 @@ export default function CreateTransaction() {
             <Label>Total Keseluruhan</Label>
             <Input
               type="text"
-              value={formatRibuan(cart.reduce((acc, item) => acc + item.subtotal, 0) + deliveryCost)}
+              value={formatRibuan(
+                cart.reduce((acc, item) => acc + item.subtotal, 0) +
+                  deliveryCost
+              )}
               disabled
             />
           </div>
@@ -551,103 +615,131 @@ export default function CreateTransaction() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <RadioGroup
-              value={buyerType}
-              onValueChange={(value: "new" | "existing") => setBuyerType(value)}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="new" id="new" />
-                <Label htmlFor="new">Pembeli Baru</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="existing" id="existing" />
-                <Label htmlFor="existing">Pembeli Lama</Label>
-              </div>
-            </RadioGroup>
-
-            {buyerType === "existing" ? (
-              <div className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <Label>Pilih Pembeli</Label>
-                  <Select
-                    value={selectedBuyer}
-                    onValueChange={handleSelectBuyer}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Pembeli" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {existingBuyers.map((buyer: any) => (
-                        <SelectItem key={buyer.id} value={buyer.id}>
-                          {buyer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {selectedBuyer && (
-                  <div className="space-y-2">
-                    <p>
-                      <strong>Alamat:</strong>{" "}
-                      {
-                        existingBuyers.find((b) => b.id === selectedBuyer)
-                          ?.address
-                      }
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      <Label>Catatan Alamat (Opsional)</Label>
-                      <Textarea
-                        placeholder="Tambahan informasi alamat pengiriman"
-                        value={buyerForm.notes}
-                        onChange={(e) =>
-                          setBuyerForm({ ...buyerForm, notes: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <Label>Nama Pembeli</Label>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label>Nama Pembeli</Label>
+                <div className="flex justify-between items-center gap-2">
                   <Input
                     value={buyerForm.name}
                     onChange={(e) =>
                       setBuyerForm({ ...buyerForm, name: e.target.value })
                     }
                   />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Alamat Lengkap</Label>
-                  <Textarea
-                    placeholder="Masukkan alamat lengkap (RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi)"
-                    value={buyerForm.address}
-                    onChange={(e) =>
-                      setBuyerForm({ ...buyerForm, address: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Catatan Alamat (Opsional)</Label>
-                  <Textarea
-                    placeholder="Tambahan informasi alamat pengiriman"
-                    value={buyerForm.notes}
-                    onChange={(e) =>
-                      setBuyerForm({ ...buyerForm, notes: e.target.value })
-                    }
-                  />
+                  <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                      <div className="flex items-center border p-3 rounded-md cursor-pointer bg-blue-500 text-white">
+                        <SearchCheckIcon className="w-4 h-4" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Pilih Pembeli</DialogTitle>
+                        <DialogDescription>
+                          Pilih pembeli dari list pembeli
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Input
+                          type="text"
+                          placeholder="Cari Pembeli"
+                          value={searchBuyer}
+                          onChange={(e) => setSearchBuyer(e.target.value)}
+                        />
+                        <Button type="button" onClick={handleSearchBuyer}>
+                          <Search className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nama</TableHead>
+                            <TableHead>Alamat</TableHead>
+                            <TableHead>Aksi</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {getCurrentPageData().map((buyer: any) => (
+                            <TableRow key={buyer.id}>
+                              <TableCell>{buyer.name}</TableCell>
+                              <TableCell>{buyer.address}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleBuyerSelect(buyer)}
+                                >
+                                  Pilih
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filteredBuyer.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center">
+                                <EmptyData text="Tidak ada pembeli yang ditemukan" />
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+
+                      {/* Tambahkan kontrol paginasi */}
+                      <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          disabled={currentPage === 1}
+                        >
+                          Sebelumnya
+                        </Button>
+                        <div className="text-sm">
+                          Halaman {currentPage} dari {totalPages}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          disabled={currentPage === totalPages}
+                        >
+                          Selanjutnya
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
-            )}
+              <div className="flex flex-col gap-2">
+                <Label>Alamat Lengkap</Label>
+                <Textarea
+                  placeholder="Masukkan alamat lengkap (RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi)"
+                  value={buyerForm.address}
+                  onChange={(e) =>
+                    setBuyerForm({ ...buyerForm, address: e.target.value })
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Catatan Alamat (Opsional)</Label>
+                <Textarea
+                  placeholder="Tambahan informasi alamat pengiriman"
+                  value={buyerForm.notes}
+                  onChange={(e) =>
+                    setBuyerForm({ ...buyerForm, notes: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
       <div className="flex justify-end mt-4 mb-8">
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isSubmitting}
-        >
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? "Menyimpan..." : "Simpan Transaksi"}
         </Button>
       </div>

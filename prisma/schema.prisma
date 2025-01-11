@@ -1,6 +1,6 @@
 // This is your Prisma schema file
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
@@ -25,6 +25,30 @@ enum PaymentStatus {
 enum UserType {
   Administrator
   Operator
+}
+
+model FactoryDistributor {
+  id                Int                 @id @default(autoincrement())
+  Factory           Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id        Int
+  name              String
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  MemberDistributor MemberDistributor[]
+
+  @@map("factory_distributors")
+}
+
+model MemberDistributor {
+  id                     Int                @id @default(autoincrement())
+  factoryDistributor     FactoryDistributor @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id Int
+  User                   User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                Int
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+
+  @@map("member_distributors")
 }
 
 model User {
@@ -59,6 +83,7 @@ model User {
   Notification                 Notification[]
   InvoiceJasa                  InvoiceJasa[]
   TransactionService           TransactionService[]
+  MemberDistributor            MemberDistributor[]
 
   @@map("users")
 }
@@ -98,6 +123,7 @@ model Factory {
   InvoiceJasa            InvoiceJasa[]
   Service                Service[]
   TransactionService     TransactionService[]
+  FactoryDistributor     FactoryDistributor[]
 
   @@map("factories")
 }

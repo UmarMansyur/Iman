@@ -217,6 +217,25 @@ async function main(): Promise<void> {
     ],
   });
 
+  const factoryDistributor = await prisma.factoryDistributor.create({
+    data: {
+      factory_id: prsj.id,
+      name: "Indera Distribution",
+      MemberDistributor: {
+        createMany: {
+          data: [
+            {
+              user_id: ditributor2.id,
+            },
+            {
+              user_id: distributor.id,
+            },
+          ],
+        },
+      },
+    },
+  });
+
   await prisma.bankAccount.createMany({
     data: [
       {

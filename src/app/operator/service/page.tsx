@@ -57,6 +57,7 @@ export default function LokasiPengirimanPage() {
 
   const fetchServices = async () => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
+    document.title = "Layanan Jasa - Indera Distribution";
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -65,7 +66,9 @@ export default function LokasiPengirimanPage() {
       sortOrder,
     });
 
-    const response = await fetch(`/api/service?${params}&factory_id=${user?.factory_selected?.id}`);
+    const response = await fetch(
+      `/api/service?${params}&factory_id=${user?.factory_selected?.id}`
+    );
 
     if (!response.ok) {
       throw new Error("Failed to fetch services");
@@ -126,9 +129,7 @@ export default function LokasiPengirimanPage() {
       <Card>
         <CardHeader>
           <CardTitle>Layanan Jasa</CardTitle>
-          <CardDescription>
-            Daftar layanan jasa yang tersedia
-          </CardDescription>
+          <CardDescription>Daftar layanan jasa yang tersedia</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center pb-4">

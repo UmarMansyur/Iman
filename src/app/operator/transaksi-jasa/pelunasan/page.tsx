@@ -37,7 +37,7 @@ interface ServiceData {
   };
 }
 
-export default function LokasiPengirimanPage() {
+export default function PelunasanPage() {
   // Separate state for local input and query parameters
   const [searchInput, setSearchInput] = useState("");
   const [queryParams, setQueryParams] = useState<
@@ -52,6 +52,10 @@ export default function LokasiPengirimanPage() {
     sortBy: "id",
     sortOrder: "asc",
   });
+
+  useEffect(() => {
+    document.title = "Pelunasan - Indera Distribution";
+  }, []);
 
   const { user } = useUserStore();
 

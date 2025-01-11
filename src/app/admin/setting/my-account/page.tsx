@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 import MainPage from "@/components/main";
@@ -18,11 +19,11 @@ import { toast } from "react-hot-toast";
 
 export default function MyAccount() {
   const { user } = useUserStore();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<any>({
     username: user?.username || "",
     email: user?.email || "",
     address: "",
-    thumbnail: user?.thumbnail || "",
+    thumbnail: user?.thumbnail || null,
     gender: "",
     date_of_birth: new Date(),
   });
@@ -60,7 +61,7 @@ export default function MyAccount() {
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setForm({ ...form, thumbnail: file.name });
+      setForm({ ...form, thumbnail: file });
       const objectUrl = URL.createObjectURL(file);
       setTempThumbnail(objectUrl);
     }
@@ -96,13 +97,13 @@ export default function MyAccount() {
       body: formData,
     });
     const result = await response.json();
+    setIsLoading(false);
     if (!response.ok) {
       toast.error(result.message);
     } else {
       toast.success(result.message);
       await fetchUser();
     }
-    setIsLoading(false);
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -219,6 +220,7 @@ export default function MyAccount() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={passwordForm.oldPassword}
+                      placeholder="Masukkan kata sandi lama"
                       onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
                     />
                     <button
@@ -237,6 +239,7 @@ export default function MyAccount() {
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       value={passwordForm.newPassword}
+                      placeholder="Masukkan kata sandi baru"
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     />
                     <button
@@ -255,6 +258,7 @@ export default function MyAccount() {
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       value={passwordForm.confirmPassword}
+                      placeholder="Masukkan kata sandi baru"
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                     />
                     <button

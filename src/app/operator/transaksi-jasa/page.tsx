@@ -55,6 +55,10 @@ export default function LokasiPengirimanPage() {
     sortOrder: "asc",
   });
 
+  useEffect(() => {
+    document.title = "Transaksi Jasa - Indera Distribution";
+  }, []);
+
   const { user } = useUserStore();
 
   const fetchServices = async () => {
