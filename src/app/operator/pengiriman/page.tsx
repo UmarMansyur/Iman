@@ -19,6 +19,10 @@ export default function PabrikPage() {
     totalPages: 0,
   });
 
+  useEffect(() => {
+    document.title = "Pengiriman - Indera Distribution";
+  }, []);
+
   const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",
@@ -32,7 +36,6 @@ export default function PabrikPage() {
     queryKey: ['transactions', pagination, filters, user?.factory_selected?.id],
     queryFn: async () => {
       if (!user) return { data: [], pagination: { total: 0, totalPages: 0 } };
-      
       const factoryId = user?.factory_selected?.id;
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -44,6 +47,14 @@ export default function PabrikPage() {
 
       if (factoryId) {
         queryParams.set("factory_id", factoryId.toString());
+      } else {
+        return {
+          data: [],
+          pagination: {
+            total: 0,
+            totalPages: 0,
+          },
+        };
       }
 
       const response = await fetch(`/api/konfirmasi-pengiriman?${queryParams}`);
@@ -76,6 +87,10 @@ export default function PabrikPage() {
       page: newPage + 1,
     }));
   };
+
+  useEffect(() => {
+    document.title = "Pengiriman - Indera Distribution";
+  }, []);
 
   return (
     <MainPage>

@@ -131,13 +131,13 @@ export default function LokasiPengirimanPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center pb-4">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari layanan jasa..."
+                  placeholder="Masukkan kata kunci..."
                   className="pl-8"
                   onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { useUserStore } from "@/store/user-store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type TransactionFilters = {
   search: string;
@@ -43,6 +43,10 @@ export default function TransactionPage() {
   });
   const { user } = useUserStore();
 
+  useEffect(() => {
+    document.title = "Transaksi Produk - Indera Distribution";
+  }, []);
+
   const fetchTransactions = async (): Promise<TransactionData> => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
     const params = new URLSearchParams({
@@ -52,17 +56,21 @@ export default function TransactionPage() {
       sortBy,
       sortOrder,
     });
-
-    if(user?.factory_selected?.id) {
-      params.set("factory_id", user?.factory_selected?.id.toString());
+    if(!user?.factory_selected?.id) {
+      return {
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 1,
+        },
+      };
     }
+
+    params.set("factory_id", user?.factory_selected?.id.toString());
 
     const response = await fetch(`/api/transaction?${params}`);
-
-    if(!response.ok) {
-      throw new Error("Failed to fetch transactions");
-    }
-
     const data = await response.json();
     return data;
   }
@@ -72,6 +80,11 @@ export default function TransactionPage() {
     queryFn: fetchTransactions,
     placeholderData: (previousData) => previousData,
   });
+
+  // fetch ulang ketika ada usernya
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["transactions", queryParams] });
+  }, [user]);
 
   const debouncedSearch = useMemo(
     () =>
@@ -85,6 +98,7 @@ export default function TransactionPage() {
     []
   );
 
+  const queryClient = useQueryClient();
   const handleSearchInputChange = useCallback(
     (value: string) => {
       setSearchInput(value);
@@ -93,11 +107,19 @@ export default function TransactionPage() {
     [debouncedSearch]
   );
 
+  const handlePageChange = (newPage: number) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      page: newPage + 1,
+    }));
+  };
+
   const updateQueryParams = (updates: Partial<typeof queryParams>) => {
     setQueryParams((prev) => ({
       ...prev,
       ...updates,
     }));
+    queryClient.invalidateQueries({ queryKey: ["transactions", queryParams] });
   };
 
   if(isError) {
@@ -146,9 +168,7 @@ export default function TransactionPage() {
               sorting={(sortBy, sortOrder) => {
                 updateQueryParams({ sortBy, sortOrder: sortOrder as "asc" | "desc" });
               }}
-              onPageChange={(page) => {
-                updateQueryParams({ page });
-              }}
+              onPageChange={handlePageChange}
               onPageSizeChange={(size) => {
                 updateQueryParams({ limit: size, page: 1 });
               }}

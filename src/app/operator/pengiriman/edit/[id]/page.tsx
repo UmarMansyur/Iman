@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect, use } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   Select,
   SelectItem,
@@ -38,6 +38,7 @@ import { id } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import React from "react";
+import LoaderScreen from "@/components/views/loader";
 
 
 // Add these utility functions at the top of your file
@@ -49,16 +50,6 @@ const formatNumber = (num: number | null | undefined): string => {
 const unformatNumber = (str: string): number => {
   return parseFloat(str.replace(/,/g, "")) || 0;
 };
-
-// Tambahkan komponen Loader sederhana
-const Loader = () => (
-  <div className="fixed inset-0 bg-white/50 backdrop-blur-lg z-50 flex items-center justify-center">
-    <div className="flex flex-col items-center gap-2">
-      <Loader2 className="animate-spin text-blue-600" />
-      <p className="text-lg font-medium text-blue-600">Memuat...</p>
-    </div>
-  </div>
-);
 
 export default function EditInvoiceForm({ params }: { params: any }) {
   const unwrappedParams: any = use(params);
@@ -317,7 +308,7 @@ export default function EditInvoiceForm({ params }: { params: any }) {
         </CardHeader>
         <CardContent className="relative">
           {isLoading ? (
-            <Loader />
+            <LoaderScreen />
           ) : (
             <div className="absolute top-0 right-0 text-sm text-gray-500 mr-4 mt-2">
               <span className="text-red-500">*</span> Wajib diisi

@@ -106,7 +106,7 @@ export const columns = (
         <>
           {data.morning_shift_amount ? (
             <>
-              {production.pack} Pack / {production.bal}
+              {production.bal} Bal - {production.pack} Pack
             </>
           ) : (
             "-"
@@ -125,7 +125,8 @@ export const columns = (
         <div>
           {data.afternoon_shift_amount ? (
             <>
-              {production.pack} Pack / {production.bal} Bal
+              {/* {production.pack} Pack / {production.bal} Bal */}
+              {production.bal} Bal - {production.pack} Pack
             </>
           ) : (
             "-"
@@ -142,7 +143,8 @@ export const columns = (
       const production = formatProduction(
         data.morning_shift_amount + data.afternoon_shift_amount
       );
-      return production.pack + " Pack / " + production.bal + " Bal";
+      // return production.pack + " Pack / " + production.bal + " Bal";
+      return production.bal + " Bal" + " - " + production.pack + " Pack"
     },
   },
   {

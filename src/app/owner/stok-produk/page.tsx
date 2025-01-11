@@ -74,6 +74,7 @@ export default function Layout() {
   ];
 
   useEffect(() => {
+    document.title = "Stok Produk - Indera Distribution";
     async function fetchData() {
       setLoading(true);
       if (user?.factory_selected?.id) {
@@ -216,7 +217,7 @@ export default function Layout() {
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "decimal",
-                      }).format(product.stock)}
+                      }).format(product.stock_pack)}
                     </TableCell>
                   </TableRow>
                 ))}

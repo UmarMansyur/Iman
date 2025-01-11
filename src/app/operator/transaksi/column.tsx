@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import DetailDialog from "./detail-dialog";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import DeleteButtonQuery from "@/components/DeleteButton";
 
 export const columns = (page: number, limit: number): ColumnDef<any>[] => [
@@ -37,7 +35,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     ),
   },
   {
-    accessorKey: "buyer",
+    accessorKey: "buyer_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Pembeli"/>
     ),
@@ -59,7 +57,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     ),
   },
   {
-    accessorKey: "payment_method",
+    accessorKey: "payment_method_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Metode Pembayaran"/>
     ),
@@ -91,7 +89,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />
@@ -99,13 +97,11 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DetailDialog invoice={row.original} />
-            <Link href={`/operator/transaksi/edit/${row.original.id}`}>
-              <Button variant="ghost" className="w-full justify-start px-2">
-                <Pencil className="w-4 h-4 mr-1" />
-                Edit
-              </Button>
-            </Link>
-            <DeleteButtonQuery endpoint="transaction" id={row.original.id.toString()} queryKey="transactions" />
+            {
+              row.original.payment_status === "Pending" && (
+                <DeleteButtonQuery endpoint="transaction" id={row.original.id.toString()} queryKey="transactions" />
+              )
+            }
           </DropdownMenuContent>
         </DropdownMenu>
       );

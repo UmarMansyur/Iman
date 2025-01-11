@@ -1,3 +1,5 @@
+"use client";
+import { useEffect } from "react";
 import MainPage from "@/components/main";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -6,6 +8,10 @@ import ListOrder from "./order/ListOrder";
 import Entry from "./entry/Entry";
 
 export default function PageStockMaterial() {
+  useEffect(() => {
+    document.title = "Persediaan Bahan Baku - Indera Distribution";
+  }, []);
+
   return (
     <MainPage>
       <Card>

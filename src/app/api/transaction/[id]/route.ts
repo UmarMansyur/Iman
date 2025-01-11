@@ -9,7 +9,7 @@ export async function GET(request: Request, { params }: { params: any }) {
     const id = paramId.id;
 
     const invoice = await prisma.invoice.findUnique({
-      where: { id: parseInt(id) },
+      where: { invoice_code: id },
       include: {
         payment_method: true,
         factory: true,

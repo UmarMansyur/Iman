@@ -452,10 +452,15 @@ async function main(): Promise<void> {
         factory_id: prsj.id,
       },
     });
-
+    const products = await prisma.product.findMany({
+      where: {
+        factory_id: prsj.id,
+      },
+    });
     const invoiceCode = `INV-${i.toString().padStart(3, "0")}`;
     const baseAmount = Math.floor(Math.random() * 100) + 1; // Random amount between 1 and 100
-    const pricePerUnit = 13000;
+    const randomProduct = products[Math.floor(Math.random() * products.length)];
+    const pricePerUnit = randomProduct.price;
     const subTotal = baseAmount * pricePerUnit;
     const total = subTotal + subTotal * (ppns.percentage / 100);
     const downPayment = Math.floor(total * 0.3); // 30% down payment
@@ -485,8 +490,8 @@ async function main(): Promise<void> {
         payment_status: paymentStatus,
         detailInvoices: {
           create: {
-            product_id: 1,
-            desc: "ST Premium",
+            product_id: randomProduct.id,
+            desc: randomProduct.name,
             amount: baseAmount,
             price: pricePerUnit,
             sub_total: subTotal,

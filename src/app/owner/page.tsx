@@ -30,6 +30,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { formatDateIndonesia } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { LineChartComponent } from "./components/LineChart";
+import BarChart2 from "./components/BarChart2";
+import { Payment } from "./components/Payment";
 
 export default function Layout() {
   const [data, setData] = useState<any>(null);
@@ -201,6 +203,11 @@ export default function Layout() {
       <div className="flex flex-col mt-4 gap-4">
         <BarChartOwner title="Pendapatan Tahunan Layanan & Produk" description="Pendapatan Tahunan" chartData={data?.total_income_year} />
         <LineChartComponent title="Jumlah Penjualan Produk" description={"Jumlah Penjualan Produk dari Tanggal " + formatDateIndonesia(date?.from) + " sampai " + formatDateIndonesia(date?.to)} chartData={data?.product_day} />
+        <LineChartComponent title="Jumlah Produksi Produk" description={"Jumlah Produksi Produk Bulan Ini"} chartData={data?.total_production_this_month} />
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <BarChart2 title="Sisa Pembayaran Invoice" description="Sisa Pembayaran Invoice selama 12 bulan" chartData={data?.total_remaining_balance_perbulan} />
+        <Payment title="Metode Pembayaran" description="Prosentase Pembayaran Invoice" chartData={data?.payment_method} />
       </div>
     </MainPage>
   );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -38,12 +39,12 @@ import LoaderScreen from "@/components/views/loader";
 
 export default function CreateTransaction() {
   const router = useRouter();
-  const [isProduct, setIsProduct] = useState(true);
   const [isDistributor, setIsDistributor] = useState("0");
   const [newAddress, setNewAddress] = useState(false);
   const [buyer, setBuyer] = useState([]);
+  const [invoiceId, setInvoiceId] = useState<any>();
   const [location, setLocation] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState<any[]>([]);
   const [paymentMethodId, setPaymentMethodId] = useState<any>();
   const [product, setProduct] = useState<any[]>([]);
   const [priceProduct, setPriceProduct] = useState<any>();
@@ -136,9 +137,9 @@ export default function CreateTransaction() {
   }
 
   useEffect(() => {
+    document.title = "Edit Transaksi - Indera Distribution";
     if (user?.factory_selected) {
       getData();
-      // getTransaction();
     }
   }, [user?.factory_selected]);
 
@@ -162,9 +163,7 @@ export default function CreateTransaction() {
     }
 
     if (jumlah === 0) {
-      toast.error(
-        "Anda belum memasukkan jumlah pada produk yang telah dipilih!"
-      );
+      toast.error("Anda belum memasukkan jumlah pada produk yang telah dipilih!");
       return;
     }
 
@@ -174,18 +173,16 @@ export default function CreateTransaction() {
     }
 
     const data = {
-      product_id: isProduct ? product_id : null,
-      desc: isProduct
-        ? product.find((item: any) => item.id === product_id)?.name
-        : desc,
+      product_id: product_id,
+      desc: product.find((item: any) => item.id === product_id)?.name,
       jumlah: jumlah,
-      harga: isProduct ? priceProductBall : harga,
+      harga: priceProductBall,
       total: totalPrice,
       diskon: diskon,
       total_harga: totalHarga,
       total_pack: amountPack,
       total_bal: amountBal,
-      is_product: isProduct,
+      is_product: true,
     };
     setCart([...cart, data]);
     setProductId(null);
@@ -195,7 +192,6 @@ export default function CreateTransaction() {
     setTotalPrice(0);
     setAmountPack(0);
     setAmountBal(0);
-    setDesc("");
   };
 
   const handleSelectProduct = (item: any) => {
@@ -263,36 +259,6 @@ export default function CreateTransaction() {
     setTotalPrice(subTotal);
   };
 
-  const handleChangeJumlah2 = (e: any) => {
-    const amount = parseInt(e.target.value);
-    if (isNaN(amount)) {
-      setJumlah(0);
-      setTotalHarga(0);
-      setTotalPrice(0);
-      return;
-    }
-    const totalAmountPrice = amount * harga;
-    const potongan = (totalAmountPrice * diskon) / 100;
-    setTotalHarga(totalAmountPrice - potongan);
-    setTotalPrice(totalAmountPrice);
-    setJumlah(amount);
-  };
-
-  const handleChangeHarga2 = (e: any) => {
-    const harga = parseInt(e.target.value);
-    if (isNaN(harga)) {
-      setHarga(0);
-      setTotalHarga(0);
-      setTotalPrice(0);
-      return;
-    }
-    const totalAmountPrice = jumlah * harga;
-    const potongan = (totalAmountPrice * diskon) / 100;
-    setTotalHarga(totalAmountPrice - potongan);
-    setTotalPrice(totalAmountPrice);
-    setHarga(harga);
-  };
-
   const handleChangeDiskon = (e: any) => {
     const diskon = parseInt(e.target.value);
     if (isNaN(diskon)) {
@@ -351,32 +317,6 @@ export default function CreateTransaction() {
     }
   };
 
-  const handleAddToCart2 = () => {
-    const data = {
-      product_id: isProduct ? product_id : null,
-      desc: isProduct
-        ? product.find((item: any) => item.id === product_id)?.name
-        : desc,
-      jumlah: jumlah,
-      harga: isProduct ? priceProductBall : harga,
-      total: totalPrice,
-      diskon: diskon,
-      total_harga: totalHarga,
-      total_pack: amountPack,
-      total_bal: amountBal,
-      is_product: isProduct,
-    };
-    setCart([...cart, data]);
-    setJumlah(0);
-    setDiskon(0);
-    setHarga(0);
-    setTotalHarga(0);
-    setTotalPrice(0);
-    setAmountPack(0);
-    setAmountBal(0);
-    setDesc("");
-  };
-
   const handleDownPaymentChange = (e: any) => {
     const value = e.target.value;
     const numericValue = value.replace(/[^0-9]/g, "");
@@ -406,7 +346,7 @@ export default function CreateTransaction() {
       type_preoder: false,
       new_pembeli: newBuyer ? newBuyer : null,
       buyer_name: newBuyer ? buyerName : null,
-      buyer_address: buyerAddress,
+      buyer_address: newBuyer ? buyerAddress : null,
       distributor_id: distributorSelected,
       factory_id: user?.factory_selected?.id,
       user_id: user?.id,
@@ -420,7 +360,7 @@ export default function CreateTransaction() {
     };
 
     try {
-      const response = await fetch(`/api/transaction/${id}`, {
+      const response = await fetch(`/api/transaction/${invoiceId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -470,6 +410,7 @@ export default function CreateTransaction() {
       const response = await fetch(`/api/transaction/${id}`);
       const result = await response.json();
       const data = result.data;
+      setInvoiceId(data.id);
       setTransaction(data);
       if (response.ok) {
         setCart(
@@ -494,6 +435,11 @@ export default function CreateTransaction() {
         if (!data.is_distributor) {
           setBuyerId(data.buyer_id);
         }
+        setNewBuyer(false);
+        setNewAddress(false);
+        setBuyerName(data.buyer_name || "");
+        setBuyerAddress(data.buyer_address || "");
+        setNotes(data.notes || "");
         setPaymentMethodId(data.payment_method_id);
         setSelectLocation(data.deliveryTracking?.[0]?.location_id);
         setNotes(data.notes || "");
@@ -556,240 +502,161 @@ export default function CreateTransaction() {
           <CardDescription>Edit data transaksi</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          {/* Product Type Selection */}
-          <div className="-b pb-4">
-            <div className="flex items-center gap-2">
-              <Switch checked={isProduct} onCheckedChange={setIsProduct} />
-              <span className="font-medium">
-                {isProduct ? "Produk" : "Non Produk"}
-              </span>
+          <div className="space-y-6">
+            <div className="grid grid-cols-3 gap-6">
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Nama Produk</Label>
+                <Select onValueChange={handleSelectProduct}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Produk" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.map((item: any) => (
+                      <SelectItem value={item.id} key={item.id}>
+                        {item.name} - {item.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Stok Produk(Pack)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah stok (Pack)"
+                  value={
+                    stockPack
+                      ? new Intl.NumberFormat("id-ID").format(stockPack)
+                      : "0"
+                  }
+                  onChange={(e) => setStockPack(e.target.value)}
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Stok Produk(Bal)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah stok (Bal)"
+                  value={
+                    stockBal
+                      ? new Intl.NumberFormat("id-ID").format(stockBal)
+                      : "0"
+                  }
+                  onChange={(e) => setStockBal(e.target.value)}
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Jumlah Bal</Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah bal"
+                  value={
+                    jumlah
+                      ? new Intl.NumberFormat("id-ID").format(jumlah)
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    handleChangeJumlah({ target: { value } });
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Jumlah Pack</Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan jumlah pack"
+                  value={
+                    amountPack
+                      ? new Intl.NumberFormat("id-ID").format(amountPack)
+                      : ""
+                  }
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Harga Produk/Pack
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Masukkan harga produk"
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(priceProduct || 0)
+                      .slice(0, -3) || ""
+                  }
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Harga Produk/Bal
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  disabled
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(priceProductBall || 0)
+                      .slice(0, -3) || 0
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">Diskon</Label>
+                <Input
+                  type="number"
+                  placeholder="Jumlah Diskon"
+                  value={diskon || ""}
+                  max={100}
+                  min={0}
+                  onChange={(e) => handleChangeDiskon(e)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label className="font-medium text-sm">
+                  Total Harga (Bal)
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="Total Harga"
+                  value={
+                    new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })
+                      .format(totalHarga || 0)
+                      .slice(0, -3) || 0
+                  }
+                  className="bg-muted"
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={handleResetForm}>
+                Reset
+              </Button>
+              <Button onClick={handleAddToCart}>
+                <ShoppingCart className="w-4 h-4" />
+                <span>Tambah Keranjang</span>
+              </Button>
             </div>
           </div>
-
-          {/* Product/Non-Product Form */}
-          {isProduct ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-3 gap-6">
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Nama Produk</Label>
-                  <Select onValueChange={handleSelectProduct}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Produk" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {product.map((item: any) => (
-                        <SelectItem value={item.id} key={item.id}>
-                          {item.name} - {item.type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">
-                    Stok Produk(Pack)
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Masukkan jumlah stok (Pack)"
-                    value={
-                      stockPack
-                        ? new Intl.NumberFormat("id-ID").format(stockPack)
-                        : "0"
-                    }
-                    onChange={(e) => setStockPack(e.target.value)}
-                    disabled
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">
-                    Stok Produk(Bal)
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Masukkan jumlah stok (Bal)"
-                    value={
-                      stockBal
-                        ? new Intl.NumberFormat("id-ID").format(stockBal)
-                        : "0"
-                    }
-                    onChange={(e) => setStockBal(e.target.value)}
-                    disabled
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Jumlah Bal</Label>
-                  <Input
-                    type="text"
-                    placeholder="Masukkan jumlah bal"
-                    value={
-                      jumlah
-                        ? new Intl.NumberFormat("id-ID").format(jumlah)
-                        : ""
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, "");
-                      handleChangeJumlah({ target: { value } });
-                    }}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Jumlah Pack</Label>
-                  <Input
-                    type="text"
-                    placeholder="Masukkan jumlah pack"
-                    value={
-                      amountPack
-                        ? new Intl.NumberFormat("id-ID").format(amountPack)
-                        : ""
-                    }
-                    disabled
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">
-                    Harga Produk/Pack
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Masukkan harga produk"
-                    value={
-                      new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })
-                        .format(priceProduct || 0)
-                        .slice(0, -3) || ""
-                    }
-                    disabled
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">
-                    Harga Produk/Bal
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="0"
-                    disabled
-                    value={
-                      new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })
-                        .format(priceProductBall || 0)
-                        .slice(0, -3) || 0
-                    }
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Diskon</Label>
-                  <Input
-                    type="number"
-                    placeholder="Jumlah Diskon"
-                    value={diskon || ""}
-                    max={100}
-                    min={0}
-                    onChange={(e) => handleChangeDiskon(e)}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">
-                    Total Harga (Bal)
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Total Harga"
-                    value={
-                      new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })
-                        .format(totalHarga || 0)
-                        .slice(0, -3) || 0
-                    }
-                    className="bg-muted"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleResetForm}>
-                  Reset
-                </Button>
-                <Button onClick={handleAddToCart}>
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Tambah Keranjang</span>
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div className="flex flex-col gap-2 col-span-3">
-                  <Label className="font-medium text-sm">Keterangan</Label>
-                  <Textarea
-                    placeholder="Masukkan keterangan transaksi"
-                    value={desc || ""}
-                    onChange={(e) => setDesc(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Jumlah</Label>
-                  <Input
-                    type="number"
-                    placeholder="Masukkan jumlah"
-                    value={jumlah || ""}
-                    onChange={(e) => handleChangeJumlah2(e)}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Harga</Label>
-                  <Input
-                    type="number"
-                    placeholder="Masukkan harga"
-                    value={harga || ""}
-                    onChange={(e) => handleChangeHarga2(e)}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label className="font-medium text-sm">Diskon</Label>
-                  <Input
-                    type="number"
-                    placeholder="Masukkan diskon"
-                    value={diskon || ""}
-                    onChange={(e) => handleChangeDiskon(e)}
-                  />
-                </div>
-                <div className="flex flex-col gap-2 col-span-3">
-                  <Label className="font-medium text-sm">Total</Label>
-                  <Input
-                    type="text"
-                    placeholder="Total akan muncul otomatis"
-                    className="bg-muted"
-                    value={
-                      new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      })
-                        .format(totalHarga)
-                        .slice(0, -3) || 0
-                    }
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={handleResetForm}>
-                  Reset
-                </Button>
-                <Button onClick={handleAddToCart2}>
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Tambah Keranjang</span>
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Cart Table */}
           <div className=" rounded-lg overflow-hidden">
@@ -907,143 +774,51 @@ export default function CreateTransaction() {
             <h3 className="text-lg font-semibold">Informasi Pembeli</h3>
             <div className="grid grid-cols-3 gap-6">
               <div className="flex flex-col gap-2">
-                <Label className="font-medium text-sm">Pembeli</Label>
-                <Select
-                  onValueChange={(e: any) => setIsDistributor(e)}
-                  defaultValue={isDistributor}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Pembeli" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Pembeli Biasa</SelectItem>
-                    <SelectItem value="2">Distributor</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="font-medium text-sm">Tipe Pembeli</Label>
+                <Input 
+                  value={isDistributor === "2" ? "Distributor" : "Pembeli Biasa"} 
+                  disabled
+                />
               </div>
               <div className="flex flex-col gap-2">
-                {isDistributor == "2" ? (
-                  <div>
-                    <Label className="text-sm font-medium mb-2">
-                      Nama Distributor
-                    </Label>
-                    <Select
-                      onValueChange={(e) => handleChangeDistributor(e)}
-                      defaultValue={distributorSelected}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Distributor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {distributor.map((item: any) => (
-                          <SelectItem value={item.id} key={item.id}>
-                            {item.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div>
-                    {newBuyer ? (
-                      <div className="mb-3">
-                        <Label className="text-sm font-medium mb-2">
-                          Nama Pembeli
-                        </Label>
-                        <Input
-                          placeholder="Masukkan nama distributor/pembeli"
-                          value={buyerName}
-                          onChange={(e: any) => setBuyerName(e)}
-                        />
-                      </div>
-                    ) : (
-                      <div className="mb-3">
-                        <Label className="text-sm font-medium mb-2">
-                          Nama Pembeli
-                        </Label>
-                        <Select
-                          onValueChange={(e: any) => {
-                            setBuyerId(e);
-                            const selectedBuyer: any = buyer.find(
-                              (item: any) => item.id === e
-                            );
-                            if (selectedBuyer) {
-                              setBuyerAddress(selectedBuyer.address);
-                            }
-                          }}
-                          defaultValue={buyerId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Pilih Pembeli" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {buyer.map((item: any) => (
-                              <SelectItem value={item.id} key={item.id}>
-                                {item.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={newBuyer}
-                        onCheckedChange={setNewBuyer}
-                      />
-                      <Label className="text-sm font-medium">
-                        {newBuyer ? "Pembeli Baru" : "Pembeli Lama"}
-                      </Label>
-                    </div>
-                  </div>
-                )}
+                <Label className="font-medium text-sm">Nama Pembeli</Label>
+                <Input
+                  value={buyerName}
+                  disabled
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <Label className="font-medium text-sm">Metode Pembayaran</Label>
-                <Select
-                  onValueChange={(e: any) => setPaymentMethodId(e)}
-                  defaultValue={paymentMethodId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Metode Pembayaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentMethod.map((item: any) => (
-                      <SelectItem value={item.id} key={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={paymentMethod.find((p: any) => p.id === paymentMethodId)?.name || ''}
+                  disabled
+                />
               </div>
               <div className="flex flex-col gap-2 col-span-3">
                 <Label className="font-medium text-sm">Uang Muka</Label>
                 <Input
-                  placeholder="Masukkan jumlah uang muka"
                   value={new Intl.NumberFormat("id-ID", {
                     style: "currency",
                     currency: "IDR",
                   })
                     .format(downPayment || 0)
                     .slice(0, -3)}
-                  onChange={handleDownPaymentChange}
+                  disabled
                 />
               </div>
               <div className="flex flex-col gap-2 col-span-3">
                 <Label className="font-medium text-sm">Alamat</Label>
                 <Textarea
-                  placeholder="Masukkan alamat lengkap"
                   value={buyerAddress}
-                  onChange={(e: any) => setBuyerAddress(e)}
-                  disabled={!newBuyer}
+                  disabled
                 />
               </div>
               <div className="flex flex-col gap-2 col-span-3">
                 <Label className="font-medium text-sm">Catatan</Label>
                 <Textarea
-                  placeholder="Masukkan catatan seperti nama penerima, nomor telepon, dll"
                   value={notes}
                   onChange={(e: any) => setNotes(e.target.value)}
+                  disabled
                 />
               </div>
             </div>

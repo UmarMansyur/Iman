@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -43,6 +43,10 @@ export default function TransactionPage() {
   });
   const { user } = useUserStore();
 
+  useEffect(() => {
+    document.title = "Pengiriman - Indera Distribution";
+  }, []);
+
   const fetchTransactions = async (): Promise<TransactionData> => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
     const params = new URLSearchParams({
@@ -55,6 +59,16 @@ export default function TransactionPage() {
 
     if(user?.factory_selected?.id) {
       params.set("factory_id", user?.factory_selected?.id.toString());
+    } else {
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          totalPages: 0,
+          page: 1,
+          limit: 10,
+        },
+      };
     }
 
     const response = await fetch(`/api/transaction?${params}`);

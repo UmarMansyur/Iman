@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect } from "react";
@@ -15,12 +16,16 @@ import { useActionState } from "react";
 import { login } from "../actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
 import Image from "next/image";
-
+import { useUserStore } from "@/store/user-store";
 const LoginPage = () => {
   const [state, action] = useActionState(login, undefined);
-  // setting headernya
+  const { user, setUser } = useUserStore();
+  // check apakah ada
   useEffect(() => {
     document.title = "Login - Indera Distribution";
+    if(user) {
+      setUser(null);
+    }
   }, []);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

@@ -35,7 +35,12 @@ import Link from "next/link";
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const { user } = useUserStore()
+  const { user, setUser } = useUserStore()
+  const handleLogout = async () => {
+    setUser(null);
+    await logout();
+  };
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -93,14 +98,23 @@ export function NavUser() {
                 Notifications
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link href="/admin/setting/my-account" className="flex items-center gap-2">
-                  <User />
-                  Pengaturan Akun
-                </Link>
+                {
+                  user?.typeUser === "Administrator" ? (
+                    <Link href={`/admin/setting/my-account`} className="flex items-center gap-2">
+                      <User />
+                      Pengaturan Akun
+                    </Link>
+                  ) : (
+                    <Link href={`/${user?.factory_selected?.position.toString().toLowerCase()}/my-account`} className="flex items-center gap-2">
+                      <User />
+                      Pengaturan Akun
+                    </Link>
+                  )
+                }
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

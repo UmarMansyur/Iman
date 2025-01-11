@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
@@ -23,14 +23,19 @@ interface Product {
   type: string;
 }
 
+interface ProductionInput {
+  amount: string;
+  unit: string;
+}
 
 export default function CreateProductionReport({ fetchData, products }: { fetchData: () => Promise<void>, products: Product[] }) {
   const [selectedProduct, setSelectedProduct] = useState("");
   const [isMorningShift, setIsMorningShift] = useState(true);
-  const [shiftAmount, setShiftAmount] = useState("");
   const [selectedHour, setSelectedHour] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState("");
+  const [productionInputs, setProductionInputs] = useState<ProductionInput[]>([
+    { amount: "", unit: "" }
+  ]);
 
   const router = useRouter();
   const { user } = useUserStore();
@@ -52,6 +57,15 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
     }
   }, [isMorningShift, selectedHour]);
 
+  const addProductionInput = () => {
+    setProductionInputs([...productionInputs, { amount: "", unit: "" }]);
+  };
+
+  const removeProductionInput = (index: number) => {
+    const newInputs = productionInputs.filter((_, i) => i !== index);
+    setProductionInputs(newInputs);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -60,25 +74,27 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
       if (!user?.factory_selected?.id) {
         throw new Error("Pilih pabrik terlebih dahulu");
       }
-      let amount = 0;
-      if (selectedUnit === "Bal") {
-        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 200;
-      } else if (selectedUnit === "Pack") {
-        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 10;
-      } else if (selectedUnit === "Karton") {
-        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 800;
-      } else if (selectedUnit === "Slop") {
-        amount = parseFloat(shiftAmount.replace(/,/g, "")) * 10;
-      } else {
-        amount = parseFloat(shiftAmount.replace(/,/g, ""));
+
+      let totalPacks = 0;
+      for (const input of productionInputs) {
+        const inputAmount = parseFloat(input.amount.replace(/,/g, ""));
+        if (input.unit === "Bal") {
+          totalPacks += inputAmount * 20 * 10;
+        } else if (input.unit === "Karton") {
+          totalPacks += inputAmount * 80;
+        } else if (input.unit === "Slop") {
+          totalPacks += inputAmount * 10;
+        } else {
+          totalPacks += inputAmount;
+        }
       }
-  
+
       const payload = {
         product_id: parseInt(selectedProduct),
         factory_id: user.factory_selected.id,
-        morning_shift_amount: isMorningShift ? amount : null,
+        morning_shift_amount: isMorningShift ? totalPacks : null,
         morning_shift_time: isMorningShift ? "12:00:00" : null,
-        afternoon_shift_amount: !isMorningShift ? amount : null,
+        afternoon_shift_amount: !isMorningShift ? totalPacks : null,
         afternoon_shift_time: !isMorningShift ? "16:00:00" : null,
         type: "In",
         morning_shift_user_id: isMorningShift ? user.id : null,
@@ -154,39 +170,63 @@ export default function CreateProductionReport({ fetchData, products }: { fetchD
               <Label>{isMorningShift ? "Pagi" : "Siang"}</Label>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Pilih Jenis Satuan</Label>
-            <Select
-              value={selectedUnit}
-              onValueChange={setSelectedUnit}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih Satuan">
-                  {selectedUnit}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pack">Pack</SelectItem>
-                <SelectItem value="Bal">Bal</SelectItem>
-                <SelectItem value="Karton">Karton</SelectItem>
-                <SelectItem value="Slop">Slop</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Jumlah Produksi</Label>
-            <Input
-              type="text"
-              value={shiftAmount}
-              onChange={(e) => {
-                const value = e.target.value.replace(/,/g, "");
-                if (/^\d*$/.test(value) || value === "") {
-                  setShiftAmount(formatNumber(value));
-                }
-              }}
-              placeholder={`Jumlah produksi shift ${isMorningShift ? 'pagi' : 'siang'}`}
-              required
-            />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Jumlah Produksi</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addProductionInput}>
+                <Plus className="w-4 h-4 mr-1" />
+                Tambah Input
+              </Button>
+            </div>
+            
+            {productionInputs.map((input, index) => (
+              <div key={index} className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    type="text"
+                    value={input.amount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, "");
+                      if (/^\d*$/.test(value) || value === "") {
+                        const newInputs = [...productionInputs];
+                        newInputs[index].amount = formatNumber(value);
+                        setProductionInputs(newInputs);
+                      }
+                    }}
+                    placeholder="Jumlah"
+                    required
+                  />
+                </div>
+                <Select
+                  value={input.unit}
+                  onValueChange={(value) => {
+                    const newInputs = [...productionInputs];
+                    newInputs[index].unit = value;
+                    setProductionInputs(newInputs);
+                  }}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Pilih Satuan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pack">Pack</SelectItem>
+                    <SelectItem value="Bal">Bal (20 Press)</SelectItem>
+                    <SelectItem value="Karton">Karton</SelectItem>
+                    <SelectItem value="Slop">Slop</SelectItem>
+                  </SelectContent>
+                </Select>
+                {productionInputs.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => removeProductionInput(index)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
           <Button
             type="submit"

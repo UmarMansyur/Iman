@@ -18,17 +18,13 @@ import {
 } from "@/components/ui/chart";
 
 const chartConfig = {
-  pendapatan: {
-    label: "Pendapatan",
+  total_remaining_balance: {
+    label: "Sisa Pembayaran Invoice",
     color: "hsl(217.2 91.2% 59.8%)",
-  },
-  pendapatan_service: {
-    label: "Pendapatan Service",
-    color: "hsl(47.9 95.8% 53.1%)",
   },
 } satisfies ChartConfig;
 
-export default function BarChartOwner({
+export default function BarChart2({
   title,
   description,
   chartData,
@@ -59,13 +55,8 @@ export default function BarChartOwner({
               content={<ChartTooltipContent />}
             />
             <Bar
-              dataKey="pendapatan"
-              fill={chartConfig.pendapatan.color}
-              radius={8}
-            />
-            <Bar
-              dataKey="pendapatan_service"
-              fill={chartConfig.pendapatan_service.color}
+              dataKey="total_remaining_balance"
+              fill={chartConfig.total_remaining_balance.color}
               radius={8}
             />
           </BarChart>
@@ -76,19 +67,10 @@ export default function BarChartOwner({
           <div className="flex flex-row items-center">
             <div
               className="w-2 h-2 rounded-full mr-2"
-              style={{ backgroundColor: chartConfig.pendapatan.color }}
+              style={{ backgroundColor: chartConfig.total_remaining_balance.color }}
             ></div>
             <p className="text-sm text-gray-500">
-              {chartConfig.pendapatan.label}
-            </p>
-          </div>
-          <div className="flex flex-row items-center">
-            <div
-              className="w-2 h-2 rounded-full mr-2"
-              style={{ backgroundColor: chartConfig.pendapatan_service.color }}
-            ></div>
-            <p className="text-sm text-gray-500">
-              {chartConfig.pendapatan_service.label}
+              {chartConfig.total_remaining_balance.label}
             </p>
           </div>
         </div>

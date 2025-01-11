@@ -87,6 +87,7 @@ export async function GET(request: Request) {
         afternoon_shift_amount: true,
       },
       where: {
+        factory_id: factoryId ? parseInt(factoryId, 10) : undefined,
         created_at: {
           gte: new Date(new Date().setMonth(0, 1)),
           lt: new Date(new Date().setMonth(11, 31)),
@@ -100,6 +101,7 @@ export async function GET(request: Request) {
         afternoon_shift_amount: true,
       },
       where: {
+        factory_id: factoryId ? parseInt(factoryId, 10) : undefined,
         created_at: {
           gte: new Date(new Date().setDate(new Date().getDate() - 6)),
           lt: new Date(new Date().setDate(new Date().getDate() + 1)),
@@ -113,6 +115,7 @@ export async function GET(request: Request) {
         afternoon_shift_amount: true,
       },
       where: {
+        factory_id: factoryId ? parseInt(factoryId, 10) : undefined,
         created_at: {
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
           lt: new Date(new Date().setHours(23, 59, 59, 999)),

@@ -56,7 +56,9 @@ export function TeamSwitcher() {
                   {user?.factory_selected?.name}
                 </span>
                 <span className="truncate text-xs">
-                  {user?.factory_selected?.status === "Active" ? "Aktif" : "Tidak Aktif"}
+                  {user?.factory_selected?.status === "Active"
+                    ? "Aktif"
+                    : "Tidak Aktif"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -73,19 +75,13 @@ export function TeamSwitcher() {
             </DropdownMenuLabel>
             {user?.factory.map((team) => (
               <Link
-                href={`${
-                  team.status_member === "Active" 
-                    ? team.position.includes("Owner") 
-                      ? "/owner"
-                      : team.position.includes("Distributor")
-                        ? "/distributor"
-                        : team.position.includes("Operator")
-                          ? "/operator"
-                          : "/"
-                    : "/"
-                }`}
+                href={`/${team.position.toString().toLowerCase()}`}
                 key={team.name}
-                className={team.status_member !== "Active" || team.status !== "Active" ? "pointer-events-none" : ""}
+                className={
+                  team.status_member !== "Active" || team.status !== "Active"
+                    ? "pointer-events-none"
+                    : ""
+                }
               >
                 <DropdownMenuItem
                   key={team.name}
@@ -96,7 +92,9 @@ export function TeamSwitcher() {
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : ""
                   } ${
-                    team.status !== "Active" ? "opacity-50 cursor-not-allowed" : ""
+                    team.status !== "Active"
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
                 >
                   <div className="flex size-6 items-center justify-center rounded-sm border">
@@ -114,7 +112,6 @@ export function TeamSwitcher() {
                   </div>
                   {team.name}
                   <DropdownMenuShortcut>
-                    {/* jika sama dengan factory_selected maka tampilkan shorcut lucide-react:check */}
                     {team.id == user?.factory_selected?.id ? (
                       <Check className="size-4 shrink-0" />
                     ) : null}

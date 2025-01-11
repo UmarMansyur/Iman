@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/(dashboard)/laporan-produksi/components/ActionCell.tsx
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +34,11 @@ interface ActionCellProps {
   products: any[];
 }
 
+interface UnitInput {
+  amount: string;
+  unit: string;
+}
+
 export function ActionCell({ row, fetchData, products }: ActionCellProps) {
   const router = useRouter();
   const { user } = useUserStore();
@@ -43,56 +48,42 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
   const [selectedProduct, setSelectedProduct] = useState(
     row.original.product_id
   );
-  const convertAmount = (amount: number, to: string) => {
-    let result = 0;
-    if(selectedUnit === "Bal") {
-      result = amount * 200;
-    } else if(selectedUnit === "Karton") {
-      result = amount * 800;
-    } else if(selectedUnit === "Slop") {
-      result = amount * 10;
-    } else if(selectedUnit === "Pack") {
-      result = amount;
-    }
+  const [morningInputs, setMorningInputs] = useState<UnitInput[]>([
+    { amount: row.original.morning_shift_amount?.toString() || "", unit: "Pack" }
+  ]);
+  const [afternoonInputs, setAfternoonInputs] = useState<UnitInput[]>([
+    { amount: row.original.afternoon_shift_amount?.toString() || "", unit: "Pack" }
+  ]);
 
-    if(to === "Pack") {
-      return result;
-    }
-
-    if(to === "Bal") {
-      return result / 200;
-    }
-
-    if(to === "Karton") {
-      return result / 800;
-    }
-
-    if(to === "Slop") {
-      return result / 10;
-    }
-
-    return result;
+  const convertToPacks = (amount: number, unit: string) => {
+    const conversions: Record<string, number> = {
+      "Pack": 1,
+      "Bal": 200,
+      "Karton": 800,
+      "Slop": 10,
+      "Press": 20
+    };
+    return amount * (conversions[unit] || 1);
   };
 
-  // Form states
-  const [morningAmount, setMorningAmount] = useState(
-    row.original.morning_shift_amount?.toString() || ""
-  );
-  const [afternoonAmount, setAfternoonAmount] = useState(
-    row.original.afternoon_shift_amount?.toString() || ""
-  );
+  const calculateTotalPacks = (inputs: UnitInput[]) => {
+    return inputs.reduce((total, input) => {
+      const amount = parseFloat(input.amount.replace(/,/g, "")) || 0;
+      return total + convertToPacks(amount, input.unit);
+    }, 0);
+  };
 
   const handleSelectUnit = (value: string) => {
-    const morning = convertAmount(
-      parseFloat((`${morningAmount}`).replace(/,/g, "")),
+    const morning = convertToPacks(
+      parseFloat((`${morningInputs[0].amount}`).replace(/,/g, "")),
       value
     );
-    const afternoon = convertAmount(
-      parseFloat((`${afternoonAmount}`).replace(/,/g, "")),
+    const afternoon = convertToPacks(
+      parseFloat((`${afternoonInputs[0].amount}`).replace(/,/g, "")),
       value
     );
-    setMorningAmount(morning);
-    setAfternoonAmount(afternoon);
+    setMorningInputs([{ amount: morning.toString(), unit: value }]);
+    setAfternoonInputs([{ amount: afternoon.toString(), unit: value }]);
     setSelectedUnit(value);
   };
 
@@ -107,13 +98,9 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
 
     try {
       const payload: any = {
-        morning_shift_amount: morningAmount
-          ? morningAmount
-          : null,
+        morning_shift_amount: calculateTotalPacks(morningInputs),
         morning_shift_time: "12:00:00",
-        afternoon_shift_amount: afternoonAmount
-          ? afternoonAmount
-          : null,
+        afternoon_shift_amount: calculateTotalPacks(afternoonInputs),
         afternoon_shift_time: "16:00:00",
       };
 
@@ -152,7 +139,7 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
   return (
     <>
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-4 w-4" />
@@ -213,40 +200,130 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                   <SelectItem value="Bal">Bal</SelectItem>
                   <SelectItem value="Karton">Karton</SelectItem>
                   <SelectItem value="Slop">Slop</SelectItem>
+                  <SelectItem value="Press">Press</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Shift Pagi</Label>
-                <Input
-                  type="text"
-                  value={morningAmount}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/,/g, "");
-                    if (/^\d*$/.test(value) || value === "") {
-                      setMorningAmount(formatNumber(value));
-                    }
-                  }}
-                  disabled={row.original.morning_shift_user?.id != user?.id}
-                  placeholder={`Jumlah produksi shift pagi`}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Shift Siang</Label>
-                <Input
-                  type="text"
-                  value={afternoonAmount}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/,/g, "");
-                    if (/^\d*$/.test(value) || value === "") {
-                      setAfternoonAmount(formatNumber(value));
-                    }
-                  }}
-                  placeholder="Jumlah produksi shift siang"
-                />
-              </div>
+            <div className="space-y-4">
+              <Label>Shift Pagi</Label>
+              {morningInputs.map((input, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={input.amount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, "");
+                      if (/^\d*$/.test(value) || value === "") {
+                        const newInputs = [...morningInputs];
+                        newInputs[index].amount = formatNumber(value);
+                        setMorningInputs(newInputs);
+                      }
+                    }}
+                    disabled={row.original.morning_shift_user?.id != user?.id}
+                    placeholder="Jumlah produksi"
+                    className="flex-1"
+                  />
+                  <Select
+                    value={input.unit}
+                    onValueChange={(value) => {
+                      const newInputs = [...morningInputs];
+                      newInputs[index].unit = value;
+                      setMorningInputs(newInputs);
+                    }}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pack">Pack</SelectItem>
+                      <SelectItem value="Bal">Bal</SelectItem>
+                      <SelectItem value="Karton">Karton</SelectItem>
+                      <SelectItem value="Slop">Slop</SelectItem>
+                      <SelectItem value="Press">Press</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {morningInputs.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        setMorningInputs(morningInputs.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMorningInputs([...morningInputs, { amount: "", unit: "Pack" }])}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Tambah Input
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Shift Siang</Label>
+              {afternoonInputs.map((input, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={input.amount}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/,/g, "");
+                      if (/^\d*$/.test(value) || value === "") {
+                        const newInputs = [...afternoonInputs];
+                        newInputs[index].amount = formatNumber(value);
+                        setAfternoonInputs(newInputs);
+                      }
+                    }}
+                    placeholder="Jumlah produksi"
+                    className="flex-1"
+                  />
+                  <Select
+                    value={input.unit}
+                    onValueChange={(value) => {
+                      const newInputs = [...afternoonInputs];
+                      newInputs[index].unit = value;
+                      setAfternoonInputs(newInputs);
+                    }}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pack">Pack</SelectItem>
+                      <SelectItem value="Bal">Bal</SelectItem>
+                      <SelectItem value="Karton">Karton</SelectItem>
+                      <SelectItem value="Slop">Slop</SelectItem>
+                      <SelectItem value="Press">Press</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {afternoonInputs.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => {
+                        setAfternoonInputs(afternoonInputs.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAfternoonInputs([...afternoonInputs, { amount: "", unit: "Pack" }])}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Tambah Input
+              </Button>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>

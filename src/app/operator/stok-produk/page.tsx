@@ -76,6 +76,7 @@ export default function Layout() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      document.title = "Stok Produk - Indera Distribution";
       if (user?.factory_selected?.id) {
         const response = await fetch(
           `/api/stock-product?factory_id=${user?.factory_selected?.id}`
@@ -134,13 +135,22 @@ export default function Layout() {
                   <TableHead rowSpan={2} className="font-bold text-black">
                     Nama Produk
                   </TableHead>
-                  <TableHead rowSpan={2} className="font-bold text-black text-center">
+                  <TableHead
+                    rowSpan={2}
+                    className="font-bold text-black text-center"
+                  >
                     Tipe
                   </TableHead>
-                  <TableHead colSpan={2} className="font-bold text-center text-black">
+                  <TableHead
+                    colSpan={2}
+                    className="font-bold text-center text-black"
+                  >
                     Harga
                   </TableHead>
-                  <TableHead rowSpan={2} className="font-bold text-black text-end">
+                  <TableHead
+                    rowSpan={2}
+                    className="font-bold text-black text-end"
+                  >
                     Stok Terjual
                   </TableHead>
                   <TableHead
@@ -178,7 +188,9 @@ export default function Layout() {
                       {index + 1}.
                     </TableCell>
                     <TableCell className="text-black">{product.name}</TableCell>
-                    <TableCell className="text-black text-center">{product.type}</TableCell>
+                    <TableCell className="text-black text-center">
+                      {product.type}
+                    </TableCell>
                     <TableCell className="text-black text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
@@ -196,7 +208,8 @@ export default function Layout() {
                         .slice(0, -3)}
                     </TableCell>
                     <TableCell className="text-end">
-                      {formatProduction(product.sold).bal} Bal - {formatProduction(product.sold).pack} Pack
+                      {formatProduction(product.sold).bal} Bal -{" "}
+                      {formatProduction(product.sold).pack} Pack
                     </TableCell>
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
@@ -216,7 +229,7 @@ export default function Layout() {
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {
                         style: "decimal",
-                      }).format(product.stock)}
+                      }).format(product.stock_pack)}
                     </TableCell>
                   </TableRow>
                 ))}

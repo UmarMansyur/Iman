@@ -45,6 +45,10 @@ const formatDateIndonesia = (date: Date) => {
 };
 
 export default function PabrikPage() {
+  useEffect(() => {
+    document.title = "Laporan Order - Indera Distribution";
+  }, []);
+
   const [searchInput, setSearchInput] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,

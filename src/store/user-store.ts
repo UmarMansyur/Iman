@@ -10,13 +10,14 @@ interface UserStore {
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  setActiveFactory: (factory) => set((state) => {
-    if (!state.user) return { user: null };
-    return {
-      user: {
-        ...state.user,
-        factory_selected: factory
-      }
-    };
-  })
+  setActiveFactory: (factory) =>
+    set((state) => {
+      if (!state.user) return { user: null };
+      return {
+        user: {
+          ...state.user,
+          factory_selected: factory,
+        },
+      };
+    }),
 }));

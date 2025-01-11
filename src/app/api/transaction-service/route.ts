@@ -142,64 +142,67 @@ export async function GET(req: Request) {
   const filterStatus = searchParams.get("filterStatus") || "";
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
-
-  const where: any = {
-    OR: [
-      { buyer: { name: { contains: search } } },
-      { transaction_code: { contains: search } },
-    ],
-    factory_id: factory_id ? parseInt(factory_id) : undefined,
-    user_id: user_id ? parseInt(user_id) : undefined,
-  };
-
-  if (startDate && endDate) {
-    where.created_at = {
-      gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
-      lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+  try {
+    const where: any = {
+      OR: [
+        { buyer: { name: { contains: search } } },
+        { transaction_code: { contains: search } },
+      ],
+      factory_id: factory_id ? parseInt(factory_id) : undefined,
+      user_id: user_id ? parseInt(user_id) : undefined,
     };
-  }
 
-  if (status) {
-    where.status = status;
-  }
+    if (startDate && endDate) {
+      where.created_at = {
+        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+      };
+    }
 
-  if (filterPayment == "all") {
-    delete where.payment_method_id;
-  } else {
-    where.payment_method_id = parseInt(filterPayment);
-  }
+    if (status) {
+      where.status = status;
+    }
 
-  if (filterStatus == "all") {
-    delete where.status;
-  } else {
-    where.status = filterStatus as TransactionServiceStatus;
-  }
+    if (filterPayment == "all") {
+      delete where.payment_method_id;
+    } else if (filterPayment) {
+      where.payment_method_id = parseInt(filterPayment);
+    }
 
-  const total = await prisma.transactionService.count({ where });
-  const data = await prisma.transactionService.findMany({
-    where,
-    skip,
-    take: limit,
-    include: {
-      DetailTransactionService: {
-        include: {
-          service: true,
+    if (filterStatus == "all") {
+      delete where.status;
+    } else if (filterStatus) {
+      where.status = filterStatus as TransactionServiceStatus;
+    }
+
+    const total = await prisma.transactionService.count({ where });
+    const data = await prisma.transactionService.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        DetailTransactionService: {
+          include: {
+            service: true,
+          },
         },
+        buyer: true,
+        payment_method: true,
+        user: true,
       },
-      buyer: true,
-      payment_method: true,
-      user: true,
-    },
-  });
+    });
 
-  return NextResponse.json({
-    message: "Transaksi jasa berhasil diambil",
-    data: data,
-    pagination: {
-      page: page,
-      limit: limit,
-      total: total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
+    return NextResponse.json({
+      message: "Transaksi jasa berhasil diambil",
+      data: data,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
 }

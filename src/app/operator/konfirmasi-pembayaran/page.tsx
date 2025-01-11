@@ -19,6 +19,10 @@ export default function PabrikPage() {
     totalPages: 0,
   });
 
+  useEffect(() => {
+    document.title = "Konfirmasi Pembayaran - Indera Distribution";
+  }, []);
+
   const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",

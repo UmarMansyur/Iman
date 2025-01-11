@@ -47,11 +47,8 @@ export default function LaporanProduksiPage() {
         search: filters.search,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
+        factoryId: factoryId?.toString() || "",
       });
-
-      if (factoryId) {
-        queryParams.set("factoryId", factoryId.toString());
-      }
 
       const response = await fetch(`/api/laporan-produksi?${queryParams}`);
       if (!response.ok) {
@@ -142,11 +139,11 @@ export default function LaporanProduksiPage() {
             <CardContent>
               <div className="flex justify-between items-center py-4">
                 <div className="flex items-center gap-2">
-                  <div className="relative">
+                  <div className="relative w-56">
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       type="text"
-                      placeholder="Cari laporan..."
+                      placeholder="Masukkan kata kunci..."
                       className="pl-8"
                       onChange={(e) => handleSearch(e.target.value)}
                       value={searchInput}

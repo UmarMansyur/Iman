@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ActionCell } from "./components/ActionCell";
+import { formatProduction } from "@/lib/utils";
 
 export const columns = (
   fetchData: () => Promise<void>,
@@ -95,22 +96,12 @@ export const columns = (
     header: "Jumlah Produksi Pagi",
     cell: ({ row }) => {
       const data = row.original as any;
-      // buat html
+      const production = formatProduction(data.morning_shift_amount);
       return (
         <>
           {data.morning_shift_amount ? (
             <>
-              {new Intl.NumberFormat("id-ID").format(
-                data.morning_shift_amount
-              ) +
-                " " +
-                "Pack"}
-              /
-              {new Intl.NumberFormat("id-ID").format(
-                data.morning_shift_amount / 200
-              ) +
-                " " +
-                "Bal"}
+              {production.bal} Bal - {production.pack} Pack
             </>
           ) : (
             "-"
@@ -124,21 +115,13 @@ export const columns = (
     header: "Jumlah Produksi Siang",
     cell: ({ row }) => {
       const data = row.original as any;
+      const production = formatProduction(data.afternoon_shift_amount);
       return (
         <div>
           {data.afternoon_shift_amount ? (
             <>
-              {new Intl.NumberFormat("id-ID").format(
-                data.afternoon_shift_amount
-              ) +
-                " " +
-                "Pack"}
-              /
-              {new Intl.NumberFormat("id-ID").format(
-                data.afternoon_shift_amount / 200
-              ) +
-                " " +
-                "Bal"}
+              {/* {production.pack} Pack / {production.bal} Bal */}
+              {production.bal} Bal - {production.pack} Pack
             </>
           ) : (
             "-"
@@ -151,14 +134,11 @@ export const columns = (
     accessorKey: "total_amount",
     header: "Total Produksi",
     cell: ({ row }) => {
-      const data = row.original as any; 
-      const totalAmount =
-        (data.morning_shift_amount || 0) +
-        (data.afternoon_shift_amount || 0) +
-        " Pack" + " /" +
-        (data.morning_shift_amount / 200 || 0) + " Bal" + " /" +
-        (data.afternoon_shift_amount / 200 || 0) + " Bal"
-      return totalAmount ? totalAmount : "-";
+      const data = row.original as any;
+      const production = formatProduction(
+        data.morning_shift_amount + data.afternoon_shift_amount
+      );
+      return production.bal + " Bal" + " - " + production.pack + " Pack";
     },
   },
   {

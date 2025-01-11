@@ -47,13 +47,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     ),
     cell: ({ row }) => {
       const status = row.original.payment_status;
-      // const variants: { [key: string]: string } = {
-      //   PENDING: "bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300",
-      //   PAID: "bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300",
-      //   FAILED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300",
-      //   CANCELLED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300"
-      // };
-      
       if(status === 'Pending') {
         return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
           {status}
@@ -108,7 +101,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

@@ -15,7 +15,9 @@ import Form from './form';
 export default function PabrikPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  useEffect(() => {
+    document.title = "Bahan Baku Produksi - Indera Distribution";
+  }, []);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -120,7 +122,7 @@ export default function PabrikPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between items-center py-4">
+              <div className="flex justify-between items-center pb-4">
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />

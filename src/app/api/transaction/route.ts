@@ -217,6 +217,10 @@ export async function GET(req: Request) {
     const endDate = searchParams.get("endDate") || "";
     const filterPayment = searchParams.get("filterPayment") || "";
     const filterStatus = searchParams.get("filterStatus") || "";
+    const sortBy = searchParams.get("sortBy") || "";
+    const sortOrder = searchParams.get("sortOrder") || "";
+
+
 
     const where: any = {
       OR: [
@@ -296,7 +300,7 @@ export async function GET(req: Request) {
       take: limit,
       skip: skip,
       orderBy: {
-        created_at: "desc",
+        [sortBy]: sortOrder,
       },
     });
 
