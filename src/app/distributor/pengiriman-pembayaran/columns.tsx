@@ -15,7 +15,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import DeliveryStatusDialog from "./delivery-status-dialog";
 import PembayaranDialog from "./pembayaran";
+import OrderPabrik from "./order-pabrik";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -115,123 +115,119 @@ export const columns: ColumnDef<any>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="flex w-full items-center">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Lihat Detail
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      Detail Transaksi - {data.invoice_code}
-                    </DialogTitle>
-                  </DialogHeader>
+            <Dialog>
+              <DialogTrigger
+                asChild
+                className="w-full cursor-pointer p-2 hover:bg-gray-50"
+              >
+                <div className="flex w-full items-center">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Lihat Detail
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    Detail Transaksi - {data.invoice_code}
+                  </DialogTitle>
+                </DialogHeader>
 
-                  <div className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Informasi Pembeli</CardTitle>
-                      </CardHeader>
-                      <CardContent>
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informasi Pembeli</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="font-semibold">Nama</p>
+                          <p>{data.buyer.name}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">Alamat</p>
+                          <p>{data.buyer.address}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Detail Transaksi</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="font-semibold">Nama</p>
-                            <p>{data.buyer.name}</p>
+                            <p className="font-semibold">Status Pembayaran</p>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                data.status_payment === "Paid"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {data.status_payment}
+                            </span>
                           </div>
                           <div>
-                            <p className="font-semibold">Alamat</p>
-                            <p>{data.buyer.address}</p>
+                            <p className="font-semibold">Metode Pembayaran</p>
+                            <p>{data.payment_method.name}</p>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Detail Transaksi</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="font-semibold">Status Pembayaran</p>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs ${
-                                  data.status_payment === "Paid"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                {data.status_payment}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-semibold">Metode Pembayaran</p>
-                              <p>{data.payment_method.name}</p>
-                            </div>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Deskripsi</TableHead>
+                              <TableHead>Jumlah</TableHead>
+                              <TableHead>Harga</TableHead>
+                              <TableHead>Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {data.DetailTransactionDistributor.map(
+                              (item: any) => (
+                                <TableRow key={item.id}>
+                                  <TableCell>{item.desc}</TableCell>
+                                  <TableCell>{item.amount}</TableCell>
+                                  <TableCell>
+                                    {formatCurrency(item.price)}
+                                  </TableCell>
+                                  <TableCell>
+                                    {formatCurrency(item.sale_price)}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            )}
+                          </TableBody>
+                        </Table>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(data.amount)}</span>
                           </div>
-
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Deskripsi</TableHead>
-                                <TableHead>Jumlah</TableHead>
-                                <TableHead>Harga</TableHead>
-                                <TableHead>Total</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {data.DetailTransactionDistributor.map(
-                                (item: any) => (
-                                  <TableRow key={item.id}>
-                                    <TableCell>{item.desc}</TableCell>
-                                    <TableCell>{item.amount}</TableCell>
-                                    <TableCell>
-                                      {formatCurrency(item.price)}
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatCurrency(item.sale_price)}
-                                    </TableCell>
-                                  </TableRow>
-                                )
-                              )}
-                            </TableBody>
-                          </Table>
-
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span>Subtotal</span>
-                              <span>{formatCurrency(data.amount)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Ongkos Kirim</span>
-                              <span>{formatCurrency(data.cost_delivery)}</span>
-                            </div>
-                            <div className="flex justify-between font-bold">
-                              <span>Total</span>
-                              <span>
-                                {formatCurrency(
-                                  data.amount + data.cost_delivery
-                                )}
-                              </span>
-                            </div>
+                          <div className="flex justify-between">
+                            <span>Ongkos Kirim</span>
+                            <span>{formatCurrency(data.cost_delivery)}</span>
+                          </div>
+                          <div className="flex justify-between font-bold">
+                            <span>Total</span>
+                            <span>
+                              {formatCurrency(data.amount + data.cost_delivery)}
+                            </span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <PembayaranDialog invoice={data} />
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <DeliveryStatusDialog invoice={data} />
-            </DropdownMenuItem>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <PembayaranDialog invoice={data} />
+            <OrderPabrik invoice={data} />
+            <DeliveryStatusDialog invoice={data} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

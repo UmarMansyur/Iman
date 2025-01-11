@@ -67,7 +67,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
       cost,
       items,
       down_payment,
-      remaining_balance,
       cost_delivery,
       desc_delivery,
     } = body;
@@ -152,10 +151,12 @@ export async function PUT(req: Request, { params }: { params: any }) {
     const invoiceCode = oldTransaction.invoice_code;
 
     // status payment berubah menjadi Paid Off ketika melebihi total amount atau sama dengan total amount
-    let status_payments = "Paid";
-    if (totalAmount > Number(down_payment)) {
-      status_payments = "Paid Off";
+    let status_payments = "Pending";
+    if (Number(down_payment) >= (totalAmount + Number(cost_delivery))) {
+      status_payments = "Paid_Off";
     }
+
+    const remaining_balance = totalAmount + Number(cost_delivery) - Number(down_payment);
 
     // Buat transaksi baru dengan invoice_code lama
     const transaction = await prisma.transactionDistributor.create({

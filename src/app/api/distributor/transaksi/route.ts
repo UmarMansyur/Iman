@@ -18,7 +18,6 @@ export async function POST(req: Request) {
       cost,
       items,
       down_payment,
-      remaining_balance,
       cost_delivery,
       desc_delivery,
     } = body;
@@ -123,9 +122,11 @@ export async function POST(req: Request) {
 
     // status payment berubah menjadi Paid Off ketika melebihi total amount atau sama dengan total amount
     let status_payments = "Pending";
-    if (Number(down_payment) >= totalAmount) {
+    if (Number(down_payment) >= (totalAmount + Number(cost_delivery))) {
       status_payments = "Paid_Off";
     }
+
+    const remaining_balance = totalAmount + Number(cost_delivery) - Number(down_payment);
 
     // Buat transaksi
     const transaction = await prisma.transactionDistributor.create({

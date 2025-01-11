@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useActionState } from "react";
 import { login } from "../actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -21,6 +21,7 @@ import Link from "next/link";
 const LoginPage = () => {
   const [state, action] = useActionState(login, undefined);
   const { user, setUser } = useUserStore();
+  const [showPassword, setShowPassword] = useState(false);
   // check apakah ada
   useEffect(() => {
     document.title = "Login - Indera Distribution";
@@ -66,11 +67,19 @@ const LoginPage = () => {
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Masukkan password"
                   className="pl-10"
                   name="password"
                 />
+                {
+                  showPassword ? (
+                    <EyeOff className="absolute right-3 top-3 h-4 w-4 text-gray-400 cursor-pointer" onClick={() => setShowPassword(false)} />
+                  ) : (
+                    <Eye className="absolute right-3 top-3 h-4 w-4 text-gray-400 cursor-pointer" onClick={() => setShowPassword(true)} />
+                  )
+                }
+
                 <small className="text-red-500">
                   {state?.errors?.password && state.errors.password}
                 </small>

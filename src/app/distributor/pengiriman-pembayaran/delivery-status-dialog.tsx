@@ -97,8 +97,8 @@ export default function DeliveryStatusDialog({ invoice }: any) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start py-0 px-1 ">
-          <Truck className="w-4 h-4 mr-1" /> Ubah Status Pengiriman
+        <Button variant="ghost" className="w-full justify-start py-0 px-2 ">
+          <Truck className="w-4 h-4" /> Ubah Status Pengiriman
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl">

@@ -40,7 +40,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, SearchCheckIcon } from "lucide-react";
+import { Search, SearchCheckIcon, Trash2 } from "lucide-react";
 import EmptyData from "@/components/views/empty-data";
 
 export default function CreateTransaction() {
@@ -171,7 +171,7 @@ export default function CreateTransaction() {
         ...cart,
         {
           product_id: true,
-          product_name: productData?.product.name,
+          product_name: productData?.product.name + " - " + productData?.product.type,
           product_type: productData?.product.type,
           quantity: quantity,
           price: price,
@@ -369,7 +369,7 @@ export default function CreateTransaction() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label>Harga</Label>
+                <Label>Harga Per Ball</Label>
                 <Input
                   type="text"
                   value={formatRibuan(price)}
@@ -455,7 +455,7 @@ export default function CreateTransaction() {
                           setCart(newCart);
                         }}
                       >
-                        Hapus
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
                   </tr>
@@ -581,6 +581,7 @@ export default function CreateTransaction() {
                 <Label>Nama Pembeli</Label>
                 <div className="flex justify-between items-center gap-2">
                   <Input
+                    placeholder="Masukkan nama pembeli"
                     value={buyerForm.name}
                     onChange={(e) =>
                       setBuyerForm({ ...buyerForm, name: e.target.value })

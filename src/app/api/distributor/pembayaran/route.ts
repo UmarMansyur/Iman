@@ -27,8 +27,6 @@ export async function PATCH(req: Request) {
         data.status_payment = status_payment;
       }
 
-      console.log(data);
-
       const transactionDistributor = await tx.transactionDistributor.update({
         where: {
           id: Number(id),
