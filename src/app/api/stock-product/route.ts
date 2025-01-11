@@ -57,11 +57,10 @@ export async function GET(request: Request) {
           // stock konvert ke karton sisanya ke bal sisanya ke slop/press dan sisanya ke pack
       
       const Karton = Math.floor(stock / 800);
-      const balAmount = stock - Karton * 800;
-      const pressAmount = Math.floor(balAmount / 200);
-      const packAmount = balAmount - pressAmount * 200;
+      const balAmount = Math.floor((stock - (Karton * 800)) / 200);
+      const pressAmount = Math.floor((stock - ((Karton * 800) + (balAmount * 200))) / 10);
+      const packAmount = Math.floor(stock - ((Karton * 800) + (balAmount * 200) + (pressAmount * 10)));
       
-
       return {
         id: product.id,
         name: product.name,

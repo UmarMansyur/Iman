@@ -17,13 +17,14 @@ import { login } from "../actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
 import Image from "next/image";
 import { useUserStore } from "@/store/user-store";
+import Link from "next/link";
 const LoginPage = () => {
   const [state, action] = useActionState(login, undefined);
   const { user, setUser } = useUserStore();
   // check apakah ada
   useEffect(() => {
     document.title = "Login - Indera Distribution";
-    if(user) {
+    if (user) {
       setUser(null);
     }
   }, []);
@@ -54,7 +55,9 @@ const LoginPage = () => {
                   className="pl-10"
                   name="email"
                 />
-                <small className="text-red-500">{state?.errors?.email && state.errors.email}</small>
+                <small className="text-red-500">
+                  {state?.errors?.email && state.errors.email}
+                </small>
               </div>
             </div>
             <div className="space-y-2">
@@ -68,19 +71,28 @@ const LoginPage = () => {
                   className="pl-10"
                   name="password"
                 />
-                <small className="text-red-500">{state?.errors?.password && state.errors.password}</small>
+                <small className="text-red-500">
+                  {state?.errors?.password && state.errors.password}
+                </small>
               </div>
-              <small className="text-red-500">{state?.message && state.message}</small>
+              <small className="text-red-500">
+                {state?.message && state.message}
+              </small>
             </div>
-            <div className="flex items-center space-x-2 my-3">
-              <input
-                type="checkbox"
-                id="remember"
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <label htmlFor="remember" className="text-sm text-gray-600">
-                Ingat saya
-              </label>
+            <div className="flex items-center space-x-2 my-3 justify-between">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <label htmlFor="remember" className="text-sm text-gray-600">
+                  Ingat saya
+                </label>
+              </div>
+              <div className="flex items-center space-x-2 justify-end"> 
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline">Lupa Password?</Link>
+              </div>
             </div>
             <div className="flex flex-col space-y-4">
               <SubmitButton text="Masuk" />
@@ -105,7 +117,5 @@ const LoginPage = () => {
     </div>
   );
 };
-
-
 
 export default LoginPage;

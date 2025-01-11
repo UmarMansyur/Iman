@@ -120,7 +120,7 @@ export default function Form({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="unit">Satuan</Label>
-              <Popover open={unitOpen} onOpenChange={setUnitOpen}>
+              <Popover open={unitOpen} onOpenChange={setUnitOpen} modal={true}>
                 <PopoverTrigger asChild className="col-span-3" name="unit_id">
                   <Button
                     variant="ghost"

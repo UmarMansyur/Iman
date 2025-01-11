@@ -30,6 +30,7 @@ export async function verifyToken(token: string): Promise<any> {
     console.error(error ||'Failed to verify session')
   }
 }
+
  
 export async function decrypt(session: string | undefined = '') {
   try {

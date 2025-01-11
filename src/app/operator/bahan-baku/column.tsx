@@ -20,16 +20,26 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "material",
+    accessorKey: "material_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Bahan Baku"/>
     ),
+    cell: ({ row }) => {
+      const materialUnit = row.original as MaterialUnit;
+      const material = options.materials.find(material => material.id === materialUnit.material_id);
+      return material ? material.name : "";
+    },
   },
   {
-    accessorKey: "unit",
+    accessorKey: "unit_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Satuan"/>
     ),
+    cell: ({ row }) => {
+      const materialUnit = row.original as MaterialUnit;
+      const unit = options.units.find(unit => unit.id === materialUnit.unit_id);
+      return unit ? unit.name : "";
+    },
   },
   {
     accessorKey: "action",

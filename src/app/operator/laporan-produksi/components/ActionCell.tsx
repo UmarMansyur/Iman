@@ -49,19 +49,25 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
     row.original.product_id
   );
   const [morningInputs, setMorningInputs] = useState<UnitInput[]>([
-    { amount: row.original.morning_shift_amount?.toString() || "", unit: "Pack" }
+    {
+      amount: row.original.morning_shift_amount?.toString() || "",
+      unit: "Pack",
+    },
   ]);
   const [afternoonInputs, setAfternoonInputs] = useState<UnitInput[]>([
-    { amount: row.original.afternoon_shift_amount?.toString() || "", unit: "Pack" }
+    {
+      amount: row.original.afternoon_shift_amount?.toString() || "",
+      unit: "Pack",
+    },
   ]);
 
   const convertToPacks = (amount: number, unit: string) => {
     const conversions: Record<string, number> = {
-      "Pack": 1,
-      "Bal": 200,
-      "Karton": 800,
-      "Slop": 10,
-      "Press": 20
+      Pack: 1,
+      Bal: 200,
+      Karton: 800,
+      Slop: 10,
+      Press: 20,
     };
     return amount * (conversions[unit] || 1);
   };
@@ -75,11 +81,11 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
 
   const handleSelectUnit = (value: string) => {
     const morning = convertToPacks(
-      parseFloat((`${morningInputs[0].amount}`).replace(/,/g, "")),
+      parseFloat(`${morningInputs[0].amount}`.replace(/,/g, "")),
       value
     );
     const afternoon = convertToPacks(
-      parseFloat((`${afternoonInputs[0].amount}`).replace(/,/g, "")),
+      parseFloat(`${afternoonInputs[0].amount}`.replace(/,/g, "")),
       value
     );
     setMorningInputs([{ amount: morning.toString(), unit: value }]);
@@ -156,10 +162,10 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
         <DialogContent className="max-w-2xl">
           <DialogTitle>Edit Laporan Produksi</DialogTitle>
           <DialogDescription>
-            Secara default, laporan produksi akan dikonversi ke jumlah <b className="text-blue-500 font-bold">Pack</b>.
-            Tapi jangan khawatir, jika anda ingin mengubah jumlah produksi
-            dengan satuan yang lain, anda dapat mengubah satuan produksi dibawah
-            ini.
+            Secara default, laporan produksi akan dikonversi ke jumlah{" "}
+            <b className="text-blue-500 font-bold">Pack</b>. Tapi jangan
+            khawatir, jika anda ingin mengubah jumlah produksi dengan satuan
+            yang lain, anda dapat mengubah satuan produksi dibawah ini.
           </DialogDescription>
 
           <form onSubmit={handleUpdate} className="space-y-4">
@@ -225,6 +231,7 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                     className="flex-1"
                   />
                   <Select
+                    disabled={row.original.morning_shift_user?.id != user?.id}
                     value={input.unit}
                     onValueChange={(value) => {
                       const newInputs = [...morningInputs];
@@ -249,7 +256,9 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                       variant="destructive"
                       size="icon"
                       onClick={() => {
-                        setMorningInputs(morningInputs.filter((_, i) => i !== index));
+                        setMorningInputs(
+                          morningInputs.filter((_, i) => i !== index)
+                        );
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -260,7 +269,13 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setMorningInputs([...morningInputs, { amount: "", unit: "Pack" }])}
+                onClick={() =>
+                  setMorningInputs([
+                    ...morningInputs,
+                    { amount: "", unit: "Pack" },
+                  ])
+                }
+                disabled={row.original.morning_shift_user?.id != user?.id}
               >
                 <Plus className="h-4 w-4 mr-2" /> Tambah Input
               </Button>
@@ -309,7 +324,9 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
                       variant="destructive"
                       size="icon"
                       onClick={() => {
-                        setAfternoonInputs(afternoonInputs.filter((_, i) => i !== index));
+                        setAfternoonInputs(
+                          afternoonInputs.filter((_, i) => i !== index)
+                        );
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -320,7 +337,12 @@ export function ActionCell({ row, fetchData, products }: ActionCellProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setAfternoonInputs([...afternoonInputs, { amount: "", unit: "Pack" }])}
+                onClick={() =>
+                  setAfternoonInputs([
+                    ...afternoonInputs,
+                    { amount: "", unit: "Pack" },
+                  ])
+                }
               >
                 <Plus className="h-4 w-4 mr-2" /> Tambah Input
               </Button>
