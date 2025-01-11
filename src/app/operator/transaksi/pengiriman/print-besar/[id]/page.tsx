@@ -248,13 +248,21 @@ const PrintInvoice = ({ params }: { params: any }) => {
                     <div className="text-center">
                       <p className="font-semibold mb-6">Penerima</p>
                       <div className="">
-                        (_____________)
+                        {data.deliveryTracking[0]?.recipient ? (
+                          "(" + data.deliveryTracking[0]?.recipient + ")"
+                        ) : (
+                          "(_____________)"
+                        )}
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Pengirim</p>
                       <div className="">
-                        (_____________)
+                        {data.deliveryTracking[0]?.sales_man ? (
+                          "(" + data.deliveryTracking[0]?.sales_man + ")"
+                        ) : (
+                          "(_____________)"
+                        )}
                       </div>
                     </div>
                     <div className="text-center">

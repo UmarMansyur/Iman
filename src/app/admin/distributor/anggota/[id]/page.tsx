@@ -13,23 +13,21 @@ import {
 } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { debounce } from "lodash";
 import Form from "./form";
 import { useQuery } from "@tanstack/react-query";
 import LoaderScreen from "@/components/views/loader";
-import { useUserStore } from "@/store/user-store";
-import { redirect } from "next/navigation";
-import toast from "react-hot-toast";
+import { useParams } from "next/navigation";
 
 // Type definitions for better type safety
-interface DataProductFilter {
+interface ServiceFilters {
   search: string;
   sortBy: string;
   sortOrder: "asc" | "desc";
 }
 
-interface DataProduct {
+interface ServiceData {
   data: any[];
   pagination: {
     page: number;
@@ -37,14 +35,14 @@ interface DataProduct {
     total: number;
     totalPages: number;
   };
-  options: any;
+  users: any[];
 }
 
-export default function LokasiPengirimanPage() {
-  // Separate state for local input and query parameters
+export default function AnggotaDistributorPage() {
+  const id = useParams();
   const [searchInput, setSearchInput] = useState("");
   const [queryParams, setQueryParams] = useState<
-    DataProductFilter & {
+    ServiceFilters & {
       page: number;
       limit: number;
     }
@@ -56,51 +54,55 @@ export default function LokasiPengirimanPage() {
     sortOrder: "asc",
   });
 
-  const { user } = useUserStore();
-
-  const fetchDataProduct = async () => {
+  const fetchServices = async () => {
     const { page, limit, search, sortBy, sortOrder } = queryParams;
+    document.title = "Anggota Distributor - Indera Distribution";
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
       search,
       sortBy,
       sortOrder,
+
     });
-    if(!user?.factory_selected?.id && !user?.id) {
-      throw new Error("Invalid user data");
-    }
-    
-    const response = await fetch(`/api/distributor/data-produk/?${params}&factory_id=${user?.factory_selected?.id}&user_id=${user?.id}`);
-    const data = await response.json();
-    if(!response.ok) {
-      throw new Error(data.message);
+
+    const response = await fetch(
+      `/api/distributor/${id.id}?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch distributors");
     }
 
-    return data as DataProduct;
+    return response.json() as Promise<ServiceData>;
   };
 
-  const { data, isLoading, isError, error } = useQuery<DataProduct>({
-    queryKey: ["product-distributor", queryParams],
-    queryFn: fetchDataProduct,
+  const { data, isLoading, isError, error } = useQuery<ServiceData>({
+    queryKey: ["member-distributor", queryParams],
+    queryFn: fetchServices,
     placeholderData: (previousData) => previousData,
   });
 
+  // Create a memoized debounced search function
   const debouncedSearch = useMemo(
     () =>
       debounce((searchValue: string) => {
         setQueryParams((prev) => ({
           ...prev,
           search: searchValue,
-          page: 1,
+          page: 1, // Reset to first page on new search
         }));
       }, 500),
     []
   );
 
+  // Handle input changes
   const handleSearchInputChange = useCallback(
     (value: string) => {
+      // Update local input state immediately
       setSearchInput(value);
+
+      // Trigger debounced search
       debouncedSearch(value);
     },
     [debouncedSearch]
@@ -114,39 +116,29 @@ export default function LokasiPengirimanPage() {
     }));
   };
 
-  useEffect(() => {
-    if(data?.options.length === 0) {
-      toast.error("Data Produk Tidak Ada, Silahkan Lakukan Pre-Order Terlebih Dahulu");
-      redirect("/distributor/pre-order");
-    }
-  }, [data]);
-
-  if (isError) {
+  if (isError)
     return (
       <div>
         Error:{" "}
         {error instanceof Error ? error.message : "An unknown error occurred"}
       </div>
     );
-  }
 
   return (
     <MainPage>
       <Card>
         <CardHeader>
-          <CardTitle>Data Produk</CardTitle>
-          <CardDescription>
-            Harga berikut dapat berubah jika anda telah mengubah data produk
-          </CardDescription>
+          <CardTitle>Distributor</CardTitle>
+          <CardDescription>Daftar distributor yang tersedia</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center pb-4">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Cari produk..."
+                  placeholder="Masukkan kata kunci..."
                   className="pl-8"
                   onChange={(e) => handleSearchInputChange(e.target.value)}
                   value={searchInput}
@@ -154,7 +146,7 @@ export default function LokasiPengirimanPage() {
               </div>
             </div>
             <div>
-              <Form products={data?.options}/>
+              <Form distributorId={Number(id.id)} users={data?.users ?? []} />
             </div>
           </div>
           {isLoading ? (
@@ -164,7 +156,8 @@ export default function LokasiPengirimanPage() {
               columns={columns(
                 data?.pagination.page ?? 1,
                 data?.pagination.limit ?? 10,
-                data?.options
+                data?.users ?? [],
+                Number(id.id)
               )}
               data={data?.data ?? []}
               pagination={{

@@ -81,7 +81,7 @@ async function main(): Promise<void> {
       username: "citra",
       password: await bcrypt.hash("citra", 10),
       date_of_birth: new Date("2001-07-29"),
-      gender: "Male",
+      gender: "Female",
       address: "Jl. Citra",
       user_type: "Operator",
       is_active: true,
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
       username: "lita",
       password: await bcrypt.hash("lita", 10),
       date_of_birth: new Date("2001-07-29"),
-      gender: "Male",
+      gender: "Female",
       address: "Jl. Lita",
       user_type: "Operator",
       is_active: true,
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
       username: "yanti",
       password: await bcrypt.hash("yanti", 10),
       date_of_birth: new Date("2001-07-29"),
-      gender: "Male",
+      gender: "Female",
       address: "Jl. Yanti",
       user_type: "Operator",
       is_active: true,
@@ -217,7 +217,7 @@ async function main(): Promise<void> {
     ],
   });
 
-  const factoryDistributor = await prisma.factoryDistributor.create({
+  await prisma.factoryDistributor.create({
     data: {
       factory_id: prsj.id,
       name: "Indera Distribution",
@@ -231,6 +231,18 @@ async function main(): Promise<void> {
               user_id: distributor.id,
             },
           ],
+        },
+      },
+    },
+  });
+
+  await prisma.factoryDistributor.create({
+    data: {
+      factory_id: prpj.id,
+      name: "Indera Distribution",
+      MemberDistributor: {
+        createMany: {
+          data: [{ user_id: ditributor2.id }, { user_id: distributor.id }],
         },
       },
     },

@@ -17,6 +17,7 @@ export async function GET(request: Request) {
         { user: { username: { contains: search } } },
         { factory: { name: { contains: search } } },
       ],
+
       factory_id: factoryId,
     };
 
@@ -41,7 +42,12 @@ export async function GET(request: Request) {
     }
 
     const operator = await prisma.memberFactory.findMany({
-      where,
+      where: {
+        ...where,
+        role: {
+          role: "Operator",
+        },
+      },
       include: {
         user: true,
         factory: true,
@@ -62,7 +68,14 @@ export async function GET(request: Request) {
       status: item.status,
     }));
 
-    const total = await prisma.memberFactory.count({ where });
+    const total = await prisma.memberFactory.count({
+      where: {
+        ...where,
+        role: {
+          role: "Operator",
+        },
+      },
+    });
 
     return NextResponse.json(
       {

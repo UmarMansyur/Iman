@@ -55,6 +55,10 @@ const data = {
           url: "/admin/pabrik",
         },
         {
+          title: "Distributor",
+          url: "/admin/distributor",
+        },
+        {
           title: "Satuan",
           url: "/admin/satuan",
         },

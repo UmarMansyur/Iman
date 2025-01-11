@@ -168,7 +168,9 @@ const PrintInvoice = ({ params }: { params: any }) => {
             </div>
             {pageIndex !== pagedItems.length - 1 && (
               <div className=" mb-2">
-                <p className="text-[12pt] text-center font-bold">Terima Kasih</p>
+                <p className="text-[12pt] text-center font-bold">
+                  Terima Kasih
+                </p>
                 <p className="text-[8pt] text-center">
                   Jangan terima nota pembayaran ini, jika nota pembayaran belum
                   ditandangani oleh operator!
@@ -191,13 +193,13 @@ const PrintInvoice = ({ params }: { params: any }) => {
                         {data.payment_status === "Cancelled" && "BATAL"}
                       </div>
                     </div>
-                     {/* Notes */}
-                {data.notes && (
-                  <div className="border-t border-gray-300 pt-1">
-                    <p className="font-semibold">Catatan:</p>
-                    <p className="text-[8pt]">{data.notes}</p>
-                  </div>
-                )}
+                    {/* Notes */}
+                    {data.notes && (
+                      <div className="border-t border-gray-300 pt-1">
+                        <p className="font-semibold">Catatan:</p>
+                        <p className="text-[8pt]">{data.notes}</p>
+                      </div>
+                    )}
                   </div>
                   <div className="w-48">
                     <div className="flex justify-between mb-1">
@@ -247,13 +249,21 @@ const PrintInvoice = ({ params }: { params: any }) => {
                     <div className="text-center">
                       <p className="font-semibold mb-6">Penerima</p>
                       <div className="border-t border-gray-300 pt-1">
-                        (_____________)
+                        {data.deliveryTracking[0]?.recipient ? (
+                          "(" + data.deliveryTracking[0]?.recipient + ")"
+                        ) : (
+                          "(_____________)"
+                        )}
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Pengirim</p>
                       <div className="border-t border-gray-300 pt-1">
-                        (_____________)
+                        {data.deliveryTracking[0]?.sales_man ? (
+                          "(" + data.deliveryTracking[0]?.sales_man + ")"
+                        ) : (
+                          "(_____________)"
+                        )}
                       </div>
                     </div>
                     <div className="text-center">
@@ -264,8 +274,6 @@ const PrintInvoice = ({ params }: { params: any }) => {
                     </div>
                   </div>
                 </div>
-
-               
               </>
             )}
           </div>

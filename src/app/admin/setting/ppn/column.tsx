@@ -29,7 +29,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <Settings className="w-4 h-4" />

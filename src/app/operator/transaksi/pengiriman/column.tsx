@@ -121,7 +121,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     accessorKey: "print",
     header: "Cetak",
     cell: ({ row }) => (
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div className="rounded-md p-2 cursor-pointer">
             <Printer className="w-4 h-4" />
@@ -157,7 +157,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

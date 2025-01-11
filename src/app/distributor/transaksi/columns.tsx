@@ -103,7 +103,7 @@ export const columns: ColumnDef<any>[] = [
     accessorKey: "print",
     header: "Cetak",
     cell: ({ row }) => (
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div className="rounded-md p-2 cursor-pointer">
             <Printer className="w-4 h-4" />
@@ -138,7 +138,7 @@ export const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const data = row.original as any;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <MoreHorizontal className="h-4 w-4" />

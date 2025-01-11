@@ -65,7 +65,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => {
       const productUnit = row.original as ProductUnit;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

@@ -2,15 +2,21 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, User } from "lucide-react";
 import Form from "./form";
 import DeleteButtonQuery from "@/components/DeleteButton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const columns = (
   page: number,
   limit: number,
-  products: any
+  factories: any[]
 ): ColumnDef<any>[] => [
   {
     id: "index",
@@ -20,7 +26,7 @@ export const columns = (
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Produk" />
+      <DataTableColumnHeader column={column} title="Nama Distributor" />
     ),
     cell: ({ row }) => {
       const data = row.original as any;
@@ -28,35 +34,34 @@ export const columns = (
     },
   },
   {
-    accessorKey: "price",
-    header: ({column}) => (
-      <DataTableColumnHeader column={column} title="Harga Produk" />
+    accessorKey: "factory_id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Pabrik" />
     ),
-    cell: ({row}) => {
+    cell: ({ row }) => {
       const data = row.original as any;
-      return data.price ? new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(data.price).slice(0, -3) : "-";
-    }
+      return data.Factory?.name || "-";
+    },
   },
   {
-    accessorKey: "sale_price",
-    header: ({column}) => (
-      <DataTableColumnHeader column={column} title="Harga Jual" />
-    ),
-    cell: ({row}) => {
+    accessorKey: "anggota",
+    header: "Anggota",
+    cell: ({ row }) => {
       const data = row.original as any;
-      return data.sale_price ? new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(data.sale_price).slice(0, -3) : "-";
-    }
+      //  buatkan tombol link untuk melihat anggota
+      return (
+        <Link href={`/admin/distributor/anggota/${data.id}`}>
+          <Button size="icon">
+            <User className="w-4 h-4" />
+          </Button>
+        </Link>
+      );
+    },
   },
   {
     accessorKey: "action",
     header: "Aksi",
-    cell: ({row}) => {
+    cell: ({ row }) => {
       const data = row.original as any;
       return (
         <DropdownMenu modal={false}>
@@ -66,11 +71,15 @@ export const columns = (
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <Form data={data} products={products}/>
-            <DeleteButtonQuery endpoint="distributor/data-produk" id={data?.id.toString()} queryKey="product-distributor" />
+            <Form distributor={data} factories={factories} />
+            <DeleteButtonQuery
+              endpoint="distributor"
+              id={data?.id.toString()}
+              queryKey="distributors"
+            />
           </DropdownMenuContent>
         </DropdownMenu>
-      )
-    }
+      );
+    },
   },
 ];

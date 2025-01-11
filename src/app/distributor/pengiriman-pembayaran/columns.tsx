@@ -108,7 +108,7 @@ export const columns: ColumnDef<any>[] = [
       const data = row.original as any;
 
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <MoreHorizontal className="h-4 w-4" />

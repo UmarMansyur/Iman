@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/user-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoaderScreen from "@/components/views/loader";
+import EmptyData from "@/components/views/empty-data";
+import { formatProduction } from "@/lib/utils";
 
 interface Product {
   id: number;
@@ -151,17 +153,15 @@ export default function DataStock() {
                     <th scope="col" className="px-6 py-3">Nama Produk</th>
                     <th scope="col" className="px-6 py-3">Tipe</th>
                     <th scope="col" className="px-6 py-3 text-right">Harga</th>
-                    <th scope="col" className="px-6 py-3 text-right">Stok Keluar (Pack)</th>
-                    <th scope="col" className="px-6 py-3 text-right">Stok Keluar (Bal)</th>
-                    <th scope="col" className="px-6 py-3 text-right">Stok Tersedia (Pack)</th>
-                    <th scope="col" className="px-6 py-3 text-right">Stok Tersedia (Bal)</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Keluar</th>
+                    <th scope="col" className="px-6 py-3 text-right">Stok Tersedia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stocks.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-6 py-4 text-center">
-                        Tidak ada data stok
+                        <EmptyData text="Data Stok Tidak Ada" />
                       </td>
                     </tr>
                   ) : (
@@ -176,10 +176,8 @@ export default function DataStock() {
                             currency: "IDR",
                           }).format(stock.product.price_per_pack).slice(0, -3)}
                         </td>
-                        <td className="px-6 py-4 text-right">{stock.stockOut * 20}</td>
-                        <td className="px-6 py-4 text-right">{stock.stockOut}</td>
-                        <td className="px-6 py-4 text-right">{stock.available_stock * 20}</td>
-                        <td className="px-6 py-4 text-right">{stock.available_stock}</td>
+                        <td className="px-6 py-4 text-right">{formatProduction(stock.stockOut * 20).bal}</td>
+                        <td className="px-6 py-4 text-right">{formatProduction(stock.available_stock * 20).bal}</td>
                       </tr>
                     ))
                   )}

@@ -133,7 +133,7 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     cell: ({ row }) => {
       const data = row.original as any;
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />

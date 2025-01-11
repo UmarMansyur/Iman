@@ -34,6 +34,7 @@ import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { redirect } from "next/navigation";
+import EmptyData from "@/components/views/empty-data";
 export default function CreateTransaction() {
   const [paymentMethod, setPaymentMethod] = useState([]);
   const [paymentMethodId, setPaymentMethodId] = useState<any>();
@@ -378,6 +379,13 @@ export default function CreateTransaction() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {cart.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">
+                      <EmptyData text="Keranjang Belanjaan Kosong" />  
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

@@ -2,7 +2,11 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Form from "./form";
 import DeleteButtonQuery from "@/components/DeleteButton";
@@ -10,6 +14,8 @@ import DeleteButtonQuery from "@/components/DeleteButton";
 export const columns = (
   page: number,
   limit: number,
+  users: any[],
+  distributorId: number | null
 ): ColumnDef<any>[] => [
   {
     id: "index",
@@ -17,32 +23,38 @@ export const columns = (
     cell: ({ row }) => (page - 1) * limit + row.index + 1,
   },
   {
-    accessorKey: "name",
+    accessorKey: "username",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Nama Lokasi" />
+      <DataTableColumnHeader column={column} title="Nama Anggota" />
     ),
     cell: ({ row }) => {
       const data = row.original as any;
-      return data.name;
+      return data.User?.username;
     },
   },
   {
-    accessorKey: "cost",
-    header: ({column}) => (
-      <DataTableColumnHeader column={column} title="Biaya" />
+    accessorKey: "address",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Alamat" />
     ),
-    cell: ({row}) => {
+    cell: ({ row }) => {
       const data = row.original as any;
-      return data.cost ? new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(data.cost).slice(0, -3) : "-";
-    }
+      return data.User?.address || "-";
+    },
+  },
+  // gender
+  {
+    accessorKey: "gender",
+    header: "Jenis Kelamin",
+    cell: ({ row }) => {
+      const data = row.original as any;
+      return data.User?.gender == "Male" ? "Laki-laki" : "Perempuan";
+    },
   },
   {
     accessorKey: "action",
     header: "Aksi",
-    cell: ({row}) => {
+    cell: ({ row }) => {
       const data = row.original as any;
       return (
         <DropdownMenu modal={false}>
@@ -52,11 +64,15 @@ export const columns = (
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <Form location={data}/>
-            <DeleteButtonQuery endpoint="location" id={data?.id.toString()} queryKey="locations" />
+            <Form user={data.User} distributorId={distributorId} users={users} />
+            <DeleteButtonQuery
+              endpoint="distributor"
+              id={data?.id.toString()}
+              queryKey="member-distributor"
+            />
           </DropdownMenuContent>
         </DropdownMenu>
-      )
-    }
+      );
+    },
   },
 ];

@@ -25,7 +25,7 @@ export function DataTablePagination<TData>({
   return (
     <div className="flex items-center justify-between space-x-2 py-4">
       <div className="flex items-center space-x-2">
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center space-x-2">
               <span className="text-sm">Menampilkan</span>

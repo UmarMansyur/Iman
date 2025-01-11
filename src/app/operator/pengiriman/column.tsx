@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Printer, PrinterCheckIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import DeliveryStatusDialog from "./delivery-status-dialog";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -148,20 +147,49 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
     accessorKey: "print",
     header: "Cetak",
-    cell: ({ row }) => (
-      <Link href={`/operator/transaksi/pengiriman/print/${row.original.id}`} target="_blank">
-        <Button variant="outline">
-          Cetak
-        </Button>
-      </Link>
-    ),
+    cell: ({ row }) => {
+      const data = row.original;
+      return (
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <div className="rounded-md p-2 cursor-pointer">
+              <PrinterCheckIcon className="w-4 h-4" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {/* cetak kecil */}
+            <Link
+              href={"/operator/transaksi/pengiriman/print/" + data.invoice_code}
+              className="hover:bg-gray-100"
+              target="_blank"
+            >
+              <div className="flex p-2 items-center hover:bg-gray-50">
+                <Printer className="w-4 h-4 mr-3"></Printer>
+                <span>Cetak Kecil</span>
+              </div>
+            </Link>
+            {/* cetak besar */}
+            <Link
+              href={"/operator/transaksi/pengiriman/print-besar/" + data.invoice_code}
+              className="hover:bg-gray-100"
+              target="_blank"
+            >
+              <div className="flex p-2 items-center hover:bg-gray-50">
+                <Printer className="w-4 h-4 mr-3"></Printer>
+                <span>Cetak Besar</span>
+              </div>
+            </Link>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
   {
     accessorKey: "action",
     header: "Aksi",
     cell: ({ row }) => {
       return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div className="rounded-md p-2 cursor-pointer">
               <MoreHorizontal className="w-4 h-4" />
