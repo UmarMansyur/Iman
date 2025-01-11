@@ -140,7 +140,7 @@ export async function POST(request: Request) {
       details.map((detail: any) =>
         prisma.materialStock.create({
           data: {
-            factory_id: 1, // Sesuaikan dengan factory_id yang sesuai
+            factory_id: Number(factory_id), // Sesuaikan dengan factory_id yang sesuai
             material_unit_id: Number(detail.material_unit_id),
             amount: Number(detail.amount),
             status: MaterialStockStatus.Out,
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return NextResponse.json(
       {
-        message: "Gagal melaporkan penggunaan bahan baku",
+        message: error.message || "Gagal melaporkan penggunaan bahan baku",
         error: error.message,
       },
       { status: 500 }

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -87,23 +88,22 @@ export default function OrderPage() {
     setPrice(0);
     setTotalPrice(0);
   };
-
+  const { user } = useUserStore();
   const [materials, setMaterials] = useState<any[]>([]);
   useEffect(() => {
     const fetchMaterials = async () => {
-      const response = await fetch("/api/material-unit?limit=1000");
+      const response = await fetch("/api/material-unit?limit=1000&page=1&factory_id=" + user?.factory_selected?.id);
       const data = await response.json();
       setMaterials(data.data);
     };
     fetchMaterials();
-  }, []);
+  }, [user?.factory_selected?.id]);
 
   const removeDetail = (index: number) => {
     const newDetails = details.filter((_, i) => i !== index);
     setDetails(newDetails);
   };
 
-  const { user } = useUserStore();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

@@ -117,12 +117,12 @@ export default function OrderPage() {
       })
     );
   }, [currentAmount, currentPrice]);
-
+  const { user } = useUserStore();
   const [materials, setMaterials] = useState<any[]>([]);
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const response = await fetch("/api/material-unit?limit=1000");
+        const response = await fetch("/api/material-unit?limit=1000&page=1&factory_id=" + user?.factory_selected?.id);
         const data = await response.json();
         setMaterials(data.data);
       } finally {
@@ -130,7 +130,7 @@ export default function OrderPage() {
       }
     };
     fetchMaterials();
-  }, []);
+  }, [user?.factory_selected?.id]);
 
   const removeDetail = (index: number) => {
     const newDetails = details.filter((_, i) => i !== index);
@@ -138,7 +138,6 @@ export default function OrderPage() {
   };
 
   const grandTotal = details.reduce((sum, detail) => sum + detail.total, 0);
-  const { user } = useUserStore();
 
   useEffect(() => {
     const fetchOrder = async () => {

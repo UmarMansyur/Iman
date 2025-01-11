@@ -12,26 +12,28 @@ export async function GET(request: Request) {
     const sortOrder = searchParams.get("sortOrder") || "desc";
     const factory_id = searchParams.get("factory_id") || "";
 
+
     const where: any = {
       OR: [
         { material: { name: { contains: search } } },
         { unit: { name: { contains: search } } },
       ],
+      material: {
+        factory_id: Number(factory_id),
+      }
     };
 
-    if(factory_id != "") {
-      const existMaterialUnit = await prisma.materialStock.findMany({
-        where: {
-          factory_id: parseInt(factory_id),
-        },
-        distinct: ["material_unit_id"],
-        select: {
-          material_unit_id: true,
-        }
-      });
-      where.id = {
-        in: existMaterialUnit.map((item) => item.material_unit_id),
-      }
+    if(factory_id == "undefined") {
+      delete where.material.factory_id;
+    } 
+
+    if(factory_id == undefined) {
+      delete where.material.factory_id;
+    }
+
+
+    if(!factory_id) {
+      delete where.material.factory_id;
     }
 
     const materialUnit = await prisma.materialUnit.findMany({
@@ -54,7 +56,7 @@ export async function GET(request: Request) {
       material: item.material.name,
       unit_id: item.unit.id,
       unit: item.unit.name,
-      
+      factory_id: item.material.factory_id,
     }));
 
     const options = {

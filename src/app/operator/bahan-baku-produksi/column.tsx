@@ -82,9 +82,9 @@ export const columns = (
         </DialogTrigger>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Detail Laporan Stock</DialogTitle>
+            <DialogTitle>Rincian Penggunaan Bahan Baku</DialogTitle>
             <DialogDescription>
-              Detail informasi laporan stock bahan baku
+              Rincian penggunaan bahan baku
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

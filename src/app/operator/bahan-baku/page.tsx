@@ -14,6 +14,7 @@ import { DataTable } from "./data-table";
 import { Material, MaterialUnit, Unit } from "@prisma/client";
 
 export default function PabrikPage() {
+  const { user } = useUserStore()
   const [data, setData] = useState<MaterialUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -27,11 +28,11 @@ export default function PabrikPage() {
     search: "",
     sortBy: "id",
     sortOrder: "asc",
+    factory_id: user?.factory_selected?.id,
   });
 
   const [searchInput, setSearchInput] = useState("");
   const [options, setOptions] = useState<{ materials: Material[], units: Unit[] }>({ materials: [], units: [] });
-  const { user } = useUserStore()
 
   const fetchProducts = async () => {
     try {
@@ -43,6 +44,7 @@ export default function PabrikPage() {
         search: filters.search,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
+        factory_id: user?.factory_selected?.id || "",
       });
 
       const response = await fetch(`/api/material-unit?${queryParams}`);
@@ -81,7 +83,7 @@ export default function PabrikPage() {
     filters.search,
     filters.sortBy,
     filters.sortOrder,
-    user,
+    user?.factory_selected?.id
   ]);
 
   useEffect(() => {

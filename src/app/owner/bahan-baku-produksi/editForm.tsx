@@ -81,7 +81,7 @@ export default function EditMaterialStockReport({
     const fetchMaterials = async () => {
       try {
         const factory_id = user?.factory_selected?.id || "";
-        const response = await fetch(`/api/material-unit?limit=1000&factory_id=${factory_id}`);
+        const response = await fetch(`/api/material-unit?limit=1000&page=1&factory_id=${factory_id}`);
         const data = await response.json();
         setMaterials(data.data);
       } catch (error: any) {

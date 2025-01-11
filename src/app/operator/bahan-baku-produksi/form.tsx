@@ -114,6 +114,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
           material_unit_id: detail.material_unit_id,
           amount: detail.amount,
         })),
+        factory_id: user?.factory_selected?.id,
         total_amount: details.reduce((acc, curr) => acc + curr.amount, 0),
       };
 
