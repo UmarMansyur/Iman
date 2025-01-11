@@ -130,7 +130,7 @@ export default function PabrikPage() {
             <Link href="/distributor/pre-order">
               <Button className="flex items-center gap-2">
                 <PlusCircle className="w-4 h-4" />
-                Tambah Transaksi
+                Tambah Order
               </Button>
             </Link>
           </div>

@@ -13,14 +13,12 @@ import {
 } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { debounce } from "lodash";
 import Form from "./form";
 import { useQuery } from "@tanstack/react-query";
 import LoaderScreen from "@/components/views/loader";
 import { useUserStore } from "@/store/user-store";
-import { redirect } from "next/navigation";
-import toast from "react-hot-toast";
 
 // Type definitions for better type safety
 interface DataProductFilter {
@@ -67,13 +65,15 @@ export default function LokasiPengirimanPage() {
       sortBy,
       sortOrder,
     });
-    if(!user?.factory_selected?.id && !user?.id) {
+    if (!user?.factory_selected?.id && !user?.id) {
       throw new Error("Invalid user data");
     }
-    
-    const response = await fetch(`/api/distributor/data-produk/?${params}&factory_id=${user?.factory_selected?.id}&user_id=${user?.id}`);
+
+    const response = await fetch(
+      `/api/distributor/data-produk/?${params}&factory_id=${user?.factory_selected?.id}&user_id=${user?.id}`
+    );
     const data = await response.json();
-    if(!response.ok) {
+    if (!response.ok) {
       throw new Error(data.message);
     }
 
@@ -114,13 +114,6 @@ export default function LokasiPengirimanPage() {
     }));
   };
 
-  useEffect(() => {
-    if(data?.options.length === 0) {
-      toast.error("Data Produk Tidak Ada, Silahkan Lakukan Pre-Order Terlebih Dahulu");
-      redirect("/distributor/pre-order");
-    }
-  }, [data]);
-
   if (isError) {
     return (
       <div>
@@ -154,7 +147,7 @@ export default function LokasiPengirimanPage() {
               </div>
             </div>
             <div>
-              <Form products={data?.options}/>
+              <Form products={data?.options} />
             </div>
           </div>
           {isLoading ? (

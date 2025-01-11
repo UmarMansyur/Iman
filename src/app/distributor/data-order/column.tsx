@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Printer } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import DeleteButton from "@/components/delete-button";
+import Link from "next/link";
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
     id: "index",
@@ -88,6 +89,39 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       <div className="text-start">
         {row.original.payment_method.name}
       </div>
+    ),
+  },
+  {
+    accessorKey: "print",
+    header: "Cetak",
+    cell: ({ row }) => (
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <div className="rounded-md p-2 cursor-pointer">
+            <Printer className="w-4 h-4" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/distributor/data-order/print-besar/${row.original.invoice_code}`}
+              target="_blank"
+              className="w-full px-2 hover:bg-gray-100 py-2"
+            >
+              Ukuran Besar
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/distributor/data-order/print/${row.original.invoice_code}`}
+              target="_blank"
+              className="w-full px-2 hover:bg-gray-100 py-2"
+            >
+              Ukuran Kecil
+            </Link>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     ),
   },
   {

@@ -47,11 +47,17 @@ export default function Form({
 }) {
   const { user } = useUserStore();
   const [product, setProduct] = useState<any>(null);
-  const fetchProduct = async (id: string) => {
-    const response = await fetch(`/api/product/${id}`);
-    const data = await response.json();
-    setProduct(data);
-  }
+  // const fetchProduct = async (id: string) => {
+  //   const response = await fetch(`/api/product/${id}`);
+  //   const data = await response.json();
+  //   setProduct(data);
+  // }
+
+  useEffect(() => {
+    if (data) {
+      setProduct(products?.find((product: any) => product.id == data.product_id));
+    }
+  }, [data]);
 
   const [state, setState] = useState<ProductFormState>({
     product_id: data?.product_id || "",
@@ -62,12 +68,7 @@ export default function Form({
     unit: "pack",
   });
 
-  // jika ada product, maka ambil data product
-  useEffect(() => {
-    if (data) {
-      fetchProduct(data.product_id);
-    }
-  }, [data]);
+  
 
   const convertToPackPrice = (price: number, unit: string): number => {
     switch (unit) {
@@ -185,7 +186,7 @@ export default function Form({
               <Select
                 onValueChange={(value) => {
                   setState({ ...state, product_id: value });
-                  fetchProduct(value);
+                  setProduct(products?.find((product: any) => product.id == value));
                 }}
               >
                 <SelectTrigger className="col-span-3">

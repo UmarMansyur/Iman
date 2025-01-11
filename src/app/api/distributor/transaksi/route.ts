@@ -122,9 +122,9 @@ export async function POST(req: Request) {
     }
 
     // status payment berubah menjadi Paid Off ketika melebihi total amount atau sama dengan total amount
-    let status_payments = "Paid";
-    if (totalAmount > Number(down_payment)) {
-      status_payments = "Paid Off";
+    let status_payments = "Pending";
+    if (Number(down_payment) >= totalAmount) {
+      status_payments = "Paid_Off";
     }
 
     // Buat transaksi
@@ -264,7 +264,7 @@ export async function GET(req: Request) {
   } catch (error: any) {
     console.error(error);
     return NextResponse.json(
-      { message: "Terjadi kesalahan server" },
+      { message: error.message || "Terjadi kesalahan server" },
       { status: 500 }
     );
   }

@@ -358,7 +358,7 @@ async function main(): Promise<void> {
     ],
   });
 
-  for (let i = 1; i <= 5000; i++) {
+  for (let i = 1; i <= 1000; i++) {
     // random quantity tidak boleh ganjil
     let randomQuantity = Math.floor(Math.random() * 100) + 1;
     if (randomQuantity % 2 !== 0) {
@@ -470,7 +470,7 @@ async function main(): Promise<void> {
   //     recipient: "PT. Iman",
   //   },
   // });
-  for (let i = 1; i <= 5000; i++) {
+  for (let i = 1; i <= 1000; i++) {
     const buyer = await prisma.buyer.create({
       data: {
         name: `PT. Iman ${i}`,

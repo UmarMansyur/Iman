@@ -20,13 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useUserStore } from "@/store/user-store";
 import { useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Table,
@@ -46,12 +45,10 @@ import EmptyData from "@/components/views/empty-data";
 
 export default function CreateTransaction() {
   const { user } = useUserStore();
-  const [isProduct, setIsProduct] = useState(true);
   const [product, setProduct] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string | undefined>(
     undefined
   );
-  const [stock, setStock] = useState<number>(0);
   const [buyerType, setBuyerType] = useState<"new" | "existing">("new");
   const [existingBuyers, setExistingBuyers] = useState<any[]>([]);
   const [selectedBuyer, setSelectedBuyer] = useState<string>("");
@@ -80,9 +77,11 @@ export default function CreateTransaction() {
       `/api/distributor/data-stock?distributor_id=${user?.id}&factory_id=${user?.factory_selected?.id}`
     );
     const data = await response.json();
-    if(data.data.length === 0) {
-      toast.error("Tidak ada data produk yang tersedia, Silahkan order produk terlebih dahulu");
-      redirect("/distributor/pre-order");
+    if (data.data.length === 0) {
+      toast.error(
+        "Tidak ada data produk yang tersedia, Silahkan hubungi operator pabrik dan set harga di halaman data produk"
+      );
+      redirect("/distributor/data-produk");
     }
     setProduct(data.data);
   };
@@ -92,7 +91,7 @@ export default function CreateTransaction() {
     const availableStock = product.find(
       (item: any) => item.product.id == value
     );
-    setStock(availableStock?.available_stock);
+
     // harga masih per pack
     setPrice(availableStock?.product.price);
   };
@@ -103,22 +102,22 @@ export default function CreateTransaction() {
     );
     const data = await response.json();
     setExistingBuyers(data.data);
+    setFilteredBuyer(data.data);
   };
 
+  // Tambahkan state untuk paginasi
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Jumlah item per halaman
 
-    // Tambahkan state untuk paginasi
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5; // Jumlah item per halaman
-  
-    // Tambahkan fungsi untuk menghitung total halaman
-    const totalPages = Math.ceil(filteredBuyer.length / itemsPerPage);
-  
-    // Fungsi untuk mendapatkan data yang ditampilkan di halaman saat ini
-    const getCurrentPageData = () => {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      return filteredBuyer.slice(startIndex, endIndex);
-    };
+  // Tambahkan fungsi untuk menghitung total halaman
+  const totalPages = Math.ceil(filteredBuyer.length / itemsPerPage);
+
+  // Fungsi untuk mendapatkan data yang ditampilkan di halaman saat ini
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredBuyer.slice(startIndex, endIndex);
+  };
 
   const handleSearchBuyer = async () => {
     const filteredBuyer = existingBuyers.filter((buyer: any) =>
@@ -129,6 +128,12 @@ export default function CreateTransaction() {
 
   const handleBuyerSelect = (buyer: any) => {
     setSelectedBuyer(buyer);
+    setBuyerForm({
+      name: buyer.name,
+      address: buyer.address,
+      phone: buyer.phone,
+      notes: "",
+    });
     setBuyerType("existing");
     setOpen(false);
   };
@@ -165,7 +170,7 @@ export default function CreateTransaction() {
       setCart([
         ...cart,
         {
-          product_id: isProduct ? selectedProduct : null,
+          product_id: true,
           product_name: productData?.product.name,
           product_type: productData?.product.type,
           quantity: quantity,
@@ -180,21 +185,7 @@ export default function CreateTransaction() {
     setSelectedProduct(undefined);
   };
 
-  // const handleSelectBuyer = (value: string) => {
-  //   const existingBuyer = existingBuyers.find(
-  //     (buyer: any) => buyer.id == value
-  //   );
-  //   // alamat lengkap
-  //   const address = `${existingBuyer.address}, ${existingBuyer.city}, ${existingBuyer.province}`;
-  //   setSelectedBuyer(existingBuyer.id);
-  //   setBuyerForm({
-  //     name: existingBuyer.name,
-  //     address: address,
-  //     phone: existingBuyer.phone,
-  //     notes: "",
-  //   });
-  // };
-
+  const router = useRouter();
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -243,8 +234,8 @@ export default function CreateTransaction() {
           price: item.price,
           discount: 0,
           sale_price: item.price,
-          is_product: isProduct,
-          product_id: isProduct ? item.product_id : null,
+          is_product: true,
+          product_id: item.product_id,
         })),
         down_payment: downPayment,
         remaining_balance: remainingPayment + deliveryCost,
@@ -263,34 +254,33 @@ export default function CreateTransaction() {
       });
 
       const data = await response.json();
-
+      
       if (!response.ok) {
         throw new Error(data.message || "Terjadi kesalahan");
+      } else {
+        toast.success("Transaksi berhasil disimpan");
+        setCart([]);
+        setBuyerForm({
+          name: "",
+          phone: "",
+          address: "",
+          notes: "",
+        });
+        setDownPayment(0);
+        setRemainingPayment(0);
+        setPaymentMethod("");
+        setSelectedBuyer("");
+        setSelectedProduct(undefined);
+        setCart([]);
+        setDeliveryCost(0);
+        window.open(
+          "/distributor/transaksi/print-besar/" + data.invoice_code,
+          "_blank"
+        );
+        router.push("/distributor/transaksi");
       }
 
-      toast.success("Transaksi berhasil disimpan");
       // Reset form setelah berhasil
-      setCart([]);
-      setBuyerForm({
-        name: "",
-        phone: "",
-        address: "",
-        notes: "",
-      });
-      setDownPayment(0);
-      setRemainingPayment(0);
-      setPaymentMethod("");
-      setSelectedBuyer("");
-      setSelectedProduct(undefined);
-      setIsProduct(true);
-      setCart([]);
-      setPaymentMethod("");
-      setSelectedBuyer("");
-      setSelectedProduct(undefined);
-      setIsProduct(true);
-      setCart([]);
-      setDeliveryCost(0);
-      redirect("/distributor/transaksi");
     } catch (error: any) {
       toast.error(error.message || "Terjadi kesalahan");
     } finally {
@@ -325,78 +315,42 @@ export default function CreateTransaction() {
       <Card>
         <CardHeader>
           <CardTitle>Tambah Transaksi</CardTitle>
-          <CardDescription>
-            Tambah transaksi baru. Terdapat dua jenis transaksi yaitu transaksi
-            produk dan transaksi non produk
-          </CardDescription>
+          <CardDescription>Tambah transaksi baru untuk produk</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Form input transaksi toogle swith product dan non product */}
           <form>
-            <div className="grid grid-cols-3 gap-4 mb-3">
-              <div className="flex flex-col gap-2">
-                <Label>Jenis Transaksi</Label>
-                <div className="flex items-center gap-2">
-                  <Switch checked={isProduct} onCheckedChange={setIsProduct} />
-                  <p className="text-sm text-gray-500">
-                    {isProduct ? "Transaksi Produk" : "Transaksi Non Produk"}
-                  </p>
-                </div>
-              </div>
-              <div
-                className={`flex flex-col gap-2 ${
-                  !isProduct ? "col-span-2" : ""
-                }`}
-              >
-                <Label>{isProduct ? "Produk" : "Keterangan"}</Label>
-                {isProduct ? (
-                  <Select
-                    value={selectedProduct}
-                    onValueChange={handleSelectProduct}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Produk">
-                        {selectedProduct
-                          ? product.find(
-                              (item: any) => item.product.id == selectedProduct
-                            )?.product.name +
-                            " - " +
-                            product.find(
-                              (item) => item.product.id == selectedProduct
-                            )?.product.type
-                          : "Pilih Produk"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {product.map((item: any) => (
-                        <SelectItem
-                          key={item.product.id}
-                          value={item.product.id.toString()}
-                        >
-                          {item.product.name} - {item.product.type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    type="text"
-                    placeholder="Masukkan keterangan transaksi"
-                  />
-                )}
-              </div>
-              {isProduct && (
-                <div className="flex flex-col gap-2">
-                  <Label>Stock(Ball)</Label>
-                  <Input
-                    type="text"
-                    value={stock || 0}
-                    onChange={(e) => setStock(Number(e.target.value))}
-                  />
-                </div>
-              )}
-            </div>
             <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col gap-2 mb-3">
+                <Label>Produk</Label>
+                <Select
+                  value={selectedProduct}
+                  onValueChange={handleSelectProduct}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Produk">
+                      {selectedProduct
+                        ? product.find(
+                            (item: any) => item.product.id == selectedProduct
+                          )?.product.name +
+                          " - " +
+                          product.find(
+                            (item) => item.product.id == selectedProduct
+                          )?.product.type
+                        : "Pilih Produk"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.map((item: any) => (
+                      <SelectItem
+                        key={item.product.id}
+                        value={item.product.id.toString()}
+                      >
+                        {item.product.name} - {item.product.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex flex-col gap-2">
                 <Label>Jumlah</Label>
                 <Input
@@ -409,6 +363,12 @@ export default function CreateTransaction() {
                 />
               </div>
               <div className="flex flex-col gap-2">
+                <Label>Harga Per Pack</Label>
+                <Input type="text" value={formatRibuan(price / 200)} disabled />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
                 <Label>Harga</Label>
                 <Input
                   type="text"
@@ -417,6 +377,7 @@ export default function CreateTransaction() {
                     const value = e.target.value.replace(/\./g, "");
                     setPrice(Number(value));
                   }}
+                  disabled
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -505,7 +466,7 @@ export default function CreateTransaction() {
                       colSpan={5}
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      Keranjang masih kosong
+                      <EmptyData text="Keranjang masih kosong" />
                     </td>
                   </tr>
                 )}
@@ -550,6 +511,17 @@ export default function CreateTransaction() {
               />
             </div>
             <div className="flex flex-col gap-2">
+              <Label>Ongkos Kirim</Label>
+              <Input
+                type="text"
+                value={formatRibuan(deliveryCost)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\./g, "");
+                  setDeliveryCost(Number(value));
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
               <Label>Uang Muka</Label>
               <Input
                 type="text"
@@ -583,28 +555,17 @@ export default function CreateTransaction() {
                 disabled
               />
             </div>
-          </div>
-          <div className="flex flex-col gap-2 mt-4">
-            <Label>Ongkos Kirim</Label>
-            <Input
-              type="text"
-              value={formatRibuan(deliveryCost)}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\./g, "");
-                setDeliveryCost(Number(value));
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-2 mt-4">
-            <Label>Total Keseluruhan</Label>
-            <Input
-              type="text"
-              value={formatRibuan(
-                cart.reduce((acc, item) => acc + item.subtotal, 0) +
-                  deliveryCost
-              )}
-              disabled
-            />
+            <div className="flex flex-col gap-2">
+              <Label>Total Keseluruhan</Label>
+              <Input
+                type="text"
+                value={formatRibuan(
+                  cart.reduce((acc, item) => acc + item.subtotal, 0) +
+                    deliveryCost
+                )}
+                disabled
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

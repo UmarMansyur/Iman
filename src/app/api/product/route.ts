@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const sortBy = searchParams.get("sortBy") || "id";
     const sortOrder = searchParams.get("sortOrder") || "asc";
     const factoryId = searchParams.get("factoryId") || "";
+    const factory_id = searchParams.get("factory_id") || "";
     // Buat where clause berdasarkan filter
     const where: any = {
       OR: [
@@ -21,6 +22,10 @@ export async function GET(request: Request) {
 
     if(factoryId) {
       where.factory_id = parseInt(factoryId);
+    }
+
+    if(factory_id) {
+      where.factory_id = parseInt(factory_id);
     }
 
     if(search === ProductType.Gabus || search === ProductType.Kretek) {
@@ -39,14 +44,32 @@ export async function GET(request: Request) {
       take: limit,
       include: {
         factory: true,
-        stockProducts: true,
+        // stockProducts: true,
       },
     });
 
+    // ambil stock product dengan query RAW group by dengan product_id, dan type
+    const stockProducts = await prisma.stockProduct.groupBy({
+      by: ['type', 'product_id'],
+      where: {
+        product_id: {
+          in: products.map(product => product.id)
+        }
+      },
+      _sum: {
+        amount: true
+      },
+    });
+
+
     const result = products.map((product) => {
+      const stockIn = stockProducts.find((stock: any) => stock.product_id === product.id && stock.type === "In");
+      const stockOut = stockProducts.find((stock: any) => stock.product_id === product.id && stock.type === "Out");
       return {
         ...product,
-        stock: product.stockProducts.reduce((acc, curr) => acc + curr.amount, 0),
+        stock_out: stockOut?._sum.amount || 0,
+        stock_in: stockIn?._sum.amount || 0,
+        stock: (stockIn?._sum.amount || 0) - (stockOut?._sum.amount || 0),
       };
     });
 

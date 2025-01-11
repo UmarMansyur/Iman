@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Pencil, Printer } from "lucide-react";
+import { Eye, MoreHorizontal, Printer } from "lucide-react";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -256,7 +256,7 @@ export const columns: ColumnDef<any>[] = [
                 </DialogContent>
               </Dialog>
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            {/* <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <Link
                 href={`/distributor/transaksi/${data.id}/edit`}
                 className="flex items-center w-full"
@@ -264,13 +264,15 @@ export const columns: ColumnDef<any>[] = [
                 <Pencil className="h-4 w-4 mr-2" />
                 Ubah Transaksi
               </Link>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
-            <DeleteButtonQuery
-              endpoint={`/distributor/transaksi`}
+            {/* {data.status_payment === "Pending" && ( */}
+              <DeleteButtonQuery
+                endpoint={`/distributor/transaksi`}
               id={data.id}
-              queryKey="transaksi-distributor         "
-            />
+                queryKey="transaksi-distributor"
+              />
+            {/* )} */}
           </DropdownMenuContent>
         </DropdownMenu>
       );

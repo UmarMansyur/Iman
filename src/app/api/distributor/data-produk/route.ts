@@ -25,18 +25,11 @@ export async function GET(req: Request) {
       throw new Error("Member factory tidak ditemukan!");
     }
 
-    const productId = await prisma.distributorStock.groupBy({
-      by: ["product_id"],
-      where: {
-        factory_id: parseInt(factory_id),
-      },
-    });
+
 
     const listProduct = await prisma.product.findMany({
       where: {
-        id: {
-          in: productId.map((item) => item.product_id),
-        },
+        factory_id: parseInt(factory_id),
       },
     });
 
@@ -44,6 +37,7 @@ export async function GET(req: Request) {
       return {
         id: item.id,
         name: item.name + " - " + item.type,
+        price: item.price,
       }
     });
 

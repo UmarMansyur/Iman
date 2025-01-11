@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
   Blocks,
-  CheckCheckIcon,
   Combine,
   Database,
   FileText,
@@ -16,7 +15,6 @@ import {
   ShoppingBagIcon,
   SquareKanban,
   SquarePercent,
-  Truck,
   Users,
 } from "lucide-react";
 
@@ -269,21 +267,31 @@ const data = {
       title: "Data Order",
       url: "/distributor/data-order",
       icon: SendToBack,
+      items: [
+        {
+          title: "Data Order",
+          url: "/distributor/data-order",
+        },
+        {
+          title: "Konfirmasi Penerimaan Order",
+          url: "/distributor/konfirmasi-penerimaan",
+        },
+      ],
     },
     {
-      title: "Konfirmasi Penerimaan Order",
-      url: "/distributor/konfirmasi-penerimaan",
-      icon: CheckCheckIcon,
-    },
-    {
-      title: "Transaksi/Penjualan Produk",
+      title: "Transaksi Produk",
       url: "/distributor/transaksi",
       icon: ShoppingBagIcon,
-    },
-    {
-      title: "Pengiriman dan Pembayaran",
-      url: "/distributor/pengiriman-pembayaran",
-      icon: Truck,
+      items: [
+        {
+          title: "Daftar Transaksi",
+          url: "/distributor/transaksi",
+        },
+        {
+          title: "Pengiriman & Pembayaran",
+          url: "/distributor/pengiriman-pembayaran",
+        },
+      ],
     },
   ],
 };

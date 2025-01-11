@@ -6,6 +6,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const distributor_id = searchParams.get("distributor_id");
   const factory_id = searchParams.get("factory_id");
+
   const data = await prisma.distributorStock.groupBy({
     by: ["product_id", "type"],
     where: {
@@ -17,25 +18,23 @@ export async function GET(req: Request) {
     },
   });
 
-  const summary = await prisma.distributorStock.groupBy({
-    by: ["type"],
-    where: {
-      distributor_id: parseInt(distributor_id!),
-      factory_id: parseInt(factory_id!)
-    },
-    _sum: {
-      amount: true
-    },
-  });
+  // const summary = await prisma.distributorStock.groupBy({
+  //   by: ["type"],
+  //   where: {
+  //     distributor_id: parseInt(distributor_id!),
+  //     factory_id: parseInt(factory_id!)
+  //   },
+  //   _sum: {
+  //     amount: true
+  //   },
+  // });
 
-  const totalStockIn = summary.find(item => item.type === "In")?._sum.amount || 0;
-  const totalStockOut = summary.find(item => item.type === "Out")?._sum.amount || 0;
-  
+  const totalStockIn = data.find(item => item.type === "In")?._sum.amount || 0;
+  const totalStockOut = data.find(item => item.type === "Out")?._sum.amount || 0;
+
   const products = await prisma.product.findMany({
     where: {
-      id: {
-        in: data.map(item => item.product_id)
-      }
+      factory_id: parseInt(factory_id!)
     }
   });
 

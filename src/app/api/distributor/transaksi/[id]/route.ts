@@ -9,7 +9,7 @@ export async function GET(req: Request, { params }: { params: any }) {
 
   const transaction = await prisma.transactionDistributor.findUnique({
     where: {
-      id: Number(id),
+      invoice_code: id,
     },
     include: {
       buyer: true,
