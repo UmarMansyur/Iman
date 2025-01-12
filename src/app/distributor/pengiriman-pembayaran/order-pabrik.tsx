@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,10 +83,10 @@ const transactions: Transaction[] = [
   // ...data JSON Anda
 ];
 
-const groupedByFactory = transactions.map(transaction => {
+const groupedByFactory = transactions.map((transaction) => {
   const groupedProducts: { [key: number]: DetailTransaction[] } = {};
 
-  transaction.DetailTransactionDistributor.forEach(detail => {
+  transaction.DetailTransactionDistributor.forEach((detail) => {
     const factoryId = detail.Product.factory_id || 0; // Gunakan 0 jika factory_id null
     if (!groupedProducts[factoryId]) {
       groupedProducts[factoryId] = [];
@@ -102,24 +103,24 @@ const groupedByFactory = transactions.map(transaction => {
 // Tambahkan fungsi untuk mengelompokkan produk per pabrik
 const groupProductsByFactory = (details: DetailTransaction[]) => {
   const grouped: { [key: string]: any } = {};
-  
+
   details.forEach((detail) => {
-    const factoryId = detail.Product.factory_id || 'other';
-    const factoryName = detail.Product.factory?.name || 'Produk Tanpa Pabrik';
-    
+    const factoryId = detail.Product.factory_id || "other";
+    const factoryName = detail.Product.factory?.name || "Produk Tanpa Pabrik";
+
     if (!grouped[factoryId]) {
       grouped[factoryId] = {
         factory: {
           id: factoryId,
-          name: factoryName
+          name: factoryName,
         },
-        products: []
+        products: [],
       };
     }
-    
+
     grouped[factoryId].products.push(detail);
   });
-  
+
   return grouped;
 };
 
@@ -143,7 +144,7 @@ export default function TransactionDialog({
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [descDelivery, setDescDelivery] = useState<string>("");
-  
+
   // State baru untuk menyimpan data pembayaran per pabrik
   const [paymentsData, setPaymentsData] = useState<PaymentData[]>([]);
 
@@ -161,83 +162,126 @@ export default function TransactionDialog({
     return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  const handleFileChange = (factoryId: string | number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      if (
-        !["image/jpeg", "image/png", "application/pdf"].includes(
-          selectedFile.type
-        )
-      ) {
-        toast.error("Format file harus JPG, PNG, atau PDF");
-        return;
+  const handleFileChange =
+    (factoryId: string | number) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+        const selectedFile = e.target.files[0];
+        if (
+          !["image/jpeg", "image/png", "application/pdf"].includes(
+            selectedFile.type
+          )
+        ) {
+          toast.error("Format file harus JPG, PNG, atau PDF");
+          return;
+        }
+        if (selectedFile.size > 5 * 1024 * 1024) {
+          toast.error("Ukuran file maksimal 5MB");
+          return;
+        }
+
+        setPaymentsData((prev) => {
+          const existing = prev.find((p) => p.factoryId === factoryId);
+          if (existing) {
+            return prev.map((p) =>
+              p.factoryId === factoryId ? { ...p, file: selectedFile } : p
+            );
+          }
+          return [
+            ...prev,
+            {
+              factoryId,
+              file: selectedFile,
+              downPayment: "",
+              paymentMethod: "",
+            },
+          ];
+        });
       }
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        toast.error("Ukuran file maksimal 5MB");
-        return;
-      }
-      
-      setPaymentsData(prev => {
-        const existing = prev.find(p => p.factoryId === factoryId);
+    };
+
+  const handleDownPaymentChange =
+    (factoryId: string | number) => (value: string) => {
+      setPaymentsData((prev) => {
+        const existing = prev.find((p) => p.factoryId === factoryId);
         if (existing) {
-          return prev.map(p => 
-            p.factoryId === factoryId ? { ...p, file: selectedFile } : p
+          return prev.map((p) =>
+            p.factoryId === factoryId ? { ...p, downPayment: value } : p
           );
         }
-        return [...prev, { factoryId, file: selectedFile, downPayment: "", paymentMethod: "" }];
+        return [
+          ...prev,
+          { factoryId, downPayment: value, paymentMethod: "", file: null },
+        ];
       });
-    }
-  };
+    };
 
-  const handleDownPaymentChange = (factoryId: string | number) => (value: string) => {
-    setPaymentsData(prev => {
-      const existing = prev.find(p => p.factoryId === factoryId);
-      if (existing) {
-        return prev.map(p => 
-          p.factoryId === factoryId ? { ...p, downPayment: value } : p
-        );
-      }
-      return [...prev, { factoryId, downPayment: value, paymentMethod: "", file: null }];
-    });
-  };
-
-  const handlePaymentMethodChange = (factoryId: string | number) => (value: string) => {
-    setPaymentsData(prev => {
-      const existing = prev.find(p => p.factoryId === factoryId);
-      if (existing) {
-        return prev.map(p => 
-          p.factoryId === factoryId ? { ...p, paymentMethod: value } : p
-        );
-      }
-      return [...prev, { factoryId, paymentMethod: value, downPayment: "", file: null }];
-    });
-  };
+  const handlePaymentMethodChange =
+    (factoryId: string | number) => (value: string) => {
+      setPaymentsData((prev) => {
+        const existing = prev.find((p) => p.factoryId === factoryId);
+        if (existing) {
+          return prev.map((p) =>
+            p.factoryId === factoryId ? { ...p, paymentMethod: value } : p
+          );
+        }
+        return [
+          ...prev,
+          { factoryId, paymentMethod: value, downPayment: "", file: null },
+        ];
+      });
+    };
 
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const responses = await Promise.all(
-        paymentsData.map(async (payment) => {
-          const formData = new FormData();
-          formData.append("payment_proof", payment.file || "");
-          formData.append("transaction_distributor_id", invoice.id.toString());
-          formData.append("down_payment", payment.downPayment.replace(/\./g, ""));
-          formData.append("payment_method_id", payment.paymentMethod);
-          formData.append("desc_delivery", descDelivery);
-          formData.append("user_id", user?.id.toString() || "");
-          formData.append("factory_id", payment.factoryId.toString());
+      const parentFormData = new FormData();
+      const payload: any[] = [];
 
-          const response = await fetch("/api/order-ke-pabrik", {
-            method: "POST",
-            body: formData,
+      await Promise.all(
+        paymentsData.map(async (payment) => {
+          // const formData = new FormData();
+          // formData.append("payment_proof", payment.file || "");
+          // formData.append("transaction_distributor_id", invoice.id.toString());
+          // formData.append(
+          //   "down_payment",
+          //   payment.downPayment.replace(/\./g, "")
+          // );
+          // formData.append("payment_method_id", payment.paymentMethod);
+          // formData.append("desc_delivery", descDelivery);
+          // formData.append("user_id", user?.id.toString() || "");
+          // formData.append("factory_id", payment.factoryId.toString());
+          payload.push({
+            payment_proof: payment.file || "",
+            transaction_distributor_id: invoice.id.toString(),
+            down_payment: payment.downPayment.replace(/\./g, ""),
+            payment_method_id: payment.paymentMethod,
+            desc_delivery: descDelivery,
+            user_id: user?.id.toString() || "",
+            factory_id: payment.factoryId.toString(),
           });
 
-          return response.json();
+          // const response = await fetch("/api/order-ke-pabrik", {
+          //   method: "POST",
+          //   body: formData,
+          // });
+
+          // return response.json();
         })
       );
 
-      return responses;
+
+      console.log(payload);
+
+      parentFormData.append("payload", JSON.stringify(payload));
+
+      const response = await fetch("/api/order-ke-pabrik", {
+        method: "POST",
+        body: parentFormData,
+      });
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transaksi-distributor"] });
@@ -254,11 +298,11 @@ export default function TransactionDialog({
   const { user } = useUserStore();
 
   // Di dalam render, gunakan state yang baru
-  const getPaymentData = (factoryId: string | number) => 
-    paymentsData.find(p => p.factoryId === factoryId) || {
+  const getPaymentData = (factoryId: string | number) =>
+    paymentsData.find((p) => p.factoryId === factoryId) || {
       downPayment: "",
       paymentMethod: "",
-      file: null
+      file: null,
     };
 
   return (
@@ -272,6 +316,9 @@ export default function TransactionDialog({
             <Receipt className="w-6 h-6" />
             Detail Invoice {invoice.invoice_code} - Order ke Pabrik
           </DialogTitle>
+          <DialogDescription>
+            Masukkan detail pembayaran dan unggah bukti pembayaran untuk setiap pabrik
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-[calc(90vh-100px)]">
@@ -349,7 +396,9 @@ export default function TransactionDialog({
             </Card>
 
             {/* Detail Produk Per Pabrik */}
-            {Object.entries(groupProductsByFactory(invoice.DetailTransactionDistributor)).map(([factoryId, factoryData]: [string, any]) => (
+            {Object.entries(
+              groupProductsByFactory(invoice.DetailTransactionDistributor)
+            ).map(([factoryId, factoryData]: [string, any]) => (
               <Card key={factoryId}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -362,36 +411,57 @@ export default function TransactionDialog({
                     <table className="w-full text-sm text-left rtl:text-right">
                       <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                          <th scope="col" className="px-6 py-3">Produk</th>
-                          <th scope="col" className="px-6 py-3 text-center">Jumlah</th>
-                          <th scope="col" className="px-6 py-3 text-end">Harga Distributor</th>
-                          <th scope="col" className="px-6 py-3 text-end">Harga Pabrik</th>
-                          <th scope="col" className="px-6 py-3 text-end">Total</th>
+                          <th scope="col" className="px-6 py-3">
+                            Produk
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-center">
+                            Jumlah
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-end">
+                            Harga Distributor
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-end">
+                            Harga Pabrik
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-end">
+                            Total
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {factoryData.products.map((item: any, index: number) => (
-                          <tr key={index} className="bg-white border-b">
-                            <td className="px-6 py-4">{item.desc}</td>
-                            <td className="px-6 py-4 text-center">{item.amount}</td>
-                            <td className="px-6 py-4 text-end">{formatCurrency(item.price)}</td>
-                            <td className="px-6 py-4 text-end">
-                              {formatCurrency(item.Product.price)}
-                            </td>
-                            <td className="px-6 py-4 text-end">
-                              {formatCurrency(item.Product.price * item.amount)}
-                            </td>
-                          </tr>
-                        ))}
+                        {factoryData.products.map(
+                          (item: any, index: number) => (
+                            <tr key={index} className="bg-white border-b">
+                              <td className="px-6 py-4">{item.desc}</td>
+                              <td className="px-6 py-4 text-center">
+                                {item.amount}
+                              </td>
+                              <td className="px-6 py-4 text-end">
+                                {formatCurrency(item.price)}
+                              </td>
+                              <td className="px-6 py-4 text-end">
+                                {formatCurrency(item.Product.price * 200)}
+                              </td>
+                              <td className="px-6 py-4 text-end">
+                                {formatCurrency(
+                                  item.Product.price * 200 * item.amount
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        )}
                       </tbody>
                       <tfoot>
                         <tr className="font-semibold text-gray-900">
-                          <td colSpan={4} className="px-6 py-3 text-right">Total untuk {factoryData.factory.name}</td>
+                          <td colSpan={4} className="px-6 py-3 text-right">
+                            Total untuk {factoryData.factory.name}
+                          </td>
                           <td className="px-6 py-3 text-end">
                             {formatCurrency(
                               factoryData.products.reduce(
                                 (total: number, item: any) =>
-                                  total + (item.Product.price * item.amount),
+                                  total +
+                                  item.Product.price * 200 * item.amount,
                                 0
                               )
                             )}
@@ -405,24 +475,41 @@ export default function TransactionDialog({
                   <div className="mt-6 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2">
-                        <Label>Uang Muka untuk {factoryData.factory.name} <sup className="text-red-500">*</sup></Label>
+                        <Label>
+                          Uang Muka untuk {factoryData.factory.name}{" "}
+                          <sup className="text-red-500">*</sup>
+                        </Label>
                         <Input
                           type="text"
-                          value={formatNumber(getPaymentData(factoryId).downPayment)}
-                          onChange={(e) => handleDownPaymentChange(factoryId)(formatNumber(e.target.value))}
+                          value={formatNumber(
+                            getPaymentData(factoryId).downPayment
+                          )}
+                          onChange={(e) =>
+                            handleDownPaymentChange(factoryId)(
+                              formatNumber(e.target.value)
+                            )
+                          }
                           placeholder="Masukkan jumlah uang muka"
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Label>Sisa Pembayaran <sup className="text-red-500">*</sup></Label>
+                        <Label>
+                          Sisa Pembayaran <sup className="text-red-500">*</sup>
+                        </Label>
                         <Input
                           type="text"
                           value={formatCurrency(
                             factoryData.products.reduce(
                               (total: number, item: any) =>
-                                total + ((products.find((p: any) => p.id === item.product_id)?.price * 200 || item.price) * item.amount),
-                                0
-                            ) - Number(getPaymentData(factoryId).downPayment.replace(/\./g, ""))
+                                total + item.Product.price * 200 * item.amount,
+                              0
+                            ) -
+                              Number(
+                                getPaymentData(factoryId).downPayment.replace(
+                                  /\./g,
+                                  ""
+                                )
+                              )
                           )}
                           disabled
                           className="font-mono"
@@ -433,10 +520,15 @@ export default function TransactionDialog({
                     {/* Metode Pembayaran dan Upload Bukti per Pabrik */}
                     <div className="space-y-4">
                       <div className="flex flex-col gap-2">
-                        <Label>Metode Pembayaran <sup className="text-red-500">*</sup></Label>
+                        <Label>
+                          Metode Pembayaran{" "}
+                          <sup className="text-red-500">*</sup>
+                        </Label>
                         <Select
                           value={getPaymentData(factoryId).paymentMethod}
-                          onValueChange={(value) => handlePaymentMethodChange(factoryId)(value)}
+                          onValueChange={(value) =>
+                            handlePaymentMethodChange(factoryId)(value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih Metode Pembayaran" />
@@ -452,7 +544,10 @@ export default function TransactionDialog({
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Upload Bukti Pembayaran untuk {factoryData.factory.name}: </Label>
+                        <Label>
+                          Upload Bukti Pembayaran untuk{" "}
+                          {factoryData.factory.name}:{" "}
+                        </Label>
                         <Input
                           type="file"
                           accept=".jpg,.jpeg,.png,.pdf"
@@ -473,7 +568,9 @@ export default function TransactionDialog({
                 disabled={loading}
                 className="w-full"
               >
-                {loading ? "Memproses..." : "Simpan & Upload Semua Bukti Pembayaran"}
+                {loading
+                  ? "Memproses..."
+                  : "Simpan & Upload Semua Bukti Pembayaran"}
               </Button>
             </div>
           </div>

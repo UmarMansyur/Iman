@@ -266,6 +266,10 @@ const data = {
           title: "Konfirmasi Penerimaan Order",
           url: "/distributor/konfirmasi-penerimaan",
         },
+        {
+          title: "Pelunasan",
+          url: "/distributor/pelunasan",
+        },
       ],
     },
     {

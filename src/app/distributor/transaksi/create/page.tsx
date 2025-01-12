@@ -176,7 +176,7 @@ export default function CreateTransaction() {
     );
     if (existingItem) {
       existingItem.quantity += quantity;
-      existingItem.subtotal = existingItem.quantity * price;
+      existingItem.subtotal = existingItem.quantity * (price * 200);
     } else {
       setCart([
         ...cart,
@@ -185,8 +185,8 @@ export default function CreateTransaction() {
           product_name: productData?.name + " - " + productData?.type,
           product_type: productData?.type,
           quantity: quantity,
-          price: price,
-          subtotal: quantity * price,
+          price: price * 200,
+          subtotal: quantity * price * 200,
         },
       ]);
     }

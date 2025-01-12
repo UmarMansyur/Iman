@@ -148,9 +148,15 @@ export async function GET(req: Request) {
         { buyer: { name: { contains: search } } },
         { transaction_code: { contains: search } },
       ],
-      factory_id: factory_id ? parseInt(factory_id) : undefined,
-      user_id: user_id ? parseInt(user_id) : undefined,
     };
+
+    if(user_id) {
+      where.user_id = parseInt(user_id);
+    }
+
+    if(factory_id) {
+      where.factory_id = parseInt(factory_id);
+    }
 
     if (startDate && endDate) {
       where.created_at = {

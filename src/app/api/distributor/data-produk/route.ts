@@ -162,15 +162,18 @@ export async function POST(req: Request) {
       where.factory_distributor_id = parseInt(factory_id);
     }
 
-    if (Number(factory_id) > 0) {
+    if (!isNaN(Number(factory_id))) {
       where.factory_id = parseInt(factory_id);
+    }
+
+    if (!isNaN(Number(product_id))) {
+      where.product_id = parseInt(product_id);
     }
 
     const existingMemberPriceProduct =
       await prisma.memberPriceProduct.findFirst({
         where: {
           ...where,
-          product_id: parseInt(product_id),
           factory_distributor_id: Number(factory_distributor),
         },
       });
@@ -182,7 +185,8 @@ export async function POST(req: Request) {
     }
 
     let memberPriceProduct = null;
-    if (product_id !== '') {
+    // jika product_id di convert tidak nan
+    if (!isNaN(Number(product_id))) {
       const existProduct = await prisma.product.findFirst({
         where: {
           id: parseInt(product_id),

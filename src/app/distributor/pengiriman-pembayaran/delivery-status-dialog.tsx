@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -69,12 +70,11 @@ export default function DeliveryStatusDialog({ invoice }: any) {
           status_delivery: formData.status,
         }),
       });
-      if (!response.ok) throw new Error("Gagal mengubah status");
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      toast.success(data.message);
+      const res = await response.json();
+      if (!response.ok) throw new Error(res.message);
+      toast.success(res.message);
       setOpen(false);
-      return data;
+      return res;
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -106,6 +106,9 @@ export default function DeliveryStatusDialog({ invoice }: any) {
           <DialogTitle className="text-xl font-bold">
             Status Pengiriman
           </DialogTitle>
+          <DialogDescription>
+            Anda dapat mengubah status pengiriman dengan memilih status pengiriman yang tersedia dibawah ini.
+          </DialogDescription>
         </DialogHeader>
 
         <Card className="mb-4">

@@ -9,11 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Truck, CreditCard, Eye } from "lucide-react";
+import { Calendar, MapPin, Truck, CreditCard } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 interface DetailDialogProps {
   invoice: any;
@@ -35,16 +34,19 @@ const formatDate = (date: string) => {
 };
 
 export default function DetailDialog({ invoice }: DetailDialogProps) {
+
+
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Eye className="w-4 h-4" />
+        <Button variant="outline" size="sm" >
+          Detail
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between pt-4">
+          <DialogTitle className="flex items-center justify-between">
             <span>Invoice {invoice.invoice_code}</span>
             <div className="flex gap-2">
               {invoice.type_preorder && (
@@ -65,11 +67,19 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 <p className="text-sm text-muted-foreground">Status Pembayaran</p>
               </div>
               <Badge className={`${
+                invoice.payment_status === 'Unpaid' ? 'bg-red-100 text-red-800' :
                 invoice.payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                invoice.payment_status === 'Paid_Off' ? 'bg-green-100 text-green-800' :
                 invoice.payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                invoice.payment_status === 'Cancelled' ? 'bg-red-100 text-red-800' :
                 'bg-red-100 text-red-800'
               } border-0`}>
-                {invoice.payment_status}
+                {invoice.payment_status === 'Unpaid' ? 'Belum Lunas' :
+                invoice.payment_status === 'Pending' ? 'Menunggu Konfirmasi' :
+                invoice.payment_status === 'Paid_Off' ? 'Lunas' :
+                invoice.payment_status === 'Paid' ? 'Dibayar Sebagian' :
+                invoice.payment_status === 'Cancelled' ? 'Dibatalkan' : 'Belum Lunas'
+                }
               </Badge>
             </Card>
 
@@ -142,8 +152,14 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                       <p className="font-medium text-green-600">-{formatCurrency(invoice.discount)}</p>
                     </div>
                   )}
+                  {invoice.ppn > 0 && (
+                    <div className="flex justify-between">
+                      <p className="text-sm text-muted-foreground">PPN</p>
+                      <p className="font-medium">{formatCurrency(invoice.ppn)}</p>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <p className="text-sm text-muted-foreground">Uang Muka</p>
+                    <p className="text-sm text-muted-foreground">Down Payment</p>
                     <p className="font-medium">{formatCurrency(invoice.down_payment)}</p>
                   </div>
                   <div className="flex justify-between">
@@ -207,21 +223,21 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
               </Card>
             </div>
           )}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-start text-sm">
-                <p>Keterangan: </p>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={invoice.notes || ""}
-                disabled
-                className="resize-none"
-                placeholder="Masukkan keterangan penolakan"
-              />
-            </CardContent>
-          </Card>
+          {invoice.proof_of_payment_2 && (
+            <div>
+              <h3 className="font-semibold mb-3">Bukti Pembayaran Pelunasan</h3>
+              <Card className="p-4">
+                <div className="relative w-full h-[300px]">
+                  <Image 
+                    src={invoice.proof_of_payment_2} 
+                    alt="Bukti Pembayaran Pelunasan" 
+                    fill
+                    className="object-contain rounded-lg"
+                  />
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
         
       </DialogContent>

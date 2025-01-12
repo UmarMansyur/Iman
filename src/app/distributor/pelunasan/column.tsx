@@ -182,7 +182,7 @@ export const columns = (
     ),
   },
   {
-    accessorKey: "proof_of_payment",
+    accessorKey: "proof_of_payment_2",
     header: "Bukti Pembayaran",
     cell: ({ row }) => {
       return <UploadBukti data={row.original} fetchProducts={fetchData} />;

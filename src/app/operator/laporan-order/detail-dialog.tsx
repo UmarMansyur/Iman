@@ -67,11 +67,19 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 <p className="text-sm text-muted-foreground">Status Pembayaran</p>
               </div>
               <Badge className={`${
+                invoice.payment_status === 'Unpaid' ? 'bg-red-100 text-red-800' :
                 invoice.payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                invoice.payment_status === 'Paid_Off' ? 'bg-green-100 text-green-800' :
                 invoice.payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                invoice.payment_status === 'Cancelled' ? 'bg-red-100 text-red-800' :
                 'bg-red-100 text-red-800'
               } border-0`}>
-                {invoice.payment_status}
+                {invoice.payment_status === 'Unpaid' ? 'Belum Lunas' :
+                invoice.payment_status === 'Pending' ? 'Menunggu Konfirmasi' :
+                invoice.payment_status === 'Paid_Off' ? 'Lunas' :
+                invoice.payment_status === 'Paid' ? 'Dibayar Sebagian' :
+                invoice.payment_status === 'Cancelled' ? 'Dibatalkan' : 'Belum Lunas'
+                }
               </Badge>
             </Card>
 
@@ -208,6 +216,21 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                   <Image 
                     src={invoice.proof_of_payment} 
                     alt="Bukti Pembayaran" 
+                    fill
+                    className="object-contain rounded-lg"
+                  />
+                </div>
+              </Card>
+            </div>
+          )}
+          {invoice.proof_of_payment_2 && (
+            <div>
+              <h3 className="font-semibold mb-3">Bukti Pembayaran Pelunasan</h3>
+              <Card className="p-4">
+                <div className="relative w-full h-[300px]">
+                  <Image 
+                    src={invoice.proof_of_payment_2} 
+                    alt="Bukti Pembayaran Pelunasan" 
                     fill
                     className="object-contain rounded-lg"
                   />

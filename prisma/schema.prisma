@@ -523,6 +523,7 @@ model Invoice {
   payment_method         PaymentMethod            @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
   payment_method_id      Int
   proof_of_payment       String?                  @db.Text
+  proof_of_payment_2     String?                  @db.Text
   type_preorder          Boolean                  @default(false)
   detailInvoices         DetailInvoice[]
   deliveryTracking       DeliveryTracking[]
@@ -568,8 +569,8 @@ model LogOrderDistributor {
 
 model Location {
   id               Int                @id @default(autoincrement())
-  factory          Factory            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id       Int
+  factory          Factory?           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id       Int?
   name             String
   cost             Float              @default(0)
   created_at       DateTime           @default(now())

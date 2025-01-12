@@ -332,7 +332,7 @@ CREATE TABLE `ppns` (
 -- CreateTable
 CREATE TABLE `buyers` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `factory_id` INTEGER NOT NULL,
+    `factory_id` INTEGER NULL,
     `name` VARCHAR(191) NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -433,9 +433,9 @@ CREATE TABLE `location_distributors` (
     `name` VARCHAR(191) NOT NULL,
     `cost` DOUBLE NOT NULL DEFAULT 0,
     `distributor_id` INTEGER NOT NULL,
-    `factory_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `factoryId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -446,9 +446,9 @@ CREATE TABLE `buyer_distributors` (
     `name` VARCHAR(191) NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `distributor_id` INTEGER NOT NULL,
-    `factory_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `factoryId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -459,7 +459,6 @@ CREATE TABLE `transaction_distributors` (
     `invoice_code` VARCHAR(191) NOT NULL,
     `distributor_id` INTEGER NOT NULL,
     `buyer_id` INTEGER NOT NULL,
-    `factory_id` INTEGER NOT NULL,
     `location_distributor_id` INTEGER NOT NULL,
     `status_payment` ENUM('Pending', 'Paid', 'Paid_Off', 'Failed') NOT NULL DEFAULT 'Pending',
     `status_delivery` ENUM('Process', 'Sent', 'Done', 'Cancel') NOT NULL DEFAULT 'Process',
@@ -474,6 +473,7 @@ CREATE TABLE `transaction_distributors` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
     `invoiceId` INTEGER NULL,
+    `factoryId` INTEGER NULL,
 
     UNIQUE INDEX `transaction_distributors_invoice_code_key`(`invoice_code`),
     PRIMARY KEY (`id`)
@@ -773,22 +773,19 @@ ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_location_id_
 ALTER TABLE `location_distributors` ADD CONSTRAINT `location_distributors_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `location_distributors` ADD CONSTRAINT `location_distributors_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `location_distributors` ADD CONSTRAINT `location_distributors_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `buyer_distributors` ADD CONSTRAINT `buyer_distributors_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `buyer_distributors` ADD CONSTRAINT `buyer_distributors_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `buyer_distributors` ADD CONSTRAINT `buyer_distributors_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_buyer_id_fkey` FOREIGN KEY (`buyer_id`) REFERENCES `buyer_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_location_distributor_id_fkey` FOREIGN KEY (`location_distributor_id`) REFERENCES `location_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -798,6 +795,9 @@ ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_
 
 -- AddForeignKey
 ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_invoiceId_fkey` FOREIGN KEY (`invoiceId`) REFERENCES `invoices`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transaction_distributors` ADD CONSTRAINT `transaction_distributors_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `notifications` ADD CONSTRAINT `notifications_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

@@ -244,6 +244,21 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
               </Card>
             </div>
           )}
+          {invoice.proof_of_payment_2 && (
+            <div>
+              <h3 className="font-semibold mb-3">Bukti Pembayaran Pelunasan</h3>
+              <Card className="p-4">
+                <div className="relative w-full h-[300px]">
+                  <Image 
+                    src={invoice.proof_of_payment} 
+                    alt="Bukti Pembayaran" 
+                    fill
+                    className="object-contain rounded-lg"
+                  />
+                </div>
+              </Card>
+            </div>
+          )}
           <Card>
             <CardHeader>
               <CardTitle className="text-start text-sm">

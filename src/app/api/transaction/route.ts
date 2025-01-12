@@ -218,8 +218,8 @@ export async function GET(req: Request) {
     const endDate = searchParams.get("endDate") || "";
     const filterPayment = searchParams.get("filterPayment") || "";
     const filterStatus = searchParams.get("filterStatus") || "";
-    const sortBy = searchParams.get("sortBy") || "";
-    const sortOrder = searchParams.get("sortOrder") || "";
+    const sortBy = searchParams.get("sortBy") || "id";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
 
 
 
@@ -228,9 +228,20 @@ export async function GET(req: Request) {
         { buyer: { name: { contains: search } } },
         { invoice_code: { contains: search } },
       ],
-      user_id: user_id ? parseInt(user_id) : undefined,
-      type_preorder: type_preorder === "1" ? true : false,
+      // user_id: user_id ? parseInt(user_id) : undefined,
+      // type_preorder: type_preorder === "1" ? true : false,
     };
+    if(type_preorder === "true" || type_preorder === "1") {
+      where.type_preorder = true;
+    } else if(type_preorder === "false" || type_preorder === "0") {
+      where.type_preorder = false;
+    } else {
+      delete where.type_preorder;
+    }
+
+    if (user_id) {
+      where.user_id = parseInt(user_id);
+    }
 
     if (status_delivery) {
       where.deliveryTracking = {
@@ -279,6 +290,8 @@ export async function GET(req: Request) {
     if (factory_id) {
       where.factory_id = parseInt(factory_id);
     }
+
+    console.log(where);
 
     const invoices = await prisma.invoice.findMany({
       where,

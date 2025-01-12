@@ -79,13 +79,13 @@ export async function GET(req: Request) {
         },
       });
 
-      const total_income_service = await tx.invoice.aggregate({
+      const total_income_service = await tx.transactionService.aggregate({
         _sum: {
-          total: true,
+          amount: true,
         },
         where: {
           ...where,
-          payment_status: {
+          status: {
             in: ["Paid", "Paid_Off"],
           },
         },
@@ -314,12 +314,16 @@ export async function GET(req: Request) {
       }
 
       const payment_method_result: any[] = [];
+      const total_payment_result = payment_method.reduce((acc: any, item: any) => {
+        acc += item._count.payment_method_id;
+        return acc;
+      }, 0);
       payment_method.map((item: any) => {
         payment_method_result.push({
           payment_method_name: payment_methods.find(
             (payment_method: any) => payment_method.id === item.payment_method_id
           )?.name,
-          total_payment_method: item._count.payment_method_id,
+          total_payment_method: Math.round(item._count.payment_method_id * 100/ total_payment_result),
         });
       });
 
@@ -332,7 +336,7 @@ export async function GET(req: Request) {
         total_order_today: total_order_today,
         total_invoice_pending: total_invoice_pending,
         total_income: total_income._sum.total || 0,
-        total_income_service: total_income_service._sum.total || 0,
+        total_income_service: total_income_service._sum.amount || 0,
         total_order_bahan_baku: total_order_bahan_baku._sum.price || 0,
         payment_method: payment_method_result,
         total_income_year: result_annual_income,

@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     const existingDistributor = await prisma.factoryDistributor.findFirst({
       where: {
         name: data.name,
-        factory_id: Number(data.factory_id),
+        factoryId: Number(data.factory_id),
       },
     });
   
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     const distributor = await prisma.factoryDistributor.create({
       data: {
         name: data.name,
-        factory_id: Number(data.factory_id),
+        factoryId: Number(data.factory_id),
       }
     });
 
