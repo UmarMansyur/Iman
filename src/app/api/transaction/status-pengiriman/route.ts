@@ -124,44 +124,6 @@ export async function PUT(req: Request) {
           },
         });
 
-        if(invoices.is_distributor) {
-          const detailProductid = invoices.detailInvoices
-            .filter((detail: any) => detail.product_id !== null)
-            .map((detail: any) => detail.product_id);
-  
-          const existingProduct = await prisma.product.findMany({
-            where: {
-              id: {
-                in: detailProductid,
-              },
-              factory_id: parseInt(factory_id),
-            },
-          });
-  
-          const datas: any[] = [];
-          existingProduct.forEach((product: any) => {
-            datas.push({
-              factory_id: parseInt(product.factory_id),
-              product_id: product.id,
-              amount: invoices.detailInvoices.find(
-                (detail: any) => detail.product_id === product.id
-              )?.amount,
-            });
-          });
-  
-          if (datas.length > 0) {
-            await prisma.distributorStock.createMany({
-              data: datas.map((data: any) => ({
-                distributor_id: parseInt(body.user_id),
-                product_id: data.product_id,
-                amount: data.amount,
-                desc: "Pre Order Produk Invoice " + invoices.invoice_code,
-                factory_id: parseInt(data.factory_id),
-                type: "In",
-              })),
-            });
-          }
-        }
       }
 
       if (status === "Cancel") {

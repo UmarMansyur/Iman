@@ -129,7 +129,7 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   </div>
                 </div>
                 <h3 className="font-semibold">Lokasi Pengiriman:</h3>
-                <p>{data.desc_delivery}</p>
+                <p>{data.location_distributor.name}</p>
               </div>
 
               {/* Items Table */}
@@ -228,19 +228,19 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-center">
                       <p className="font-semibold mb-6">Penerima</p>
-                      <div className="border-t border-gray-300 pt-1">
+                      <div className="">
                         (_____________)
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Pengirim</p>
-                      <div className="border-t border-gray-300 pt-1">
+                      <div className="">
                         (_____________)
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Hormat Kami</p>
-                      <div className="border-t border-gray-300 pt-1">
+                      <div className="">
                         ({data.distributor?.username})
                       </div>
                     </div>

@@ -10,6 +10,9 @@ export async function DELETE(req: Request, { params }: { params: any }) {
       where: {
         id: parseInt(id),
       },
+      include: {
+        product: true,
+      },
     });
 
     if (!memberPriceProduct) {
@@ -20,6 +23,14 @@ export async function DELETE(req: Request, { params }: { params: any }) {
         id: parseInt(id),
       },
     });
+
+    if (memberPriceProduct?.product?.factory_id == null) {
+      await prisma.product.delete({
+        where: {
+          id: memberPriceProduct?.product_id,
+        },
+      });
+    }
 
     return NextResponse.json(
       {

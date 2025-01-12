@@ -219,7 +219,7 @@ async function main(): Promise<void> {
 
   await prisma.factoryDistributor.create({
     data: {
-      factory_id: prsj.id,
+      factoryId: prsj.id,
       name: "Indera Distribution",
       MemberDistributor: {
         createMany: {
@@ -238,7 +238,7 @@ async function main(): Promise<void> {
 
   await prisma.factoryDistributor.create({
     data: {
-      factory_id: prpj.id,
+      factoryId: prpj.id,
       name: "Indera Distribution",
       MemberDistributor: {
         createMany: {

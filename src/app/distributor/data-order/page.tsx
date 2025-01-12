@@ -37,7 +37,6 @@ export default function PabrikPage() {
     try {
       setLoading(true);
       if(!user) return;
-      const factoryId = user?.factory_selected?.id;
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -47,9 +46,7 @@ export default function PabrikPage() {
         type_preorder: "1",
       });
 
-      if(factoryId) {
-        queryParams.set("factory_id", factoryId.toString());
-      }
+  
   
       const response = await fetch(`/api/transaction?${queryParams}&user_id=${user?.id}`);
       const data = await response.json();

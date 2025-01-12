@@ -240,7 +240,7 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
             </div>
           )}
 
-          {invoice.proof_of_payment && (
+          {invoice.proof_of_payment ? (
             <div>
               <h3 className="font-semibold mb-3">Bukti Pembayaran</h3>
               <Card className="p-4">
@@ -252,6 +252,13 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                     className="object-contain rounded-lg"
                   />
                 </div>
+              </Card>
+            </div>
+          ) : (
+            <div>
+              <h3 className="font-semibold mb-3">Bukti Pembayaran</h3>
+              <Card className="p-4 bg-red-100 text-red-800">
+                <p>Belum ada bukti pembayaran. Anda tidak dapat mengubah status pembayaran sebelum ada bukti pembayaran.</p>
               </Card>
             </div>
           )}
@@ -266,17 +273,18 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 className="resize-none"
+                disabled={invoice.proof_of_payment ? false : true}
                 placeholder="Masukkan keterangan penolakan"
               />
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
               <DialogTrigger asChild>
-                <Button variant="destructive" onClick={handleTolak}>
+                <Button variant="destructive" onClick={handleTolak} disabled={invoice.proof_of_payment ? false : true}>
                   Tolak
                 </Button>
               </DialogTrigger>
               <DialogTrigger asChild>
-                <Button variant="default" onClick={handleSetujui}>
+                <Button variant="default" onClick={handleSetujui} disabled={invoice.proof_of_payment ? false : true}>
                   Setujui
                 </Button>
               </DialogTrigger>

@@ -185,12 +185,12 @@ const PrintInvoice = ({ params }: { params: any }) => {
                 <div className="flex justify-between mb-2">
                   <div>
                     <div className="flex justify-between mb-1 relative">
-                      <div className="absolute -bottom-32 text-red-500 text-xl font-bold translate-x-1/2">
+                      <div className="absolute -bottom-32 text-red-500 text-3xl font-bold translate-x-1/2">
                         {data.payment_status === "Paid" && "Bayar Sebagian"}
-                        {data.payment_status === "Pending" && "PENDING"}
-                        {data.payment_status === "Paid_Off" && "LUNAS"}
-                        {data.payment_status === "Failed" && "GAGAL"}
-                        {data.payment_status === "Cancelled" && "BATAL"}
+                        {data.payment_status === "Pending" && "Menunggu Konfirmasi"}
+                        {data.payment_status === "Paid_Off" && "Lunas"}
+                        {data.payment_status === "Failed" && "Gagal"}
+                        {data.payment_status === "Cancelled" && "Ditolak"}
                       </div>
                     </div>
                     {data.notes && (

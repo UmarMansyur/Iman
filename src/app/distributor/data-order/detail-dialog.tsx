@@ -123,11 +123,11 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 <div className="space-y-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Nama Pabrik</p>
-                    <p className="font-medium">{invoice.factory.name}</p>
+                    <p className="font-medium">{invoice.factory ? invoice.factory.name : "Non Pabrik"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Alamat</p>
-                    <p className="font-medium">{invoice.factory.address}</p>
+                    <p className="font-medium">{invoice.factory ? invoice.factory.address : "-"}</p>
                   </div>
                 </div>
               </Card>

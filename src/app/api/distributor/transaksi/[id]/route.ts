@@ -7,6 +7,8 @@ export async function GET(req: Request, { params }: { params: any }) {
   const param = await params;
   const id = param.id;
 
+
+
   const transaction = await prisma.transactionDistributor.findUnique({
     where: {
       invoice_code: id,
@@ -25,7 +27,17 @@ export async function GET(req: Request, { params }: { params: any }) {
     },
   });
 
-  return NextResponse.json(transaction);
+  const data_distributor = await prisma.factoryDistributor.findFirst({
+    where: {
+      MemberDistributor: {
+        some: {
+          user_id: transaction?.distributor_id,
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({ transaction, data_distributor });
 }
 
 export async function PUT(req: Request, { params }: { params: any }) {
@@ -60,7 +72,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
       payment_method_id,
       buyer_name,
       buyer_address,
-      factory_id,
       is_new_buyer,
       ppn,
       discount,
@@ -81,7 +92,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
           name: buyer_name,
           address: buyer_address,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -93,7 +103,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
           name: buyer_address,
           cost: cost,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -103,7 +112,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
         where: {
           name: buyer_name,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
       if (!existBuyer) {
@@ -119,7 +127,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
         where: {
           name: buyer_name,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -165,7 +172,6 @@ export async function PUT(req: Request, { params }: { params: any }) {
         distributor_id: Number(distributor_id),
         buyer_id,
         location_distributor_id,
-        factory_id: Number(factory_id),
         payment_method_id: Number(payment_method_id),
         amount: totalAmount + Number(cost_delivery),
         ppn,
@@ -232,17 +238,12 @@ export async function DELETE(req: Request, { params }: { params: any }) {
   }
 
   const response = await prisma.$transaction(async (tx) => {
-    const distributorStock = await tx.distributorStock.deleteMany({
-      where: {
-        invoice_code: transaction.invoice_code,
-      },
-    });
     const transactionDistributor = await tx.transactionDistributor.delete({
       where: {
         id: Number(id),
       },
     });
-    return { distributorStock, transactionDistributor };
+    return { transactionDistributor };
   });
   return NextResponse.json(
     { message: "Transaksi berhasil dihapus", data: response },

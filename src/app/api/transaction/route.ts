@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { DeliveryTrackingStatus, PaymentStatus } from "@prisma/client";
+import { deleteFile } from "@/lib/imagekit";
 
 export async function POST(req: Request) {
   try {
@@ -332,6 +333,20 @@ export async function GET(req: Request) {
 export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
+
+  const existingInvoice = await prisma.invoice.findFirst({
+    where: {
+      id: parseInt(id || ""),
+    },
+  });
+
+  if(!existingInvoice) {
+    return NextResponse.json({ message: "Invoice tidak ditemukan" }, { status: 400 });
+  }
+
+  if(existingInvoice.proof_of_payment) {
+    await deleteFile(existingInvoice.proof_of_payment);
+  }
 
   if (!id) {
     return NextResponse.json(

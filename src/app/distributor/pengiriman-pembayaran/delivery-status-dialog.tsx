@@ -198,7 +198,6 @@ export default function DeliveryStatusDialog({ invoice }: any) {
                   <Textarea
                     value={formData.desc}
                     onChange={(e) => handleChange("desc", e.target.value)}
-                    placeholder="Contoh: Paket sedang dalam perjalanan menuju alamat tujuan"
                     disabled
                     className="min-h-[100px] p-3 rounded-md border border-input"
                   />

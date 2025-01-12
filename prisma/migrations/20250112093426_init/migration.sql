@@ -1,10 +1,12 @@
 -- CreateTable
 CREATE TABLE `factory_distributors` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `factory_id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
+    `no_hp` VARCHAR(191) NULL,
+    `address` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `factoryId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -223,7 +225,7 @@ CREATE TABLE `log_order_detail_material_units` (
 -- CreateTable
 CREATE TABLE `products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `factory_id` INTEGER NOT NULL,
+    `factory_id` INTEGER NULL,
     `name` VARCHAR(191) NOT NULL,
     `type` ENUM('Kretek', 'Gabus') NOT NULL,
     `price` DOUBLE NOT NULL,
@@ -234,14 +236,15 @@ CREATE TABLE `products` (
 -- CreateTable
 CREATE TABLE `member_price_products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `factory_id` INTEGER NOT NULL,
+    `factory_id` INTEGER NULL,
+    `factory_distributor_id` INTEGER NULL,
     `product_id` INTEGER NOT NULL,
-    `user_id` INTEGER NOT NULL,
-    `member_factory_id` INTEGER NOT NULL,
     `price` DOUBLE NOT NULL,
     `sale_price` DOUBLE NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `userId` INTEGER NULL,
+    `memberFactoryId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -341,7 +344,7 @@ CREATE TABLE `buyers` (
 -- CreateTable
 CREATE TABLE `invoices` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `factory_id` INTEGER NOT NULL,
+    `factory_id` INTEGER NULL,
     `user_id` INTEGER NOT NULL,
     `is_distributor` BOOLEAN NOT NULL DEFAULT false,
     `invoice_code` VARCHAR(191) NOT NULL,
@@ -355,7 +358,7 @@ CREATE TABLE `invoices` (
     `total` DOUBLE NOT NULL DEFAULT 0,
     `sub_total` DOUBLE NOT NULL DEFAULT 0,
     `remaining_balance` DOUBLE NOT NULL DEFAULT 0,
-    `payment_status` ENUM('Pending', 'Paid', 'Paid_Off', 'Failed', 'Cancelled') NOT NULL DEFAULT 'Pending',
+    `payment_status` ENUM('Unpaid', 'Pending', 'Paid', 'Paid_Off', 'Failed', 'Cancelled') NOT NULL DEFAULT 'Pending',
     `payment_method_id` INTEGER NOT NULL,
     `proof_of_payment` TEXT NULL,
     `type_preorder` BOOLEAN NOT NULL DEFAULT false,
@@ -420,22 +423,6 @@ CREATE TABLE `delivery_trackings` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
     `status` ENUM('Process', 'Sent', 'Done', 'Cancel') NOT NULL DEFAULT 'Process',
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `distributor_stocks` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `distributor_id` INTEGER NOT NULL,
-    `factory_id` INTEGER NOT NULL,
-    `product_id` INTEGER NOT NULL,
-    `amount` DOUBLE NOT NULL,
-    `desc` VARCHAR(191) NOT NULL,
-    `type` ENUM('In', 'Out') NOT NULL,
-    `invoice_code` VARCHAR(191) NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -618,7 +605,7 @@ CREATE TABLE `services` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `factory_distributors` ADD CONSTRAINT `factory_distributors_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `factory_distributors` ADD CONSTRAINT `factory_distributors_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `member_distributors` ADD CONSTRAINT `member_distributors_factory_distributor_id_fkey` FOREIGN KEY (`factory_distributor_id`) REFERENCES `factory_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -696,13 +683,16 @@ ALTER TABLE `products` ADD CONSTRAINT `products_factory_id_fkey` FOREIGN KEY (`f
 ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_factory_distributor_id_fkey` FOREIGN KEY (`factory_distributor_id`) REFERENCES `factory_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_member_factory_id_fkey` FOREIGN KEY (`member_factory_id`) REFERENCES `member_factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `member_price_products` ADD CONSTRAINT `member_price_products_memberFactoryId_fkey` FOREIGN KEY (`memberFactoryId`) REFERENCES `member_factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `cost_deliveries` ADD CONSTRAINT `cost_deliveries_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -778,15 +768,6 @@ ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_invoice_id_f
 
 -- AddForeignKey
 ALTER TABLE `delivery_trackings` ADD CONSTRAINT `delivery_trackings_location_id_fkey` FOREIGN KEY (`location_id`) REFERENCES `locations`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `distributor_stocks` ADD CONSTRAINT `distributor_stocks_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `distributor_stocks` ADD CONSTRAINT `distributor_stocks_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `distributor_stocks` ADD CONSTRAINT `distributor_stocks_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `location_distributors` ADD CONSTRAINT `location_distributors_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

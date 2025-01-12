@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
       throw new Error("Invoice tidak ditemukan");
     }
 
-    if(response.deliveryTracking[0]?.status === "Process") {
+    if(response.deliveryTracking[0]?.status === "Process" && response.factory_id !== null) {
       throw new Error("Status pengiriman masih dalam proses, harap tunggu!");
     }
     if(response.deliveryTracking[0]?.status === "Done") {
@@ -39,21 +39,7 @@ export async function PUT(req: Request) {
       },
     });
   
-    const response3 = await prisma.distributorStock.createMany({
-      data: response?.detailInvoices?.map((detail: any) => ({
-        product_id: parseInt(detail.product_id || ""),
-        amount: parseFloat(detail.amount || ""),
-        distributor_id: parseInt(user_id || ""),
-        type: "In",
-        desc: "Konfirmasi Penerimaan Order Invoice " + response?.invoice_code,
-        factory_id: parseInt(factory_id || ""),
-        invoice_id: parseInt(response?.id.toString() || ""),
-      })),
-    });
-  
-    if(response3.count === 0) {
-      throw new Error("Gagal menambahkan stock");
-    }
+   
   
     return NextResponse.json({
       status: "success",

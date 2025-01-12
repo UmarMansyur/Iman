@@ -10,7 +10,8 @@ import DeleteButtonQuery from "@/components/DeleteButton";
 export const columns = (
   page: number,
   limit: number,
-  products: any
+  products: any,
+  factory: any
 ): ColumnDef<any>[] => [
   {
     id: "index",
@@ -28,9 +29,19 @@ export const columns = (
     },
   },
   {
+    accessorKey: "factory",
+    header: ({column}) => (
+      <DataTableColumnHeader column={column} title="Nama Pabrik" />
+    ),
+    cell: ({row}) => {
+      const data = row.original as any;
+      return data.factory?.name || "Non Pabrik";
+    }
+  },
+  {
     accessorKey: "price",
     header: ({column}) => (
-      <DataTableColumnHeader column={column} title="Harga Produk" />
+      <DataTableColumnHeader column={column} title="Harga Pabrik" />
     ),
     cell: ({row}) => {
       const data = row.original as any;
@@ -66,7 +77,7 @@ export const columns = (
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <Form data={data} products={products}/>
+            <Form data={data} products={products} factory={factory}/>
             <DeleteButtonQuery endpoint="distributor/data-produk" id={data?.id.toString()} queryKey="product-distributor" />
           </DropdownMenuContent>
         </DropdownMenu>

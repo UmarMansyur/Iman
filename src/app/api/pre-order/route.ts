@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const data = await req.formData();
 
-    const factory_id = data.get("factory_id");
+    const factory_id = data.get("factory_id") || "";
     const user_id = data.get("user_id");
     const down_payment = data.get("down_payment");
     const total = data.get("total");
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const detail_invoices = data.get("detail_invoices");
 
     // Validasi data wajib
-    if (!factory_id || !user_id || !payment_method_id) {
+    if (!user_id || !payment_method_id) {
       return NextResponse.json(
         { 
           status: "error",
@@ -30,6 +30,13 @@ export async function POST(req: Request) {
         }, 
         { status: 400 }
       );
+    }
+
+    const whereFactory: any= {};
+    if(factory_id) {
+      whereFactory.factory_id = parseInt(factory_id.toString())
+    } else {
+      delete whereFactory.factory_id;
     }
 
     // Handle upload file jika ada
@@ -80,7 +87,7 @@ export async function POST(req: Request) {
       const existBuyer = await prisma.buyer.findFirst({
         where: {
           name: existUser.username,
-          factory_id: parseInt(factory_id.toString()),
+          factory_id: whereFactory.factory_id,
           address: existUser.address
         }
       });
@@ -90,7 +97,7 @@ export async function POST(req: Request) {
           data: {
             address: existUser.address,
             name: existUser.username,
-            factory_id: parseInt(factory_id.toString())
+            factory_id: whereFactory.factory_id
           }
         })
         buyer_id = createBuyer.id;
@@ -101,7 +108,7 @@ export async function POST(req: Request) {
       const existAddress = await prisma.location.findFirst({
         where: {
           name: existUser.address,
-          factory_id: parseInt(factory_id.toString())
+          factory_id: whereFactory.factory_id
         }
       });
 
@@ -110,7 +117,7 @@ export async function POST(req: Request) {
           data: {
             name: existUser.address,
             cost: 0,
-            factory_id: parseInt(factory_id.toString())
+            factory_id: whereFactory.factory_id
           }
         });
         location_id = createAddress.id;
@@ -123,7 +130,7 @@ export async function POST(req: Request) {
       // Buat invoice
       const preOrder = await tx.invoice.create({
         data: {
-          factory_id: Number(factory_id),
+          factory_id: whereFactory.factory_id,
           user_id: Number(user_id),
           invoice_code,
           buyer_id: Number(buyer_id),
@@ -137,7 +144,7 @@ export async function POST(req: Request) {
           notes: notes as string,
           type_preorder: true,
           is_distributor: true,
-          proof_of_payment: fileUrl,
+          proof_of_payment: fileUrl == null ? undefined : fileUrl,
           detailInvoices: {
             createMany: {
               data: detail_invoices_array.map((detail: any) => ({
@@ -173,11 +180,9 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("Error creating pre-order:", error);
     return NextResponse.json(
       {
-        status: "error",
-        message: error.message || "Gagal membuat pre-order",
+        message: error.message,
       },
       { status: 500 }
     );

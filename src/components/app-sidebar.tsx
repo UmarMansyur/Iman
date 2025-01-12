@@ -252,16 +252,6 @@ const data = {
       title: "Data Produk",
       url: "/distributor/data-produk",
       icon: PackageSearch,
-      items: [
-        {
-          title: "Data Produk",
-          url: "/distributor/data-produk",
-        },
-        {
-          title: "Data Stok",
-          url: "/distributor/data-stok",
-        },
-      ],
     },
     {
       title: "Data Order",
@@ -337,7 +327,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        {user?.factory_selected && <TeamSwitcher />}
+        {user?.factory_selected &&
+          !user?.factory_selected.position.includes("Distributor") &&
+          !user?.factory_selected.position.includes("Owner Distributor") && <TeamSwitcher />}
       </SidebarHeader>
       <SidebarContent>{getNavItems()}</SidebarContent>
       <SidebarFooter>

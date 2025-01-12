@@ -1,34 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Printer } from "lucide-react";
+import { MoreHorizontal, Printer } from "lucide-react";
 import Link from "next/link";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableHead,
-} from "@/components/ui/table";
 import DeleteButtonQuery from "@/components/DeleteButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import PembayaranDialog from "./pembayaran";
+import DetailDialog from "./detail-dialog";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -73,10 +55,7 @@ export const columns: ColumnDef<any>[] = [
       <DataTableColumnHeader column={column} title="Total" />
     ),
     cell: ({ row }) => {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(row.original.amount);
+      return formatCurrency(row.original.amount);
     },
   },
   {
@@ -148,7 +127,7 @@ export const columns: ColumnDef<any>[] = [
         <DropdownMenuContent align="start" className="w-48">
           <div className="flex flex-col gap-2">
             <Link
-              href={`/distributor/transaksi/print-besar/${row.original.id}`}
+              href={`/distributor/transaksi/print-besar/${row.original.invoice_code}`}
               target="_blank"
               className="w-full px-2 hover:bg-gray-100 py-2"
             >
@@ -157,7 +136,7 @@ export const columns: ColumnDef<any>[] = [
           </div>
           <div className="flex flex-col gap-2">
             <Link
-              href={`/distributor/transaksi/print/${row.original.id}`}
+              href={`/distributor/transaksi/print/${row.original.invoice_code}`}
               target="_blank"
               className="w-full px-2 hover:bg-gray-100 py-2"
             >
@@ -181,223 +160,13 @@ export const columns: ColumnDef<any>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <div className="flex w-full items-center">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Lihat Detail Transaksi
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      Detail Transaksi - {data.invoice_code}
-                    </DialogTitle>
-                    <div className="text-sm text-gray-500">
-                      Tanggal:{" "}
-                      {new Date(data.created_at).toLocaleDateString("id-ID")}
-                    </div>
-                  </DialogHeader>
-
-                  <div className="space-y-4">
-                    {/* Informasi Pembeli */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Informasi Pembeli</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="font-semibold">Nama Pembeli</p>
-                            <p>{data.buyer.name}</p>
-                          </div>
-                          <div>
-                            <p className="font-semibold">Alamat Pengiriman</p>
-                            <p>{data.buyer.address}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Status Transaksi */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Status Transaksi</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="font-semibold">Status Pembayaran</p>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                data.status_payment === "Pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : data.status_payment === "Paid_Off"
-                                  ? "bg-green-100 text-green-800"
-                                  : data.status_payment === "Paid"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {data.status_payment === "Pending" &&
-                                "Menunggu Pembayaran"}
-                              {data.status_payment === "Paid_Off" && "Lunas"}
-                              {data.status_payment === "Paid" &&
-                                "Bayar Sebagian"}
-                              {data.status_payment === "Failed" && "Gagal"}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-semibold">Status Pengiriman</p>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                data.status_delivery === "Delivered"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
-                              {data.status_delivery === "Process"
-                                ? "Sedang Diproses"
-                                : "Terkirim"}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Detail Pembayaran */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Informasi Pembayaran</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="font-semibold">Metode Pembayaran</p>
-                            <p>{data.payment_method.name}</p>
-                          </div>
-                          <div>
-                            <p className="font-semibold">Uang Muka</p>
-                            <p>{formatCurrency(data.down_payment)}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Detail Produk */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Detail Produk</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Nama Produk</TableHead>
-                              <TableHead className="text-center">
-                                Jumlah
-                              </TableHead>
-                              <TableHead>Harga Satuan</TableHead>
-                              <TableHead>Total</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {data.DetailTransactionDistributor.map(
-                              (item: any) => (
-                                <TableRow key={item.id}>
-                                  <TableCell>{item.desc}</TableCell>
-                                  <TableCell className="">
-                                    {item.amount}
-                                  </TableCell>
-                                  <TableCell>
-                                    {formatCurrency(item.price)}
-                                  </TableCell>
-                                  <TableCell>
-                                    {formatCurrency(item.sale_price)}
-                                  </TableCell>
-                                </TableRow>
-                              )
-                            )}
-                          </TableBody>
-                        </Table>
-
-                        {/* Ringkasan Biaya */}
-                        <div className="mt-4 space-y-2 border-t pt-4">
-                          <div className="flex justify-between">
-                            <span>Subtotal Produk</span>
-                            <span>{formatCurrency(data.amount)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Biaya Pengiriman</span>
-                            <span>{formatCurrency(data.cost_delivery)}</span>
-                          </div>
-                          {data.discount > 0 && (
-                            <div className="flex justify-between text-green-600">
-                              <span>Diskon</span>
-                              <span>-{formatCurrency(data.discount)}</span>
-                            </div>
-                          )}
-                          {data.ppn > 0 && (
-                            <div className="flex justify-between">
-                              <span>PPN</span>
-                              <span>{formatCurrency(data.ppn)}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between font-bold border-t pt-2">
-                            <span>Total Pembayaran</span>
-                            <span>
-                              {formatCurrency(
-                                data.amount +
-                                  data.cost_delivery -
-                                  data.discount +
-                                  data.ppn
-                              )}
-                            </span>
-                          </div>
-                          {data.down_payment > 0 && (
-                            <div className="flex justify-between text-red-600 font-bold">
-                              <span>Sisa Pembayaran</span>
-                              <span>
-                                {formatCurrency(data.remaining_balance)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Informasi Distributor */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Informasi Distributor</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="font-semibold">Nama Pengguna</p>
-                            <p>{data.distributor.username}</p>
-                          </div>
-                          <div>
-                            <p className="font-semibold">Email</p>
-                            <p>{data.distributor.email}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            <PembayaranDialog invoice={data} />
+            <DetailDialog invoice={data} />
             {data.status_payment === "Pending" && (
-            <DeleteButtonQuery
-              endpoint={`/distributor/transaksi`}
-              id={data.id}
-              queryKey="transaksi-distributor"
-            />
+              <DeleteButtonQuery
+                endpoint={`/distributor/transaksi`}
+                id={data.id}
+                queryKey="transaksi-distributor"
+              />
             )}
           </DropdownMenuContent>
         </DropdownMenu>

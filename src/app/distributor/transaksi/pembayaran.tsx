@@ -173,7 +173,7 @@ export default function DetailInvoiceDialog({ invoice }: { invoice: InvoiceData 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild className="w-full cursor-pointer p-2 hover:bg-gray-50">
         <Button variant="ghost" className="w-full justify-start py-0 px-2 ">
-          <CreditCard className="w-4 h-4" /> Lihat Detail Invoice
+          <CreditCard className="w-4 h-4" /> Ubah Status Pembayaran
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh]">
@@ -229,13 +229,45 @@ export default function DetailInvoiceDialog({ invoice }: { invoice: InvoiceData 
                 </div>
                 <div>
                   <Label className="text-sm text-gray-500">Lokasi Pengiriman</Label>
-                  <p className="font-medium">{invoice.desc_delivery}</p>
+                  <p className="font-medium">{invoice.location_distributor.name}</p>
+                </div>
+              </CardContent>
+            </Card>
+              {/* Detail Produk */}
+              <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Detail Produk
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {invoice.DetailTransactionDistributor.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <p className="font-medium">{item.desc}</p>
+                        <p className="text-sm text-gray-500">Jumlah: {item.amount} unit</p>
+                        {item.discount > 0 && (
+                          <p className="text-sm text-green-600">
+                            Diskon: {formatCurrency(item.discount)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(item.price)}</p>
+                        <p className="text-sm text-gray-500">
+                          Harga Jual: {formatCurrency(item.sale_price)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Detail Pembayaran */}
-            <Card>
+            <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CreditCardIcon className="w-5 h-5" />
@@ -270,38 +302,7 @@ export default function DetailInvoiceDialog({ invoice }: { invoice: InvoiceData 
               </CardContent>
             </Card>
 
-            {/* Detail Produk */}
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Detail Produk
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {invoice.DetailTransactionDistributor.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <p className="font-medium">{item.desc}</p>
-                        <p className="text-sm text-gray-500">Jumlah: {item.amount} unit</p>
-                        {item.discount > 0 && (
-                          <p className="text-sm text-green-600">
-                            Diskon: {formatCurrency(item.discount)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatCurrency(item.price)}</p>
-                        <p className="text-sm text-gray-500">
-                          Harga Jual: {formatCurrency(item.sale_price)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          
 
             {/* Form Ubah Status */}
             <Card className="md:col-span-2">

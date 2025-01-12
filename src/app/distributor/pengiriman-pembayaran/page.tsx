@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Card, CardHeader } from "@/components/ui/card";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
@@ -120,6 +120,28 @@ export default function TransaksiDistributorPage() {
     }));
   };
 
+  const [products, setProducts] = useState<any[]>([]);
+
+  const fetchProduct = async () => {
+    const response = await fetch("/api/product?limit=1000&page=1&factory_id=" + user?.factory_selected?.id);
+    const data = await response.json();
+    setProducts(data.products);
+  }
+
+  const [metodePembayaran, setMetodePembayaran] = useState<any[]>([]);
+
+  const fetchMetodePembayaran = async () => {
+    const response = await fetch("/api/payment?limit=1000");
+    const data = await response.json();
+    setMetodePembayaran(data.payments);
+  }
+
+  useEffect(() => {
+    fetchProduct();
+    fetchMetodePembayaran();
+  }, [user?.factory_selected?.id]);
+
+
   if (isLoadingTransaksi) {
     return <LoaderScreen />;
   }
@@ -154,7 +176,7 @@ export default function TransaksiDistributorPage() {
           </div>
           <div className="p-4">
             <DataTable
-              columns={columns}
+              columns={columns(products, metodePembayaran)}
               data={transaksiData?.data || []}
               pagination={
                 transaksiData?.pagination || {

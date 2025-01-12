@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, PlusCircle } from "lucide-react";
+import { Pencil, PlusCircle, Save, X } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
@@ -36,26 +36,34 @@ interface ProductFormState {
   sale_price: number;
   user_id: string;
   unit: string;
+  product_type?: string;
+  purchase_price?: number;
 }
 
 export default function Form({
   data,
   products,
+  factory,
 }: {
   data?: any;
-  products?: any;
+  products?: any[];
+  factory?: any[];
 }) {
   const { user } = useUserStore();
   const [product, setProduct] = useState<any>(null);
-  // const fetchProduct = async (id: string) => {
-  //   const response = await fetch(`/api/product/${id}`);
-  //   const data = await response.json();
-  //   setProduct(data);
-  // }
+  const [factorySelected, setFactorySelected] = useState<any>(
+    data?.factory_id == null ? "all" : data?.factory_id
+  );
+  const [isOtherProduct, setIsOtherProduct] = useState(false);
+
+  // Konversi products ke array jika undefined atau bukan array
+  const productsArray = Array.isArray(products) ? products : [];
 
   useEffect(() => {
     if (data) {
-      setProduct(products?.find((product: any) => product.id == data.product_id));
+      setProduct(
+        productsArray.find((product: any) => product.id == data.product_id)
+      );
     }
   }, [data]);
 
@@ -66,9 +74,9 @@ export default function Form({
     factory_id: user?.factory_selected?.id.toString() || "",
     user_id: user?.id.toString() || "",
     unit: "pack",
+    product_type: "",
+    purchase_price: 0,
   });
-
-  
 
   const convertToPackPrice = (price: number, unit: string): number => {
     switch (unit) {
@@ -85,35 +93,31 @@ export default function Form({
 
   const createProduct = async () => {
     let response;
-    state.factory_id = user?.factory_selected?.id.toString() || "";
+    // state.factory_id = ambil dari data product yang dipilih
     state.user_id = user?.id.toString() || "";
-    
-    // Convert price to pack price before saving
+
     const packPrice = convertToPackPrice(state.sale_price, state.unit);
+
+    const payload = {
+      ...state,
+      sale_price: packPrice,
+      ...(isOtherProduct && {
+        product_type: state.product_type,
+        purchase_price: state.purchase_price,
+      }),
+    };
 
     if (state.id) {
       response = await fetch("/api/distributor/data-produk", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...state,
-          sale_price: packPrice,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
     } else {
       response = await fetch("/api/distributor/data-produk/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          product_id: state.product_id,
-          sale_price: packPrice,
-          factory_id: state.factory_id,
-          user_id: state.user_id,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
     }
     const data = await response.json();
@@ -138,6 +142,8 @@ export default function Form({
           user_id: user?.id.toString() || "",
           factory_id: user?.factory_selected?.id.toString() || "",
           unit: "pack",
+          product_type: "",
+          purchase_price: 0,
         });
       },
       onError: (error: any) => {
@@ -152,13 +158,20 @@ export default function Form({
     <Dialog>
       <DialogTrigger asChild>
         {data ? (
-          <Button variant="ghost" className="w-full flex justify-start px-2">
+          <Button
+            type="button"
+            disabled={!data}
+            variant="ghost"
+            className="w-full flex justify-start px-2"
+          >
             <Pencil className="w-4 h-4 mr-1" />
             Edit
           </Button>
         ) : (
           <Button
+            type="button"
             variant="ghost"
+            disabled={products?.length == 0}
             className="bg-blue-500 hover:bg-blue-600 flex justify-end px-4 text-white hover:text-white"
           >
             <PlusCircle className="w-4 h-4" />
@@ -166,7 +179,7 @@ export default function Form({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Tambah Produk</DialogTitle>
           <DialogDescription>
@@ -180,62 +193,169 @@ export default function Form({
             mutate();
           }}
         >
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="product_id">Pilih Produk</Label>
-            {!(data) ? (
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {
+              !data && (
+            
+            <div className="flex flex-col gap-4">
+              <Label htmlFor="product_id">Kategori Produk: </Label>
               <Select
+                value={factorySelected?.id}
                 onValueChange={(value) => {
-                  setState({ ...state, product_id: value });
-                  setProduct(products?.find((product: any) => product.id == value));
+                  // jika value adalah all maka set isOtherProduct menjadi true
+                  if (value == "all") {
+                    setIsOtherProduct(true);
+                  } else {
+                    setIsOtherProduct(false);
+                  }
+                  setFactorySelected(factory?.find((factory: any) => factory.id == value));
                 }}
+                disabled={factory?.length === 0}
               >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Pilih Produk">
-                    {products?.find(
-                      (product: any) => product.id == state.product_id
-                    )?.name || "Pilih Produk"}
-                  </SelectValue>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Kategori"></SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {products?.map((product: any) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                  {
-                    products?.length < 0 && (
-                      <SelectItem value="0">
-                        Belum ada produk
-                      </SelectItem>
-                    )
-                  }
+                  <SelectItem value="all">Baru</SelectItem>
+                  <SelectItem value="exist">Sudah ada</SelectItem>
                 </SelectContent>
               </Select>
-            ) : (
-              <Input
-                id="product_id"
-                name="product_id"
-                className="col-span-3"
-                value={products?.find(
-                  (product: any) => product.id == state.product_id
-                )?.name || ""}
-                onChange={(e) =>
-                  setState({ ...state, product_id: e.target.value })
-                }
-                disabled
-              />
+              </div>
             )}
+
+            {!data && (
+              <div className="flex flex-col gap-4">
+                <Label htmlFor="product_id">
+                  {isOtherProduct ? "Nama Produk" : "Pilih Produk"}
+                </Label>
+                {isOtherProduct ? (
+                  <Input
+                    id="product_id"
+                    name="product_id"
+                    className="w-full"
+                    placeholder="Masukkan nama produk"
+                    value={state.product_id}
+                    onChange={(e) =>
+                      setState({ ...state, product_id: e.target.value })
+                    }
+                  />
+                ) : (
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedProduct = products?.find(
+                        (product: any) => product.id == value
+                      );
+                      setState({
+                        ...state,
+                        product_id: value,
+                        factory_id: selectedProduct?.factory_id || "",
+                      });
+                      setProduct(selectedProduct);
+                      // set pilihan kategori produk ke exist
+                      setFactorySelected({
+                        id: "exist",
+                        name: "Sudah ada",
+                      });
+                    }}
+                    value={state.product_id}
+                    disabled={products?.length === 0}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Pilih Produk">
+                        {products?.find(
+                          (product: any) => product.id == state.product_id
+                        )?.name || "Pilih Produk"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {products?.map((product: any) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                      {products?.length == 0 && (
+                        <SelectItem value="0">Belum ada produk</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            {
+              data && (
+                <div className="flex flex-col gap-4 col-span-2">
+                  <Label htmlFor="product_id">Nama Produk: </Label>
+                  <Input
+                    id="product_id"
+                    name="product_id"
+                    className="w-full"
+                    value={data.name || ""}
+                    disabled
+                  />
+                </div>
+              )
+            }
           </div>
-          <div className="grid gap-4">
-            <Label htmlFor="cost">Harga Beli/Pack (Pabrik)</Label>
-            <Input
-              id="cost"
-              name="cost"
-              className="col-span-3"
-              value={formatCurrency(product?.price || 0)}
-              disabled
-            />
-          </div>
+          {!isOtherProduct && (
+            <>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="cost">Harga Beli/Pack (Pabrik)</Label>
+                <Input
+                  id="cost"
+                  name="cost"
+                  className="col-span-3"
+                  value={formatCurrency(product?.price || 0)}
+                  disabled
+                />
+              </div>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="cost">Harga Beli/Bal (Pabrik)</Label>
+                <Input
+                  id="cost"
+                  name="cost"
+                  className="col-span-3"
+                  value={formatCurrency(product?.price * 200 || 0)}
+                  disabled
+                />
+              </div>
+            </>
+          )}
+          {isOtherProduct && (
+            <>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="product_type">Tipe Produk</Label>
+                <Select
+                  value={state.product_type}
+                  onValueChange={(value) =>
+                    setState({ ...state, product_type: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Tipe Produk" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Kretek">Kretek</SelectItem>
+                    <SelectItem value="Gabus">Gabus</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="purchase_price">Harga Beli/Pack</Label>
+                <Input
+                  id="purchase_price"
+                  name="purchase_price"
+                  className="col-span-3"
+                  value={formatCurrency(state.purchase_price || 0)}
+                  onChange={(e) =>
+                    setState({
+                      ...state,
+                      purchase_price: formatCurrencyInput(e),
+                    })
+                  }
+                />
+              </div>
+            </>
+          )}
           <div className="grid gap-4 my-3">
             <Label htmlFor="unit">Satuan</Label>
             <Select
@@ -272,11 +392,13 @@ export default function Form({
                 variant="outline"
                 className="bg-white hover:bg-gray-100 border border-gray-300"
               >
+                <X className="w-4 h-4 mr-1" />
                 Batal
               </Button>
             </DialogClose>
             <DialogClose asChild>
               <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                <Save className="w-4 h-4 mr-1" />
                 Simpan
               </Button>
             </DialogClose>

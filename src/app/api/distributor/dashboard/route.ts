@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const user_id = searchParams.get("user_id");
   const factory_id = searchParams.get("factory_id");
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
@@ -25,7 +24,7 @@ export async function GET(request: Request) {
 
     const distributors = await prisma.factoryDistributor.findFirst({
       where: {
-        factory_id: Number(factory_id),
+        factoryId: Number(factory_id),
       },
       include: {
         MemberDistributor: true,
@@ -72,7 +71,7 @@ export async function GET(request: Request) {
         },
         ...where,
       },
-      _sum: {
+      _count: {
         total: true,
       },
     });
@@ -83,7 +82,7 @@ export async function GET(request: Request) {
         total_preorder: totalPreOrder,
         total_transaction: totalTransaction,
         order_pending: orderPending,
-        order_success: orderSuccess._sum.total || 0,
+        order_success: orderSuccess._count.total || 0,
       },
     });
   } catch (error: any) {

@@ -21,7 +21,9 @@ export async function GET(req: Request) {
       ],
       user_id: user_id ? parseInt(user_id) : undefined,
       type_preorder: true,
-      payment_status: "Pending",
+      payment_status: {
+        in: ["Pending", "Unpaid"]
+      },
     };
 
     if(status_delivery) {

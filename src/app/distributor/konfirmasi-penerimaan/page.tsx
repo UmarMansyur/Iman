@@ -35,7 +35,6 @@ export default function PabrikPage() {
     try {
       setLoading(true);
       if(!user) return;
-      const factoryId = user?.factory_selected?.id;
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -47,10 +46,7 @@ export default function PabrikPage() {
         status_delivery: "Sent"
       });
 
-      if(factoryId) {
-        queryParams.set("factory_id", factoryId.toString());
-      }
-  
+    
       const response = await fetch(`/api/transaction/pengiriman?${queryParams}`);
       const data = await response.json();
 

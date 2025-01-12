@@ -40,7 +40,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, SearchCheckIcon, Trash2 } from "lucide-react";
+import { Search, SearchCheckIcon, ShoppingCart, Trash2 } from "lucide-react";
 import EmptyData from "@/components/views/empty-data";
 
 export default function CreateTransaction() {
@@ -74,31 +74,38 @@ export default function CreateTransaction() {
 
   const getProduct = async () => {
     const response = await fetch(
-      `/api/distributor/data-stock?distributor_id=${user?.id}&factory_id=${user?.factory_selected?.id}`
+      `/api/distributor-product?user_id=${user?.id}`
     );
     const data = await response.json();
-    if (data.data.length === 0) {
+    
+    if (!data.products) {
+      toast.error(
+        "Terjadi kesalahan saat mengambil data produk"
+      );
+      return;
+    }
+    
+    if (data.products.length === 0) {
       toast.error(
         "Tidak ada data produk yang tersedia, Silahkan hubungi operator pabrik dan set harga di halaman data produk"
       );
       redirect("/distributor/data-produk");
     }
-    setProduct(data.data);
+    setProduct(data.products);
   };
 
   const handleSelectProduct = (value: string) => {
     setSelectedProduct(value);
-    const availableStock = product.find(
-      (item: any) => item.product.id == value
-    );
-
-    // harga masih per pack
-    setPrice(availableStock?.product.price);
+    
+    // Ambil produk yang dipilih
+    const selectedProductData = product.find((item: any) => item.id == value);
+    // Set harga langsung dari data produk
+    setPrice(selectedProductData?.price);
   };
 
   const getExistingBuyers = async () => {
     const response = await fetch(
-      `/api/distributor/buyer?distributor_id=${user?.id}&factory_id=${user?.factory_selected?.id}`
+      `/api/distributor/buyer?distributor_id=${user?.id}`
     );
     const data = await response.json();
     setExistingBuyers(data.data);
@@ -110,16 +117,20 @@ export default function CreateTransaction() {
   const itemsPerPage = 5; // Jumlah item per halaman
 
   // Tambahkan fungsi untuk menghitung total halaman
-  const totalPages = Math.ceil(filteredBuyer.length / itemsPerPage);
+  const totalPages = Math.ceil((filteredBuyer?.length || 0) / itemsPerPage);
 
   // Fungsi untuk mendapatkan data yang ditampilkan di halaman saat ini
   const getCurrentPageData = () => {
+    if (!filteredBuyer?.length) return [];
+    
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredBuyer.slice(startIndex, endIndex);
   };
 
   const handleSearchBuyer = async () => {
+    if (!existingBuyers) return;
+    
     const filteredBuyer = existingBuyers.filter((buyer: any) =>
       buyer.name.toLowerCase().includes(searchBuyer.toLowerCase())
     );
@@ -127,7 +138,7 @@ export default function CreateTransaction() {
   };
 
   const handleBuyerSelect = (buyer: any) => {
-    setSelectedBuyer(buyer);
+    setSelectedBuyer(buyer.id);
     setBuyerForm({
       name: buyer.name,
       address: buyer.address,
@@ -151,7 +162,7 @@ export default function CreateTransaction() {
   const addToCart = () => {
     if (!selectedProduct) return;
     const productData = product.find(
-      (item: any) => item.product.id == selectedProduct
+      (item: any) => item.id == selectedProduct
     );
 
     if (quantity <= 0 || price <= 0) {
@@ -170,12 +181,12 @@ export default function CreateTransaction() {
       setCart([
         ...cart,
         {
-          product_id: true,
-          product_name: productData?.product.name + " - " + productData?.product.type,
-          product_type: productData?.product.type,
+          product_id: selectedProduct,
+          product_name: productData?.name + " - " + productData?.type,
+          product_type: productData?.type,
           quantity: quantity,
           price: price,
-          subtotal: subtotal,
+          subtotal: quantity * price,
         },
       ]);
     }
@@ -223,7 +234,6 @@ export default function CreateTransaction() {
           buyerType === "new"
             ? buyerForm.address
             : existingBuyers.find((b) => b.id === selectedBuyer)?.address,
-        factory_id: user?.factory_selected?.id,
         is_new_buyer: buyerType === "new",
         ppn: 0,
         discount: 0,
@@ -302,7 +312,7 @@ export default function CreateTransaction() {
   }, [user?.id]);
 
   useEffect(() => {
-    setSubtotal(quantity * price);
+    setSubtotal(quantity * (price * 200));
   }, [quantity, price]);
 
   useEffect(() => {
@@ -330,22 +340,22 @@ export default function CreateTransaction() {
                     <SelectValue placeholder="Pilih Produk">
                       {selectedProduct
                         ? product.find(
-                            (item: any) => item.product.id == selectedProduct
-                          )?.product.name +
+                            (item: any) => item.id == selectedProduct
+                          )?.name +
                           " - " +
                           product.find(
-                            (item) => item.product.id == selectedProduct
-                          )?.product.type
+                            (item) => item.id == selectedProduct
+                          )?.type
                         : "Pilih Produk"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {product.map((item: any) => (
                       <SelectItem
-                        key={item.product.id}
-                        value={item.product.id.toString()}
+                        key={item.id}
+                        value={item.id.toString()}
                       >
-                        {item.product.name} - {item.product.type}
+                        {item.name} - {item.type}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -364,7 +374,7 @@ export default function CreateTransaction() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Harga Per Pack</Label>
-                <Input type="text" value={formatRibuan(price / 200)} disabled />
+                <Input type="text" value={formatRibuan(price)} disabled />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -372,7 +382,7 @@ export default function CreateTransaction() {
                 <Label>Harga Per Ball</Label>
                 <Input
                   type="text"
-                  value={formatRibuan(price)}
+                  value={formatRibuan(price * 200)}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\./g, "");
                     setPrice(Number(value));
@@ -390,7 +400,7 @@ export default function CreateTransaction() {
                 Reset
               </Button>
               <Button type="button" onClick={addToCart}>
-                Tambah ke Keranjang
+                <ShoppingCart className="w-4 h-4" /> Tambah ke Keranjang
               </Button>
             </div>
           </form>
@@ -540,8 +550,8 @@ export default function CreateTransaction() {
                 </SelectTrigger>
                 <SelectContent>
                   {paymentMethodList.map((item: any) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
+                    <SelectItem key={item?.id} value={item?.id}>
+                      {item?.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -622,8 +632,8 @@ export default function CreateTransaction() {
                         <TableBody>
                           {getCurrentPageData().map((buyer: any) => (
                             <TableRow key={buyer.id}>
-                              <TableCell>{buyer.name}</TableCell>
-                              <TableCell>{buyer.address}</TableCell>
+                              <TableCell>{buyer?.name}</TableCell>
+                              <TableCell>{buyer?.address}</TableCell>
                               <TableCell>
                                 <Button
                                   size="sm"
@@ -634,7 +644,7 @@ export default function CreateTransaction() {
                               </TableCell>
                             </TableRow>
                           ))}
-                          {filteredBuyer.length === 0 && (
+                          {filteredBuyer?.length === 0 && (
                             <TableRow>
                               <TableCell colSpan={3} className="text-center">
                                 <EmptyData text="Tidak ada pembeli yang ditemukan" />

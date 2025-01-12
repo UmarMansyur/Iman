@@ -68,7 +68,7 @@ const PrintInvoice = ({ params }: { params: any }) => {
       </div>
     );
 
-  const pagedItems = getPagedItems(data.DetailTransactionDistributor);
+  const pagedItems = getPagedItems(data.transaction.DetailTransactionDistributor);
 
   return (
     <div className="print-container font-sans">
@@ -86,17 +86,17 @@ const PrintInvoice = ({ params }: { params: any }) => {
                     <Building2 className="w-4 h-4" />
                   </div>
                   <h1 className="text-[10pt] font-bold">
-                    {data.factory?.name}
+                    {data.data_distributor?.name}
                   </h1>
-                  <p className="text-[8pt]">{data.factory?.address}</p>
+                  <p className="text-[8pt]">{data.data_distributor?.address || "-"}</p>
                 </div>
                 <div className="text-right">
                   <h2 className="text-[10pt] font-semibold">
-                    {data.invoice_code}
+                    {data.transaction.invoice_code}
                   </h2>
                   <p className="text-[8pt]">
                     Tanggal:{" "}
-                    {new Date(data.created_at).toLocaleDateString("id-ID")}
+                    {new Date(data.transaction.created_at).toLocaleDateString("id-ID")}
                   </p>
                   <p className="text-[8pt]">
                     Halaman {pageIndex + 1} dari {pagedItems.length}
@@ -110,26 +110,26 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   <div>
                     <h3 className="font-semibold">Pembeli:</h3>
                     <p>
-                      {data.buyer?.name} - {data.buyer?.address}
+                      {data.transaction.buyer?.name} - {data.transaction.buyer?.address}
                     </p>
                   </div>
                   <div>
                     <h3 className="font-semibold">
-                      Pembayaran: <br /> {data.payment_method?.name}
+                      Pembayaran: <br /> {data.transaction.payment_method?.name}
                     </h3>
-                    {data.payment_status === "Paid" && <p>Status: Dibayar</p>}
-                    {data.payment_status === "Pending" && (
+                    {data.transaction.payment_status === "Paid" && <p>Status: Dibayar</p>}
+                    {data.transaction.payment_status === "Pending" && (
                       <p>Status: Menunggu Konfirmasi Pembayaran</p>
                     )}
-                    {data.payment_status === "Paid_Off" && <p>Status: Lunas</p>}
-                    {data.payment_status === "Failed" && <p>Status: Gagal</p>}
-                    {data.payment_status === "Cancelled" && (
+                    {data.transaction.payment_status === "Paid_Off" && <p>Status: Lunas</p>}
+                    {data.transaction.payment_status === "Failed" && <p>Status: Gagal</p>}
+                    {data.transaction.payment_status === "Cancelled" && (
                       <p>Status: Ditolak</p>
                     )}
                   </div>
                 </div>
                 <h3 className="font-semibold">Lokasi Pengiriman:</h3>
-                <p>{data.desc_delivery}</p>
+                <p>{data.transaction.location_distributor.name}</p>
               </div>
 
               {/* Items Table */}
@@ -182,43 +182,43 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   <div>
                     <div className="flex justify-between mb-1 relative">
                       <div className="absolute -bottom-20 left-0 text-red-500 text-xl font-bold -rotate-45">
-                        {data.payment_status === "Paid" && "Bayar Sebagian"}
-                        {data.payment_status === "Pending" && "PENDING"}
-                        {data.payment_status === "Paid_Off" && "LUNAS"}
-                        {data.payment_status === "Failed" && "GAGAL"}
-                        {data.payment_status === "Cancelled" && "BATAL"}
+                        {data.transaction.payment_status === "Paid" && "Bayar Sebagian"}
+                        {data.transaction.payment_status === "Pending" && "PENDING"}
+                        {data.transaction.payment_status === "Paid_Off" && "LUNAS"}
+                        {data.transaction.payment_status === "Failed" && "GAGAL"}
+                        {data.transaction.payment_status === "Cancelled" && "BATAL"}
                       </div>
                     </div>
                     {/* Notes */}
-                    {data.notes && (
+                    {data.transaction.notes && (
                       <div className="border-t border-gray-300 pt-1">
                         <p className="font-semibold">Catatan:</p>
-                        <p className="text-[8pt]">{data.notes}</p>
+                        <p className="text-[8pt]">{data.transaction.notes}</p>
                       </div>
                     )}
                   </div>
                   <div className="w-48">
                     <div className="flex justify-between mb-1">
                       <span>Subtotal:</span>
-                      <span>{formatCurrency(data.amount - data.cost_delivery)}</span>
+                      <span>{formatCurrency(data.transaction.amount - data.transaction.cost_delivery)}</span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Ongkos Kirim:</span>
-                      <span>{formatCurrency(data.cost_delivery || 0)}</span>
+                      <span>{formatCurrency(data.transaction.cost_delivery || 0)}</span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Uang Muka:</span>
-                      <span>- {formatCurrency(data.down_payment)}</span>
+                      <span>- {formatCurrency(data.transaction.down_payment)}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t border-gray-300 pt-1">
                       <span>Total:</span>
                       <span>
-                        {formatCurrency(data.amount - data.down_payment)}
+                        {formatCurrency(data.transaction.amount - data.transaction.down_payment)}
                       </span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Sisa Pembayaran:</span>
-                      <span>{formatCurrency(data.remaining_balance - data.cost_delivery)}</span>
+                      <span>{formatCurrency(data.transaction.remaining_balance - data.transaction.cost_delivery)}</span>
                     </div>
                   </div>
                 </div>
@@ -228,20 +228,20 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-center">
                       <p className="font-semibold mb-6">Penerima</p>
-                      <div className="border-t border-gray-300 pt-1">
+                      <div className="">
                         (_____________)
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Pengirim</p>
-                      <div className="border-t border-gray-300 pt-1">
+                      <div className="">
                         (_____________)
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold mb-6">Hormat Kami</p>
-                      <div className="border-t border-gray-300 pt-1">
-                        ({data.distributor?.username})
+                      <div className="">
+                        ({data.transaction.distributor?.username})
                       </div>
                     </div>
                   </div>

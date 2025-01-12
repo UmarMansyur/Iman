@@ -75,22 +75,17 @@ export default function Layout() {
     const startDate = date?.from ? formatDateIndonesia(date.from) : "";
     const endDate = date?.to ? formatDateIndonesia(date.to) : "";
     let response;
-    if(!user?.factory_selected?.id) {
-      setLoading(false);
-      return;
-    };
+
     if (startDate && endDate) {
       response = await fetch(
-        "/api/distributor/dashboard?factory_id=" +
-          user?.factory_selected?.id +
-          "&start_date=" +
+        "/api/distributor/dashboard?start_date=" +
           startDate +
           "&end_date=" +
           endDate
       ); 
     } else {
       response = await fetch(
-        "/api/distributor/dashboard?factory_id=" + user?.factory_selected?.id
+        "/api/distributor/dashboard"
       );
     }
     const data = await response.json();
@@ -104,7 +99,7 @@ export default function Layout() {
 
   useEffect(() => {
     fetchData();
-  }, [user?.factory_selected?.id]);
+  }, [date]);
 
   return loading ? (
     <LoaderScreen />

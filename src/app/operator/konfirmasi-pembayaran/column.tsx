@@ -49,6 +49,16 @@ export const columns = (
     ),
     cell: ({ row }) => {
       const status = row.original.payment_status;
+      if (status === "Unpaid") {
+        return (
+          <Badge
+            variant="outline"
+            className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 dark:bg-yellow-800 dark:text-yellow-300 border-0`}
+          >
+            Belum Bayar
+          </Badge>
+        );
+      }
       if (status === "Pending") {
         return (
           <Badge

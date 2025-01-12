@@ -29,12 +29,24 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { ShoppingCart, Trash, Loader2 } from "lucide-react";
+import {
+  ShoppingCart,
+  Trash,
+  Loader2,
+  Save,
+  RefreshCcw,
+  Info,
+} from "lucide-react";
 import { useUserStore } from "@/store/user-store";
 import toast from "react-hot-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { redirect } from "next/navigation";
 import EmptyData from "@/components/views/empty-data";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 export default function CreateTransaction() {
   const [paymentMethod, setPaymentMethod] = useState([]);
   const [paymentMethodId, setPaymentMethodId] = useState<any>();
@@ -55,12 +67,17 @@ export default function CreateTransaction() {
   const [file, setFile] = useState<any>();
   const { user } = useUserStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [factorySelected, setFactorySelected] = useState<any>();
+  const [isAlert, setIsAlert] = useState(false);
   async function getProduct() {
-    const response = await fetch(
-      "/api/product?page=1&limit=10000&factory_id=" + user?.factory_selected?.id
-    );
+    const response = await fetch("/api/product?page=1&limit=10000");
     const data = await response.json();
+    // jika tidak ada data produk tampilkan pesan error menggunakan toast
+    if (data.products.length === 0) {
+      toast.error(
+        "Tidak ada data produk, Silahkan hubungi operator pabrik terlebih dahulu!"
+      );
+    }
     setProduct(data.products);
   }
 
@@ -69,7 +86,6 @@ export default function CreateTransaction() {
     const data = await response.json();
     setPaymentMethod(data.payments);
   }
-
 
   async function getData() {
     await getProduct();
@@ -103,15 +119,20 @@ export default function CreateTransaction() {
       return;
     }
 
-    const existProduct = cart.find((item: any) => item.product_id === product_id);
-    if(existProduct) {
+    const existProduct = cart.find(
+      (item: any) => item.product_id === product_id
+    );
+    if (existProduct) {
       toast.error("Produk sudah ada di keranjang");
       return;
     }
 
     const data = {
       product_id: product_id,
-      desc: product.find((item: any) => item.id === product_id)?.name + " - " + product.find((item: any) => item.id === product_id)?.type, 
+      desc:
+        product.find((item: any) => item.id === product_id)?.name +
+        " - " +
+        product.find((item: any) => item.id === product_id)?.type,
       jumlah: jumlah,
       harga: priceProductBall,
       total: totalPrice,
@@ -120,6 +141,22 @@ export default function CreateTransaction() {
       total_pack: amountPack,
       total_bal: amountBal,
     };
+    // tampilkan data product yang sudah di filter
+    setProduct(
+      product.filter((product: any) => product.factory_id == factorySelected)
+    );
+    if (!isAlert) {
+      const isFactory = product.find((item: any) => item.id === product_id)?.factory?.name ? product.find((item: any) => item.id === product_id)?.factory?.name : "Non Pabrik";
+      toast.success(
+        "Anda telah memilih produk dari pabrik " +
+          isFactory +
+          ". Sistem akan memfilter produk dari pabrik yang sama!",
+        {
+          duration: 10000,
+        }
+      );
+      setIsAlert(true);
+    }
     setCart([...cart, data]);
     setProductId(undefined);
     setPriceProduct(0);
@@ -136,11 +173,13 @@ export default function CreateTransaction() {
     const selectedProduct: any = product.find(
       (product: any) => product.id == item
     );
+    setFactorySelected(selectedProduct?.factory_id);
     setPriceProduct(selectedProduct?.price);
     setProductId(selectedProduct?.id);
     setTotalHarga(0);
     setTotalPrice(0);
     setPriceProductBall(selectedProduct?.price * 200);
+    // ambil factory_distributor_id dari selectedProduct
   };
 
   const handleChangeJumlah = (e: any) => {
@@ -184,16 +223,22 @@ export default function CreateTransaction() {
       setIsSubmitting(true);
       const formData = new FormData();
       formData.append("detail_invoices", JSON.stringify(cart));
-      formData.append("proof_of_payment", file);
+      if(file) {
+        formData.append("proof_of_payment", file);
+      }
       formData.append("payment_method_id", paymentMethodId);
       formData.append("total", totalCart.toString());
       formData.append("down_payment", downPayment.toString());
-      formData.append("factory_id", user!.factory_selected!.id);
+      if(factorySelected) {
+        formData.append("factory_id", factorySelected);
+      }
       formData.append("user_id", user!.id);
-      formData.append("payment_status", "Pending");
+      formData.append("payment_status", "Unpaid");
       formData.append("notes", notes);
-      formData.append("remaining_balance", (totalCart - downPayment).toString());
-      
+      formData.append(
+        "remaining_balance",
+        (totalCart - downPayment).toString()
+      );
 
       const response = await fetch("/api/pre-order", {
         method: "POST",
@@ -201,7 +246,7 @@ export default function CreateTransaction() {
       });
 
       const responseData = await response.json();
-      if(response.ok) {
+      if (response.ok) {
         toast.success("Transaksi berhasil disimpan");
         handleResetForm();
       } else {
@@ -241,7 +286,11 @@ export default function CreateTransaction() {
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
                 <Label className="font-medium text-sm">Nama Produk</Label>
-                <Select onValueChange={handleSelectProduct} value={product_id}>
+                <Select
+                  onValueChange={handleSelectProduct}
+                  value={product_id}
+                  disabled={product.length === 0}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Produk" />
                   </SelectTrigger>
@@ -260,6 +309,7 @@ export default function CreateTransaction() {
                 <Input
                   type="text"
                   placeholder="Masukkan jumlah bal"
+                  disabled={product.length === 0}
                   value={
                     jumlah ? new Intl.NumberFormat("id-ID").format(jumlah) : ""
                   }
@@ -322,10 +372,20 @@ export default function CreateTransaction() {
               </div>
             </div>
             <div className="flex justify-between">
-              <Button variant="outline" onClick={handleResetForm}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleResetForm}
+                disabled={isSubmitting || cart.length === 0}
+              >
+                <RefreshCcw className="w-4 h-4 mr-1" />
                 Reset
               </Button>
-              <Button onClick={handleAddToCart}>
+              <Button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!product_id}
+              >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Tambah Keranjang</span>
               </Button>
@@ -382,7 +442,7 @@ export default function CreateTransaction() {
                 {cart.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center">
-                      <EmptyData text="Keranjang Belanjaan Kosong" />  
+                      <EmptyData text="Keranjang Belanjaan Kosong" />
                     </TableCell>
                   </TableRow>
                 )}
@@ -448,7 +508,14 @@ export default function CreateTransaction() {
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
                 <Label className="font-medium text-sm">Jenis Pembayaran</Label>
-                <Select onValueChange={handleSelectPaymentMethod}>
+                <Select
+                  onValueChange={handleSelectPaymentMethod}
+                  disabled={
+                    paymentMethod.length === 0 ||
+                    isSubmitting ||
+                    cart.length === 0
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Pembayaran" />
                   </SelectTrigger>
@@ -470,6 +537,11 @@ export default function CreateTransaction() {
                 <Input
                   type="text"
                   placeholder="Masukkan jumlah pembayaran uang muka"
+                  disabled={
+                    isSubmitting ||
+                    cart.length === 0 ||
+                    paymentMethodId === undefined
+                  }
                   value={
                     new Intl.NumberFormat("id-ID", {
                       style: "currency",
@@ -487,10 +559,31 @@ export default function CreateTransaction() {
             </div>
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
-                <Label className="font-medium text-sm">
-                  Upload Bukti Pembayaran
-                </Label>
-                <Input type="file" placeholder="Masukkan file pembayaran" accept="image/*" multiple={false} max={1} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+                <div className="flex items-center gap-2">
+                  <Label className="font-medium text-sm">
+                    Upload Bukti Pembayaran
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>Maksimal 1 MB</TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  type="file"
+                  placeholder="Masukkan file pembayaran"
+                  accept="image/*"
+                  multiple={false}
+                  max={1}
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  disabled={
+                    isSubmitting ||
+                    cart.length === 0 ||
+                    paymentMethodId === undefined
+                  }
+                />
+                {/* beri informasi maksimal 1 mb dengan tooltip */}
               </div>
             </div>
             <div className="space-y-4 col-span-3">
@@ -506,14 +599,20 @@ export default function CreateTransaction() {
             </div>
           </div>
           <div className="flex justify-between">
-            <Button variant="outline" onClick={handleResetForm}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetForm}
+              disabled={isSubmitting || cart.length === 0}
+            >
+              <RefreshCcw className="w-4 h-4 mr-1" />
               Reset
             </Button>
-            <Button 
-              type="button" 
-              onClick={handleSubmitButton} 
-              size="lg" 
-              disabled={isSubmitting}
+            <Button
+              type="button"
+              onClick={handleSubmitButton}
+              size="lg"
+              disabled={isSubmitting || cart.length === 0}
             >
               {isSubmitting ? (
                 <>
@@ -521,7 +620,10 @@ export default function CreateTransaction() {
                   Menyimpan...
                 </>
               ) : (
-                'Simpan Transaksi'
+                <>
+                  <Save className="w-4 h-4 mr-1" />
+                  Simpan Transaksi
+                </>
               )}
             </Button>
           </div>

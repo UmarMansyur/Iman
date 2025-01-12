@@ -24,6 +24,16 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       <DataTableColumnHeader column={column} title="Kode Invoice"/>
     ),
   },
+  // tampilkan nama pabrik
+  {
+    accessorKey: "factory",
+    header: "Pabrik",
+    cell: ({ row }) => (
+      <div className="text-start">
+        {row.original.factory_id === null ? "Non Pabrik" : row.original.factory.name}
+      </div>
+    ),
+  },
   {
     accessorKey: "buyer",
     header: ({ column }) => (
@@ -32,17 +42,6 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     cell: ({ row }) => (
       <div className="text-start">
         {row.original.buyer.name}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "total",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total"/>
-    ),
-    cell: ({ row }) => (
-      <div className="text-start">
-        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(row.original.total).slice(0, -3)}
       </div>
     ),
   },
@@ -125,6 +124,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       }
     }
   },
+  // tampilkan 
   {
     accessorKey: "maturity_date",
     header: ({ column }) => (
@@ -136,8 +136,31 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
           row.original.maturity_date && new Date(row.original.maturity_date).toLocaleDateString("id-ID")
         }
         {
-          !row.original.maturity_date && "Belum diset operator pabrik"
+          !row.original.maturity_date && (row.original.factory_id === null ? "-" : "Belum diset operator pabrik")
         }
+      </div>
+    ),
+  },
+  // tampilkan sisa pembayaran
+  {
+    accessorKey: "remaining_balance",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Sisa Pembayaran"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(row.original.remaining_balance).slice(0, -3)}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "total",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total"/>
+    ),
+    cell: ({ row }) => (
+      <div className="text-start">
+        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(row.original.total).slice(0, -3)}
       </div>
     ),
   },

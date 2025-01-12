@@ -15,6 +15,7 @@ enum Gender {
 }
 
 enum PaymentStatus {
+  Unpaid
   Pending
   Paid
   Paid_Off
@@ -27,14 +28,22 @@ enum UserType {
   Operator
 }
 
+enum RoleDistributor {
+  Owner
+  Operator
+}
+
 model FactoryDistributor {
-  id                Int                 @id @default(autoincrement())
-  Factory           Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id        Int
-  name              String
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  MemberDistributor MemberDistributor[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  no_hp              String?
+  address            String?
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  MemberDistributor  MemberDistributor[]
+  Factory            Factory?             @relation(fields: [factoryId], references: [id])
+  factoryId          Int?
+  MemberPriceProduct MemberPriceProduct[]
 
   @@map("factory_distributors")
 }
@@ -76,7 +85,6 @@ model User {
   OrderMaterialUnit            OrderMaterialUnit[]
   morningShiftReportProducts   ReportProduct[]          @relation("report_product_morning_shift_user")
   afternoonShiftReportProducts ReportProduct[]          @relation("report_product_afternoon_shift_user")
-  DistributorStock             DistributorStock[]
   TransactionDistributor       TransactionDistributor[]
   BuyerDistributor             BuyerDistributor[]
   LocationDistributor          LocationDistributor[]
@@ -110,7 +118,6 @@ model Factory {
   OrderMaterialUnit      OrderMaterialUnit[]
   ReportMaterialStock    ReportMaterialStock[]
   MemberPriceProduct     MemberPriceProduct[]
-  DistributorStock       DistributorStock[]
   CostDelivery           CostDelivery[]
   LogOrderMaterialUnit   LogOrderMaterialUnit[]
   Location               Location[]
@@ -342,8 +349,8 @@ enum MaterialStockStatus {
 
 model Product {
   id                           Int                            @id @default(autoincrement())
-  factory                      Factory                        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id                   Int
+  factory                      Factory?                       @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id                   Int?
   name                         String
   type                         ProductType
   price                        Float
@@ -351,7 +358,6 @@ model Product {
   reportProducts               ReportProduct[]
   MemberPriceProduct           MemberPriceProduct[]
   DetailInvoice                DetailInvoice[]
-  DistributorStock             DistributorStock[]
   DetailTransactionDistributor DetailTransactionDistributor[]
 
   @@map("products")
@@ -363,19 +369,21 @@ enum ProductType {
 }
 
 model MemberPriceProduct {
-  id                Int           @id @default(autoincrement())
-  factory           Factory       @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id        Int
-  product           Product       @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  product_id        Int
-  user              User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id           Int
-  memberFactory     MemberFactory @relation(fields: [member_factory_id], references: [id], onDelete: Cascade)
-  member_factory_id Int
-  price             Float
-  sale_price        Float
-  created_at        DateTime      @default(now())
-  updated_at        DateTime      @updatedAt
+  id                     Int                 @id @default(autoincrement())
+  factory                Factory?            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int?
+  factoryDistributor     FactoryDistributor? @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id Int?
+  product                Product             @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id             Int
+  price                  Float
+  sale_price             Float
+  created_at             DateTime            @default(now())
+  updated_at             DateTime            @updatedAt
+  User                   User?               @relation(fields: [userId], references: [id])
+  userId                 Int?
+  MemberFactory          MemberFactory?      @relation(fields: [memberFactoryId], references: [id])
+  memberFactoryId        Int?
 
   @@map("member_price_products")
 }
@@ -480,8 +488,8 @@ enum PPNStatus {
 
 model Buyer {
   id                 Int                  @id @default(autoincrement())
-  factory            Factory              @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id         Int
+  factory            Factory?             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id         Int?
   name               String
   address            String
   created_at         DateTime             @default(now())
@@ -494,8 +502,8 @@ model Buyer {
 
 model Invoice {
   id                     Int                      @id @default(autoincrement())
-  factory                Factory                  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id             Int
+  factory                Factory?                 @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int?
   user                   User                     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id                Int
   is_distributor         Boolean                  @default(false)
@@ -598,24 +606,6 @@ enum DeliveryTrackingStatus {
   Cancel
 }
 
-model DistributorStock {
-  id             Int             @id @default(autoincrement())
-  distributor    User            @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
-  distributor_id Int
-  factory        Factory         @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id     Int
-  product        Product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  product_id     Int
-  amount         Float
-  desc           String
-  type           TypeDistributor
-  invoice_code   String?
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
-
-  @@map("distributor_stocks")
-}
-
 enum TypeDistributor {
   In
   Out
@@ -627,11 +617,11 @@ model LocationDistributor {
   cost                   Float                    @default(0)
   distributor            User                     @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
   distributor_id         Int
-  factory                Factory                  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id             Int
   created_at             DateTime                 @default(now())
   updated_at             DateTime                 @updatedAt
   TransactionDistributor TransactionDistributor[]
+  Factory                Factory?                 @relation(fields: [factoryId], references: [id])
+  factoryId              Int?
 
   @@map("location_distributors")
 }
@@ -642,11 +632,11 @@ model BuyerDistributor {
   address                String
   distributor            User                     @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
   distributor_id         Int
-  factory                Factory                  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id             Int
   created_at             DateTime                 @default(now())
   updated_at             DateTime                 @updatedAt
   TransactionDistributor TransactionDistributor[]
+  Factory                Factory?                 @relation(fields: [factoryId], references: [id])
+  factoryId              Int?
 
   @@map("buyer_distributors")
 }
@@ -658,8 +648,6 @@ model TransactionDistributor {
   distributor_id               Int
   buyer                        BuyerDistributor               @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
   buyer_id                     Int
-  factory                      Factory                        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
-  factory_id                   Int
   location_distributor         LocationDistributor            @relation(fields: [location_distributor_id], references: [id], onDelete: Cascade)
   location_distributor_id      Int
   status_payment               TransactionDistributorStatus   @default(Pending)
@@ -678,6 +666,8 @@ model TransactionDistributor {
   DetailTransactionDistributor DetailTransactionDistributor[]
   Invoice                      Invoice?                       @relation(fields: [invoiceId], references: [id])
   invoiceId                    Int?
+  Factory                      Factory?                       @relation(fields: [factoryId], references: [id])
+  factoryId                    Int?
 
   @@map("transaction_distributors")
 }

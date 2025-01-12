@@ -11,7 +11,6 @@ export async function POST(req: Request) {
       payment_method_id,
       buyer_name,
       buyer_address,
-      factory_id,
       is_new_buyer,
       ppn,
       discount,
@@ -33,7 +32,6 @@ export async function POST(req: Request) {
           name: buyer_name,
           address: buyer_address,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -45,7 +43,6 @@ export async function POST(req: Request) {
           name: buyer_address,
           cost: cost,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -55,7 +52,6 @@ export async function POST(req: Request) {
         where: {
           name: buyer_name,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
       if (!existBuyer) {
@@ -71,7 +67,6 @@ export async function POST(req: Request) {
         where: {
           name: buyer_name,
           distributor_id: Number(distributor_id),
-          factory_id: Number(factory_id),
         },
       });
 
@@ -135,7 +130,6 @@ export async function POST(req: Request) {
         distributor_id: Number(distributor_id),
         buyer_id,
         location_distributor_id,
-        factory_id: Number(factory_id),
         payment_method_id: Number(payment_method_id),
         amount: totalAmount + Number(cost_delivery),
         ppn,
@@ -192,7 +186,6 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const distributor_id = searchParams.get("distributor_id") || "";
-    const factory_id = searchParams.get("factory_id") || "";
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -208,17 +201,34 @@ export async function GET(req: Request) {
       "status_delivery",
     ];
 
+    
     if (!availableSort.includes(sortBy)) {
       return NextResponse.json(
         { message: "Sort by tidak valid" },
         { status: 400 }
       );
     }
-
+    
     const where: any = {
       distributor_id: parseInt(distributor_id),
-      factory_id: parseInt(factory_id),
     };
+
+    const FactoryDistributor = await prisma.factoryDistributor.findFirst({
+      where: {
+        MemberDistributor: {
+          some: {
+            user_id: parseInt(distributor_id),
+          },
+        },
+      },
+    });
+
+    if (!FactoryDistributor) {
+      return NextResponse.json(
+        { message: "Anda tidak memiliki akses ke data ini" },
+        { status: 403 }
+      );
+    }
 
     if (search) {
       where.OR = [
@@ -236,7 +246,15 @@ export async function GET(req: Request) {
         buyer: true,
         location_distributor: true,
         payment_method: true,
-        DetailTransactionDistributor: true,
+        DetailTransactionDistributor: {
+          include: {
+            Product: {
+              include: {
+                factory: true,
+              },
+            },
+          },
+        },
         distributor: {
           select: {
             username: true,
@@ -257,6 +275,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       data: transactions,
+      data_distributor: FactoryDistributor,
       total,
       page,
       limit,

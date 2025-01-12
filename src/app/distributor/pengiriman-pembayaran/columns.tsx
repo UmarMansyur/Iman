@@ -37,7 +37,7 @@ const formatCurrency = (value: number) => {
     .slice(0, -3);
 };
 
-export const columns: ColumnDef<any>[] = [
+export const columns = (products: any, metodePembayaran: any): ColumnDef<any>[] => [
   {
     accessorKey: "invoice_code",
     header: ({ column }) => (
@@ -49,6 +49,26 @@ export const columns: ColumnDef<any>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nama Pembeli" />
     ),
+  },
+  {
+    accessorKey: "remaining_balance",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Sisa Pembayaran" />
+    ),
+    cell: ({ row }) => {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(row.original.remaining_balance);
+    },
+  },
+  // Paymet method
+  {
+    accessorKey: "payment_method.name",
+    header: "Metode Pembayaran",
+    cell: ({ row }) => {
+      return row.original.payment_method.name;
+    },
   },
   {
     accessorKey: "amount",
@@ -226,7 +246,12 @@ export const columns: ColumnDef<any>[] = [
               </DialogContent>
             </Dialog>
             <PembayaranDialog invoice={data} />
-            <OrderPabrik invoice={data} />
+            {
+              
+              (data.status_payment === "Paid" || data.status_payment === "Paid_Off") && (
+                <OrderPabrik invoice={data} products={products} metodePembayaran={metodePembayaran} />
+              )
+            }
             <DeliveryStatusDialog invoice={data} />
           </DropdownMenuContent>
         </DropdownMenu>
