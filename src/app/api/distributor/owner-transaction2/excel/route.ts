@@ -7,62 +7,80 @@ import ExcelJS from "exceljs";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const factory_id = searchParams.get("factory_id") || "";
     const startDate = searchParams.get("startDate") || "";
     const endDate = searchParams.get("endDate") || "";
-    const filterPayment = searchParams.get("filterPayment") || "";
+    const distributor_id = searchParams.get("distributor_id") || "";
     const filterStatus = searchParams.get("filterStatus") || "";
+    const filterPayment = searchParams.get("filterPayment") || "";
 
-    console.log(factory_id);
-
-    if(startDate == "" && endDate == ""){
+    if (startDate == "" && endDate == "") {
       throw new Error("Tanggal tidak boleh kosong");
     }
 
     const where: any = {};
 
-    if(startDate && endDate) {
+    if (startDate && endDate) {
       where.created_at = {
         gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
         lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
-      }
+      };
     }
 
-    if(filterPayment == 'all' || filterPayment == "") {
+    if (filterStatus == "all" || filterStatus == "") {
+      delete where.status_payment;
+    } else {
+      where.status_payment = filterStatus;
+    }
+
+    if (filterPayment == "all" || filterPayment == "") {
       delete where.payment_method_id;
     } else {
       where.payment_method_id = Number(filterPayment);
     }
 
-    if(filterStatus == 'all' || filterStatus == "") {
-      delete where.payment_status;
-    } else {
-      where.payment_status = filterStatus;
-    }
-
-    if(factory_id) {
-      where.factory_id = parseInt(factory_id);
-    }
-
-    const factory = await prisma.factory.findUnique({
+    const FactoryDistributor = await prisma.factoryDistributor.findFirst({
       where: {
-        id: Number(factory_id),
+        MemberDistributor: {
+          some: {
+            user_id: parseInt(distributor_id),
+          },
+        },
       },
     });
 
-    const factoryName = factory?.name || "";
+    if (!FactoryDistributor) {
+      throw new Error("Distributor tidak ditemukan");
+    }
 
-    const data = await prisma.invoice.findMany({
+    const members = await prisma.memberDistributor.findMany({
+      where: {
+        factory_distributor_id: FactoryDistributor.id,
+      },
+    });
+
+    const member_ids = members.map((member) => member.user_id);
+
+    if (distributor_id) {
+      where.distributor_id = {
+        in: member_ids,
+      };
+    }
+
+    const transactions = await prisma.transactionDistributor.findMany({
       where,
       include: {
         buyer: true,
-        detailInvoices: {
+        payment_method: true,
+        DetailTransactionDistributor: {
           include: {
-            product: true,
+            Product: true,
           },
         },
-        payment_method: true,
-        deliveryTracking: true,
+        distributor: {
+          select: {
+            username: true,
+          },
+        },
       },
       orderBy: {
         created_at: "desc",
@@ -70,13 +88,13 @@ export async function GET(request: Request) {
     });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Laporan Transaksi - " + factoryName);
-
+    const worksheet = workbook.addWorksheet("Laporan Transaksi Distributor - " + FactoryDistributor.name);
 
     worksheet.columns = [
       { width: 20 }, // Tanggal
       { width: 20 }, // Kode Invoice
       { width: 25 }, // Pembeli
+      { width: 20 }, // Distributor
       { width: 20 }, // Metode Pembayaran
       { width: 20 }, // Status Pembayaran
       { width: 25 }, // Total
@@ -84,12 +102,22 @@ export async function GET(request: Request) {
     ];
 
     // Add title
-    worksheet.mergeCells("A1:G1");
+    worksheet.mergeCells("A1:H1");
     const titleCell = worksheet.getCell("A1");
-    titleCell.value = `Laporan Transaksi - ${factoryName}`;
-    // add 
+    titleCell.value = `Laporan Transaksi Distributor - ${FactoryDistributor.name}`;
     titleCell.font = { bold: true, size: 14 };
     titleCell.alignment = { vertical: "middle", horizontal: "center" };
+
+    // Add period
+    if (startDate && endDate) {
+      worksheet.mergeCells("A2:H2");
+      const periodCell = worksheet.getCell("A2");
+      periodCell.value = `Periode: ${formatDateIndonesia(new Date(startDate))} - ${formatDateIndonesia(
+        new Date(endDate)
+      )}`;
+      periodCell.font = { size: 10 };
+      periodCell.alignment = { vertical: "middle", horizontal: "center" };
+    }
 
     worksheet.addRow([]);
 
@@ -97,6 +125,7 @@ export async function GET(request: Request) {
       "Tanggal",
       "Kode Invoice",
       "Pembeli",
+      "Distributor",
       "Metode Pembayaran",
       "Status Pembayaran",
       "Total",
@@ -114,18 +143,19 @@ export async function GET(request: Request) {
       };
     });
 
-    data.forEach((item) => {
+    transactions.forEach((item) => {
       const row = worksheet.addRow([
         formatDateIndonesia(item.created_at),
         item.invoice_code,
         item.buyer?.name || "-",
+        item.distributor.username,
         item.payment_method.name,
-        item.payment_status,
+        item.status_payment,
         new Intl.NumberFormat("id-ID", {
           style: "currency",
           currency: "IDR",
-        }).format(Number(item.total)),
-        item.deliveryTracking[0]?.status || "-",
+        }).format(Number(item.amount)),
+        item.status_delivery,
       ]);
 
       row.eachCell((cell) => {
@@ -144,12 +174,12 @@ export async function GET(request: Request) {
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": 'attachment; filename="laporan-transaksi.xlsx"',
+        "Content-Disposition": 'attachment; filename="laporan-transaksi-distributor.xlsx"',
       },
     });
   } catch (error: any) {
     return NextResponse.json(
-      { message: error.message || "Internal Server Error" },
+      { message: error.message || "Terjadi kesalahan server" },
       { status: 500 }
     );
   }

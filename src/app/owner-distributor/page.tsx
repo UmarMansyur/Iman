@@ -81,19 +81,15 @@ export default function Layout() {
     let response;
 
     if (startDate && endDate) {
-      // tambah user_id
       response = await fetch(
         "/api/distributor/dashboard?start_date=" +
           startDate +
           "&end_date=" +
-          endDate +
-          "&user_id=" +
-          user?.id
+          endDate
       ); 
     } else {
       response = await fetch(
-        "/api/distributor/dashboard?user_id=" +
-          user?.id
+        "/api/distributor/dashboard"
       );
     }
     const data = await response.json();
@@ -107,7 +103,7 @@ export default function Layout() {
 
   useEffect(() => {
     fetchData();
-  }, [date, user?.id]);
+  }, [date]);
 
   return loading ? (
     <LoaderScreen />

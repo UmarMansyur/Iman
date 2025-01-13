@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PlusCircle, Search } from "lucide-react";
 import MainPage from "@/components/main";
@@ -48,6 +48,10 @@ export default function TransaksiDistributorPage() {
     sortBy: "id",
     sortOrder: "asc",
   });
+
+  useEffect(() => {
+    document.title = "Daftar Transaksi - Indera Distribution";
+  }, []);
 
   // Fetch Transaksi
   const fetchTransaksi = async (): Promise<TransactionData> => {

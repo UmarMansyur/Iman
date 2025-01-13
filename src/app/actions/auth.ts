@@ -95,6 +95,8 @@ export async function login(state: SigninFormState, formData: FormData) {
       redirect('/distributor');
     } else if(sessionUser?.factory.find((factory: any) => factory.position.includes('Operator'))) {
       redirect('/operator');
+    } else if(sessionUser?.factory.find((factory: any) => factory.position.includes('Owner Distributor'))) {
+      redirect('/owner-distributor');
     } else {
       redirect('/401');
     }

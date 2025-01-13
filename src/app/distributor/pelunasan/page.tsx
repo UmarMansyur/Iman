@@ -22,6 +22,10 @@ export default function PabrikPage() {
     totalPages: 0,
   });
 
+  useEffect(() => {
+    document.title = "Pelunasan - Indera Distribution";
+  }, []);
+
   const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",

@@ -4,15 +4,17 @@ import { formatDateIndonesia } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { PaymentStatus } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const factory_id = searchParams.get("factory_id") || "";
     const startDate = searchParams.get("startDate") || "";
     const endDate = searchParams.get("endDate") || "";
-    const filterPayment = searchParams.get("filterPayment") || "";
+    const user_id = searchParams.get("user_id") || "";
     const filterStatus = searchParams.get("filterStatus") || "";
+    const filterPayment = searchParams.get("filterPayment") || "";
+    const type_preorder = searchParams.get("type_preorder") || "";
 
     if(startDate == "" && endDate == ""){
       throw new Error("Tanggal tidak boleh kosong");
@@ -27,29 +29,67 @@ export async function GET(request: Request) {
       }
     }
 
-    if(filterPayment == 'all' || filterPayment == "") {
+    if(type_preorder === "true" || type_preorder === "1") {
+      where.type_preorder = true;
+    } else if(type_preorder === "false" || type_preorder === "0") {
+      where.type_preorder = false;
+    } else {
+      delete where.type_preorder;
+    }
+
+    if (filterPayment === "") {
+      delete where.payment_method_id;
+    } else if (filterPayment == "all") {
       delete where.payment_method_id;
     } else {
       where.payment_method_id = Number(filterPayment);
     }
-
-    if(filterStatus == 'all' || filterStatus == "") {
+    if (filterStatus === "") {
       delete where.payment_status;
-    } else {
-      where.payment_status = filterStatus;
+    } else if (filterStatus === "all") {
+      where.payment_status = {
+        in: [
+          PaymentStatus.Pending,
+          PaymentStatus.Paid,
+          PaymentStatus.Paid_Off,
+          PaymentStatus.Failed,
+          PaymentStatus.Cancelled,
+          PaymentStatus.Unpaid,
+        ],
+      };
+    } else if (filterStatus === "Pending") {
+      where.payment_status = PaymentStatus.Pending;
+    } else if (filterStatus === "Paid") {
+      where.payment_status = PaymentStatus.Paid;
+    } else if (filterStatus === "Paid_Off") {
+      where.payment_status = PaymentStatus.Paid_Off;
+    } else if (filterStatus === "Failed") {
+      where.payment_status = PaymentStatus.Failed;
+    } else if (filterStatus === "Cancelled") {
+      where.payment_status = PaymentStatus.Cancelled;
+    } else if (filterStatus === "Unpaid") {
+      where.payment_status = PaymentStatus.Unpaid;
     }
 
-    if(factory_id) {
-      where.factory_id = parseInt(factory_id);
-    }
 
-    const factory = await prisma.factory.findUnique({
+    const memberDistributor = await prisma.factoryDistributor.findFirst({
       where: {
-        id: Number(factory_id),
+        MemberDistributor: {
+          some: {
+            user_id: parseInt(user_id),
+          },
+        },
+      },
+      include: {
+        Factory: true,
       },
     });
 
-    const factoryName = factory?.name || "";
+    if(!memberDistributor) {
+      throw new Error("Member distributor tidak ditemukan");
+    }
+
+    const factoryName = memberDistributor?.name || "";
 
     const data = await prisma.invoice.findMany({
       where,

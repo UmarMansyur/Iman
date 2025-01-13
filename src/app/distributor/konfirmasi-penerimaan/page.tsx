@@ -22,6 +22,9 @@ export default function PabrikPage() {
     totalPages: 0,
   });
 
+  useEffect(() => {
+    document.title = "Konfirmasi Penerimaan - Indera Distribution";
+  }, []);
   const [filters, setFilters] = useState({
     search: "",
     sortBy: "id",

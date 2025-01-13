@@ -175,14 +175,15 @@ model Role {
 }
 
 model BankAccount {
-  id         Int      @id @default(autoincrement())
-  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  id         Int       @id @default(autoincrement())
+  factory    Factory   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
   factory_id Int
   name       String
   rekening   String
   bank_name  String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  Invoice    Invoice[]
 
   @@map("bank_accounts")
 }
@@ -506,6 +507,8 @@ model Invoice {
   factory_id             Int?
   user                   User                     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id                Int
+  bank_account           BankAccount?             @relation(fields: [bank_account_id], references: [id], onDelete: Cascade)
+  bank_account_id        Int?
   is_distributor         Boolean                  @default(false)
   invoice_code           String                   @unique
   discount               Float?                   @default(0)

@@ -86,10 +86,11 @@ export default function PabrikPage() {
         type_preorder: "true",
         filterPayment: filters.filterPayment,
         filterStatus: filters.filterStatus,
-        factory_id: factoryId?.toString() || "",
+        user_id: user?.id?.toString() || "",
+        factory_id: filters.factory_id || "",
       };
       const queryParams = new URLSearchParams(params);
-      const response = await fetch(`/api/transaction?${queryParams}`);
+      const response = await fetch(`/api/distributor/owner-transaction?${queryParams}`);
       const data = await response.json();
 
       setData(data.data);
@@ -106,9 +107,21 @@ export default function PabrikPage() {
     }
   };
 
+  const [factories, setFactories] = useState<any[]>([]);
+  
+  // Tambahkan fungsi untuk mengambil data factory
+  const fetchFactories = async () => {
+    if (!user) return;
+    if (factories.length > 0) return;
+    const response = await fetch("/api/factory?limit=10000&page=1");
+    const data = await response.json();
+    setFactories([...data.factories, { id: 'other', name: 'Non Pabrik' }]);
+  };
+
   useEffect(() => {
     fetchData();
     fetchPayment();
+    fetchFactories();
   }, [
     pagination.page,
     pagination.limit,
@@ -119,6 +132,7 @@ export default function PabrikPage() {
     user,
     filters.filterPayment,
     filters.filterStatus,
+    filters.factory_id
   ]);
 
   const debouncedSearch = useCallback(
@@ -183,12 +197,24 @@ export default function PabrikPage() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
+  const handleFilterFactory = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      factory_id: value,
+    }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
   const [statusPayment, setStatusPayment] = useState<
     Array<{ id: string; name: string }>
   >([
     {
       id: "Pending",
       name: "Menunggu Konfirmasi",
+    },
+    {
+      id: "Unpaid",
+      name: "Belum Bayar",
     },
     {
       id: "Paid",
@@ -216,15 +242,15 @@ export default function PabrikPage() {
       endDate: filters.endDate,
       search: filters.search,
       filterPayment: filters.filterPayment,
+      filterStatus: filters.filterStatus,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
       page: pagination.page.toString(),
       limit: pagination.limit.toString(),
       type_preorder: "true",
-      filterStatus: filters.filterStatus,
-
+      user_id: user?.id?.toString() || "",
     });
-    window.open(`/api/transaction/excel?${queryParams}`, "_blank");
+    window.open(`/api/distributor/owner-transaction/excel?${queryParams}`, "_blank");
   };
 
   const handleDownloadPDF = () => {
@@ -235,17 +261,18 @@ export default function PabrikPage() {
       endDate: filters.endDate,
       search: filters.search,
       filterPayment: filters.filterPayment,
+      filterStatus: filters.filterStatus,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
       page: pagination.page.toString(),
       limit: pagination.limit.toString(),
-      filterStatus: filters.filterStatus,
+      user_id: user?.id?.toString() || "",
     });
-    window.open(`/api/transaction/pdf?${queryParams}`, "_blank");
+    window.open(`/api/distributor/owner-transaction/pdf?${queryParams}`, "_blank");
   };
 
   useEffect(() => {
-    document.title = "Laporan Transaksi Produk - Indera Distribution";
+    document.title = "Data Order - Indera Distribution";
   }, []);
 
   return (
@@ -256,10 +283,10 @@ export default function PabrikPage() {
         <Card>
           <CardHeader className="border-b p-4 mb-2">
             <h4 className="text-base font-semibold mb-0">
-              Laporan Transaksi Produk
+              Data Order
             </h4>
             <p className="text-xs text-muted-foreground">
-              Laporan transaksi produk yang telah dilakukan dapat dilihat
+              Data order yang telah dilakukan dapat dilihat
               detailnya dengan mengklik tombol detail berupa icon mata pada
               kolom aksi.
             </p>
@@ -283,7 +310,7 @@ export default function PabrikPage() {
                       id="date"
                       variant={"outline"}
                       className={cn(
-                        "w-[300px] justify-start text-left font-normal",
+                        " justify-start text-left font-normal",
                         !date && "text-muted-foreground"
                       )}
                     >
@@ -364,6 +391,31 @@ export default function PabrikPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="w-56">
+                <Select
+                  onValueChange={(value) => handleFilterFactory(value)}
+                  defaultValue={filters.factory_id}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Pabrik">
+                      {filters.factory_id
+                        ? factories.find(
+                            (factory: any) =>
+                              factory.id === filters.factory_id
+                          )?.name
+                        : "Pilih Pabrik"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Pabrik</SelectItem>
+                    {factories?.map((factory: any) => (
+                      <SelectItem key={factory.id} value={factory.id}>
+                        {factory.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="ml-auto flex justify-end items-center gap-2">
               <Button
@@ -388,7 +440,7 @@ export default function PabrikPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns(pagination.page, pagination.limit)}
+              columns={columns(fetchData, pagination.page, pagination.limit)}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {

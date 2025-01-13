@@ -47,6 +47,10 @@ export default function TransaksiDistributorPage() {
     sortOrder: "asc",
   });
 
+  useEffect(() => {
+    document.title = "Pengiriman Pembayaran - Indera Distribution";
+  }, []);
+
   // Fetch Transaksi
   const fetchTransaksi = async (): Promise<TransactionData> => {
     try {

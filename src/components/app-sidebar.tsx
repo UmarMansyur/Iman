@@ -288,6 +288,28 @@ const data = {
       ],
     },
   ],
+  navOwnerDistributor: [
+    {
+      title: "Dashboard",
+      url: "/owner-distributor",
+      icon: Home,
+    },
+    {
+      title: "Data Produk",
+      url: "/owner-distributor/data-produk",
+      icon: PackageSearch,
+    },
+    {
+      title: "Data Order",
+      url: "/owner-distributor/data-order",
+      icon: SendToBack,
+    },
+    {
+      title: "Laporan Transaksi Produk",
+      url: "/owner-distributor/laporan-transaksi",
+      icon: FileText,
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -309,7 +331,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain title="Administrator" items={addActiveState(data.navAdmin)} />
       );
     }
-    if (pathname?.startsWith("/owner")) {
+    if (pathname?.startsWith("/owner") && !pathname?.startsWith("/owner-distributor")) {
       return <NavMain title="Owner" items={addActiveState(data.navOwner)} />;
     }
     if (pathname?.startsWith("/operator")) {
@@ -324,6 +346,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items={addActiveState(data.navDistributor)}
         />
       );
+    }
+    if (pathname?.startsWith("/owner-distributor")) {
+      return <NavMain title="Owner Distributor" items={addActiveState(data.navOwnerDistributor)} />;
     }
     return null;
   };

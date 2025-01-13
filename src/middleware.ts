@@ -57,7 +57,7 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
   if (session) {
     try {
       const decoded: any = jwtDecode(session);
-      if (req.nextUrl.pathname.startsWith('/owner')) {
+      if (req.nextUrl.pathname.startsWith('/owner') && !req.nextUrl.pathname.startsWith('/owner-distributor')) {
         if(!decoded?.factory_selected?.position.includes("Owner") || decoded?.factory_selected?.status_member !== "Active"){
           deleteSession();
           return NextResponse.redirect(new URL('/401', req.nextUrl));
@@ -75,6 +75,14 @@ export default async function middleware(req: NextRequest): Promise<NextResponse
       }
       if(req.nextUrl.pathname.startsWith("/distributor")) {
         if(!decoded?.factory_selected?.position.includes("Distributor") || decoded?.factory_selected?.status_member !== "Active"){
+          deleteSession();
+          return NextResponse.redirect(new URL('/401', req.nextUrl));
+        } else {
+          return NextResponse.next();
+        }
+      }
+      if(req.nextUrl.pathname.startsWith("/owner-distributor")) {
+        if(!decoded?.factory_selected?.position.includes("Owner Distributor") || decoded?.factory_selected?.status_member !== "Active"){
           deleteSession();
           return NextResponse.redirect(new URL('/401', req.nextUrl));
         } else {

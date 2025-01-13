@@ -8,8 +8,8 @@ async function main(): Promise<void> {
   const admin = await prisma.user.create({
     data: {
       email: "admin@iman.com",
-      username: "admin",
-      password: await bcrypt.hash("admin", 10),
+      username: "Administrator",
+      password: await bcrypt.hash("admin123.", 10),
       date_of_birth: new Date("2001-07-29"),
       gender: "Male",
       user_type: "Administrator",
@@ -22,8 +22,8 @@ async function main(): Promise<void> {
   const operator = await prisma.user.create({
     data: {
       email: "operator@iman.com",
-      username: "operator",
-      password: await bcrypt.hash("operator", 10),
+      username: "Operator",
+      password: await bcrypt.hash("Operator123.", 10),
       date_of_birth: new Date("2001-07-29"),
       gender: "Male",
       address: "Jl. Operator",
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
     data: {
       email: "owner@iman.com",
       username: "owner",
-      password: await bcrypt.hash("owner", 10),
+      password: await bcrypt.hash("Owner123.", 10),
       date_of_birth: new Date("2001-07-29"),
       gender: "Male",
       address: "Jl. Owner",
@@ -61,10 +61,10 @@ async function main(): Promise<void> {
     },
   });
 
-  const ditributor2 = await prisma.user.create({
+  const distributor2 = await prisma.user.create({
     data: {
       email: "inderadistribution@iman.com",
-      username: "inderadistribution",
+      username: "Indera Distribution",
       password: await bcrypt.hash("distributor123.", 10),
       date_of_birth: new Date("2001-07-29"),
       gender: "Male",
@@ -130,7 +130,7 @@ async function main(): Promise<void> {
   const prpj = await prisma.factory.create({
     data: {
       nickname: "PRPJ",
-      user_id: ditributor2.id,
+      user_id: distributor2.id,
       name: "PR. Pelita Jaya",
       address: "Blungbungan",
       status: "Active",
@@ -142,14 +142,40 @@ async function main(): Promise<void> {
       { role: "Owner" },
       { role: "Operator" },
       { role: "Distributor" },
-      { role: "Agent" },
+      { role: "Owner Distributor" },
     ],
+  });
+
+  const ownerDistributor = await prisma.user.create({
+    data: {
+      email: "ownerdistributor@iman.com",
+      username: "ownerdistributor",
+      password: await bcrypt.hash("ownerdistributor", 10),
+      date_of_birth: new Date("2001-07-29"),
+      gender: "Male",
+      address: "Jl. Owner Distributor",
+      user_type: "Operator",
+      is_active: true,
+      is_verified: true,
+    },
   });
 
   await prisma.memberFactory.createMany({
     data: [
       {
         factory_id: prpj.id,
+        user_id: ownerDistributor.id,
+        role_id: 4,
+        status: "Active",
+      },
+      {
+        factory_id: prsj.id,
+        user_id: ownerDistributor.id,
+        role_id: 4,
+        status: "Active",
+      },
+      {
+        factory_id: prpj.id,
         user_id: distributor.id,
         role_id: 3,
         status: "Active",
@@ -162,13 +188,13 @@ async function main(): Promise<void> {
       },
       {
         factory_id: prpj.id,
-        user_id: ditributor2.id,
+        user_id: distributor2.id,
         role_id: 3,
         status: "Active",
       },
       {
         factory_id: prsj.id,
-        user_id: ditributor2.id,
+        user_id: distributor2.id,
         role_id: 3,
         status: "Active",
       },
@@ -225,10 +251,13 @@ async function main(): Promise<void> {
         createMany: {
           data: [
             {
-              user_id: ditributor2.id,
+              user_id: distributor2.id,
             },
             {
               user_id: distributor.id,
+            },
+            {
+              user_id: ownerDistributor.id,
             },
           ],
         },
@@ -242,7 +271,11 @@ async function main(): Promise<void> {
       name: "Indera Distribution",
       MemberDistributor: {
         createMany: {
-          data: [{ user_id: ditributor2.id }, { user_id: distributor.id }],
+          data: [
+            { user_id: distributor2.id },
+            { user_id: distributor.id },
+            { user_id: ownerDistributor.id },
+          ],
         },
       },
     },
@@ -470,85 +503,85 @@ async function main(): Promise<void> {
   //     recipient: "PT. Iman",
   //   },
   // });
-  for (let i = 1; i <= 1000; i++) {
-    const buyer = await prisma.buyer.create({
-      data: {
-        name: `PT. Iman ${i}`,
-        address: `Jl. Iman ${i}`,
-        factory_id: prsj.id,
-      },
-    });
-    const products = await prisma.product.findMany({
-      where: {
-        factory_id: prsj.id,
-      },
-    });
-    const invoiceCode = `INV-${i.toString().padStart(3, "0")}`;
-    const baseAmount = Math.floor(Math.random() * 100) + 1; // Random amount between 1 and 100
-    const randomProduct = products[Math.floor(Math.random() * products.length)];
-    const pricePerUnit = randomProduct.price;
-    const subTotal = baseAmount * pricePerUnit;
-    const total = subTotal + subTotal * (ppns.percentage / 100);
-    const downPayment = Math.floor(total * 0.3); // 30% down payment
-    const remainingBalance = total - downPayment;
-    const paymentStatus = Math.random() < 0.5 ? "Paid" : "Pending";
-    const randomPaymentMethod = Math.floor(Math.random() * 5) + 1;
-    const invoice = await prisma.invoice.create({
-      data: {
-        factory_id: prsj.id,
-        created_at: new Date(
-          Math.floor(
-            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
-          ) + new Date(2025, 0, 1).getTime()
-        ),
-        user_id: admin.id,
-        is_distributor: true,
-        invoice_code: invoiceCode,
-        buyer_id: buyer.id,
-        maturity_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        item_amount: baseAmount,
-        down_payment: downPayment,
-        ppn: ppns.percentage,
-        payment_method_id: randomPaymentMethod,
-        total: total,
-        sub_total: subTotal,
-        remaining_balance: remainingBalance,
-        payment_status: paymentStatus,
-        detailInvoices: {
-          create: {
-            product_id: randomProduct.id,
-            desc: randomProduct.name,
-            amount: baseAmount,
-            price: pricePerUnit,
-            sub_total: subTotal,
-            is_product: true,
-          },
-        },
-      },
-    });
+  // for (let i = 1; i <= 1000; i++) {
+  //   const buyer = await prisma.buyer.create({
+  //     data: {
+  //       name: `PT. Iman ${i}`,
+  //       address: `Jl. Iman ${i}`,
+  //       factory_id: prsj.id,
+  //     },
+  //   });
+  //   const products = await prisma.product.findMany({
+  //     where: {
+  //       factory_id: prsj.id,
+  //     },
+  //   });
+  //   const invoiceCode = `INV-${i.toString().padStart(3, "0")}`;
+  //   const baseAmount = Math.floor(Math.random() * 100) + 1; // Random amount between 1 and 100
+  //   const randomProduct = products[Math.floor(Math.random() * products.length)];
+  //   const pricePerUnit = randomProduct.price;
+  //   const subTotal = baseAmount * pricePerUnit;
+  //   const total = subTotal + subTotal * (ppns.percentage / 100);
+  //   const downPayment = Math.floor(total * 0.3); // 30% down payment
+  //   const remainingBalance = total - downPayment;
+  //   const paymentStatus = Math.random() < 0.5 ? "Paid" : "Pending";
+  //   const randomPaymentMethod = Math.floor(Math.random() * 5) + 1;
+  //   const invoice = await prisma.invoice.create({
+  //     data: {
+  //       factory_id: prsj.id,
+  //       created_at: new Date(
+  //         Math.floor(
+  //           Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+  //         ) + new Date(2025, 0, 1).getTime()
+  //       ),
+  //       user_id: admin.id,
+  //       is_distributor: true,
+  //       invoice_code: invoiceCode,
+  //       buyer_id: buyer.id,
+  //       maturity_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+  //       item_amount: baseAmount,
+  //       down_payment: downPayment,
+  //       ppn: ppns.percentage,
+  //       payment_method_id: randomPaymentMethod,
+  //       total: total,
+  //       sub_total: subTotal,
+  //       remaining_balance: remainingBalance,
+  //       payment_status: paymentStatus,
+  //       detailInvoices: {
+  //         create: {
+  //           product_id: randomProduct.id,
+  //           desc: randomProduct.name,
+  //           amount: baseAmount,
+  //           price: pricePerUnit,
+  //           sub_total: subTotal,
+  //           is_product: true,
+  //         },
+  //       },
+  //     },
+  //   });
 
-    // Create location and delivery tracking for each invoice
-    const location = await prisma.location.create({
-      data: {
-        factory_id: prsj.id,
-        name: `Jl. Delivery ${i}`,
-        cost: 50000 + Math.random() * 100000, // Random cost between 50000 and 150000
-      },
-    });
+  //   // Create location and delivery tracking for each invoice
+  //   const location = await prisma.location.create({
+  //     data: {
+  //       factory_id: prsj.id,
+  //       name: `Jl. Delivery ${i}`,
+  //       cost: 50000 + Math.random() * 100000, // Random cost between 50000 and 150000
+  //     },
+  //   });
 
-    await prisma.deliveryTracking.create({
-      data: {
-        invoice_id: invoice.id,
-        desc: `Delivery for ${invoiceCode}`,
-        location_id: location.id,
-        latitude: -6.2088 + Math.random() * 0.1, // Slight random variation in coordinates
-        longitude: 106.8456 + Math.random() * 0.1,
-        cost: location.cost,
-        sales_man: `Sales Person ${i}`,
-        recipient: buyer.name,
-      },
-    });
-  }
+  //   await prisma.deliveryTracking.create({
+  //     data: {
+  //       invoice_id: invoice.id,
+  //       desc: `Delivery for ${invoiceCode}`,
+  //       location_id: location.id,
+  //       latitude: -6.2088 + Math.random() * 0.1, // Slight random variation in coordinates
+  //       longitude: 106.8456 + Math.random() * 0.1,
+  //       cost: location.cost,
+  //       sales_man: `Sales Person ${i}`,
+  //       recipient: buyer.name,
+  //     },
+  //   });
+  // }
 }
 
 main()
