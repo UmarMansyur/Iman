@@ -22,6 +22,7 @@ export default async function createMaterialUnit(
 
   const { id, material_id, unit_id, factory_id } = validatedFields.data;
   try {
+    let existingMaterialId: number;
     const existingMaterial: any = await prisma.material.findFirst({
       where: {
         factory_id: parseInt(factory_id),
@@ -36,14 +37,16 @@ export default async function createMaterialUnit(
           factory_id: parseInt(factory_id),
         },
       });
-      existingMaterial.id = material.id;
+      existingMaterialId = material.id;
+    } else {
+      existingMaterialId = Number(existingMaterial.id);
     }
 
     if (id) {
       await prisma.materialUnit.update({
         where: { id: parseInt(id) },
         data: {
-          material_id: parseInt(existingMaterial.id),
+          material_id: existingMaterialId,
           unit_id: parseInt(unit_id),
         },
       });
@@ -53,7 +56,7 @@ export default async function createMaterialUnit(
     }
     await prisma.materialUnit.create({
       data: {
-        material_id: parseInt(existingMaterial.id),
+        material_id: existingMaterialId,
         unit_id: parseInt(unit_id),
       },
     });
@@ -61,6 +64,7 @@ export default async function createMaterialUnit(
       message: "Satuan material berhasil dibuat",
     };
   } catch (error: any) {
+    console.log(error)
     return {
       message: error.message || "Gagal membuat satuan material",
     };

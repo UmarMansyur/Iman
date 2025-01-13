@@ -29,6 +29,10 @@ export default function PabrikPage() {
     sortOrder: "asc",
   });
 
+  useEffect(() => {
+    document.title = "Daftar Produk - Indera Distribution";
+  }, []);
+
   // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
   const { user } = useUserStore()

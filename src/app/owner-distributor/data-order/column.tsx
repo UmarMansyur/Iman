@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import DeleteButton from "@/components/delete-button";
 import Link from "next/link";
-import UploadBukti from "./upload-bukti";
 export const columns = (
   fetchData: () => Promise<void>,
   page: number,
@@ -149,12 +148,12 @@ export const columns = (
       if (row.original.total - row.original.down_payment < 0) {
         return (
           <div className="text-start">
-            Pengembalian Sebesar{" "}
+            Lebih {" "}
             {new Intl.NumberFormat("id-ID", {
               style: "currency",
               currency: "IDR",
             })
-              .format(row.original.total - row.original.down_payment)
+              .format(Math.abs(row.original.total - row.original.down_payment))
               .slice(0, -3)}
           </div>
         );
@@ -180,13 +179,6 @@ export const columns = (
           .slice(0, -3)}
       </div>
     ),
-  },
-  {
-    accessorKey: "proof_of_payment",
-    header: "Bukti Pembayaran",
-    cell: ({ row }) => {
-      return <UploadBukti data={row.original} fetchProducts={fetchData} />;
-    },
   },
   {
     accessorKey: "print",

@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { formatDateIndonesia, formatProduction } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import moment from "moment";
 // GET Request - Fetch Reports
 export async function GET(request: Request) {
   try {
@@ -85,7 +86,7 @@ export async function GET(request: Request) {
       },
     });
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Laporan Produksi");
+    const worksheet = workbook.addWorksheet("Laporan Produksi - " + factoryName + " - " + new Date().getFullYear());
 
     // Set kolom width
     worksheet.columns = [
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
     // Add title
     worksheet.mergeCells("A1:H1");
     const titleCell = worksheet.getCell("A1");
-    titleCell.value = `Laporan Produksi - ${factoryName}`;
+    titleCell.value = `Laporan Produksi - ${factoryName} dari ${moment(startDate).format("DD MMMM YYYY")} sampai ${moment(endDate).format("DD MMMM YYYY")}`;
     titleCell.font = { bold: true, size: 14 };
     titleCell.alignment = { vertical: "middle", horizontal: "center" };
 
@@ -165,7 +166,7 @@ export async function GET(request: Request) {
 
       const row = worksheet.addRow([
         formatDateIndonesia(item.created_at),
-        item.product.name,
+        item.product.name + " - " + item.product.type,
         item.morning_shift_user?.username || "",
         new Intl.NumberFormat("id-ID").format(morningProduction.pack),
         new Intl.NumberFormat("id-ID").format(morningProduction.bal),

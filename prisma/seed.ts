@@ -391,52 +391,52 @@ async function main(): Promise<void> {
     ],
   });
 
-  for (let i = 1; i <= 1000; i++) {
-    // random quantity tidak boleh ganjil
-    let randomQuantity = Math.floor(Math.random() * 100) + 1;
-    if (randomQuantity % 2 !== 0) {
-      randomQuantity++;
-    }
-    await prisma.reportProduct.create({
-      data: {
-        product_id: 1,
-        amount: randomQuantity,
-        factory_id: Math.floor(Math.random() * 2) + 1,
-        morning_shift_amount: randomQuantity / 2,
-        morning_shift_time: new Date(
-          Math.floor(
-            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
-          ) + new Date(2025, 0, 1).getTime()
-        ),
-        morning_shift_user_id: operator.id,
-        afternoon_shift_amount: randomQuantity / 2,
-        afternoon_shift_time: new Date(
-          Math.floor(
-            Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
-          ) + new Date(2025, 0, 1).getTime()
-        ),
-        afternoon_shift_user_id: operator.id,
-        StockProduct: {
-          create: {
-            amount: randomQuantity,
-            invoice_id: null,
-            product_id: Math.floor(Math.random() * 3) + 1,
-            type: "In",
-          },
-        },
-      },
-    });
-  }
+  // for (let i = 1; i <= 1000; i++) {
+  //   // random quantity tidak boleh ganjil
+  //   let randomQuantity = Math.floor(Math.random() * 100) + 1;
+  //   if (randomQuantity % 2 !== 0) {
+  //     randomQuantity++;
+  //   }
+  //   await prisma.reportProduct.create({
+  //     data: {
+  //       product_id: 1,
+  //       amount: randomQuantity,
+  //       factory_id: Math.floor(Math.random() * 2) + 1,
+  //       morning_shift_amount: randomQuantity / 2,
+  //       morning_shift_time: new Date(
+  //         Math.floor(
+  //           Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+  //         ) + new Date(2025, 0, 1).getTime()
+  //       ),
+  //       morning_shift_user_id: operator.id,
+  //       afternoon_shift_amount: randomQuantity / 2,
+  //       afternoon_shift_time: new Date(
+  //         Math.floor(
+  //           Math.random() * (Date.now() - new Date(2025, 0, 1).getTime())
+  //         ) + new Date(2025, 0, 1).getTime()
+  //       ),
+  //       afternoon_shift_user_id: operator.id,
+  //       StockProduct: {
+  //         create: {
+  //           amount: randomQuantity,
+  //           invoice_id: null,
+  //           product_id: Math.floor(Math.random() * 3) + 1,
+  //           type: "In",
+  //         },
+  //       },
+  //     },
+  //   });
+  // }
 
-  await prisma.reportCost.create({
-    data: {
-      material_id: 1,
-      amount: 100,
-      factory_id: prsj.id,
-      unit_id: 1,
-      user_id: operator.id,
-    },
-  });
+  // await prisma.reportCost.create({
+  //   data: {
+  //     material_id: 1,
+  //     amount: 100,
+  //     factory_id: prsj.id,
+  //     unit_id: 1,
+  //     user_id: operator.id,
+  //   },
+  // });
 
   const ppns = await prisma.pPN.create({
     data: {

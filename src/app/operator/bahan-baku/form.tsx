@@ -53,11 +53,12 @@ export default function Form({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    formData.append("id", materialUnit?.id.toString() || "");
+    formData.append("id", materialUnit?.id?.toString() || "");
     formData.append("factory_id", user?.factory_selected?.id?.toString() || "");
     formData.append("material_id", material || "");
-    formData.append("unit_id", selectedUnit?.id.toString() || "");
+    formData.append("unit_id", selectedUnit?.id?.toString() || "");
     const response = await createMaterialUnit(undefined, formData);
+
     if (response?.errors) {
       setState(response.errors as MaterialUnitFormState);
       toast.error(
