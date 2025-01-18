@@ -34,16 +34,18 @@ enum RoleDistributor {
 }
 
 model FactoryDistributor {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  no_hp              String?
-  address            String?
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
-  MemberDistributor  MemberDistributor[]
-  Factory            Factory?             @relation(fields: [factoryId], references: [id])
-  factoryId          Int?
-  MemberPriceProduct MemberPriceProduct[]
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  no_hp                     String?
+  address                   String?
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  MemberDistributor         MemberDistributor[]
+  Factory                   Factory?                    @relation(fields: [factoryId], references: [id])
+  factoryId                 Int?
+  MemberPriceProduct        MemberPriceProduct[]
+  OrderBahanBakuDistributor OrderBahanBakuDistributor[]
+  MaterialDistributor       MaterialDistributor[]
 
   @@map("factory_distributors")
 }
@@ -83,8 +85,8 @@ model User {
   MemberPriceProduct           MemberPriceProduct[]
   ReportMaterialStock          ReportMaterialStock[]
   OrderMaterialUnit            OrderMaterialUnit[]
-  morningShiftReportProducts   ReportProduct[]          @relation("report_product_morning_shift_user")
-  afternoonShiftReportProducts ReportProduct[]          @relation("report_product_afternoon_shift_user")
+  morningShiftReportProducts   ReportProduct[]             @relation("report_product_morning_shift_user")
+  afternoonShiftReportProducts ReportProduct[]             @relation("report_product_afternoon_shift_user")
   TransactionDistributor       TransactionDistributor[]
   BuyerDistributor             BuyerDistributor[]
   LocationDistributor          LocationDistributor[]
@@ -92,6 +94,7 @@ model User {
   InvoiceJasa                  InvoiceJasa[]
   TransactionService           TransactionService[]
   MemberDistributor            MemberDistributor[]
+  OrderBahanBakuDistributor    OrderBahanBakuDistributor[]
 
   @@map("users")
 }
@@ -210,10 +213,11 @@ model Material {
 }
 
 model Unit {
-  id           Int            @id @default(autoincrement())
-  name         String
-  reportCosts  ReportCost[]
-  MaterialUnit MaterialUnit[]
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  reportCosts         ReportCost[]
+  MaterialUnit        MaterialUnit[]
+  MaterialDistributor MaterialDistributor[]
 
   @@map("units")
 }
@@ -828,4 +832,42 @@ model Service {
   DetailTransactionService DetailTransactionService[]
 
   @@map("services")
+}
+
+model OrderBahanBakuDistributor {
+  id                              Int                               @id @default(autoincrement())
+  factory                         String
+  factoryDistributor              FactoryDistributor                @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id          Int
+  distributor                     User                              @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id                  Int
+  desc                            String                            @db.Text
+  total                           Float                             @db.Double
+  type_preorder                   Boolean
+  created_at                      DateTime
+  updated_at                      DateTime
+  DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+}
+
+model MaterialDistributor {
+  id                              Int                               @id @default(autoincrement())
+  order_code                      String                            @unique
+  name                            String                            @db.VarChar(200)
+  factoryDistributor              FactoryDistributor                @relation(fields: [factory_distributor_id], onDelete: Cascade, references: [id])
+  factory_distributor_id          Int
+  unit                            Unit                              @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id                         Int
+  DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+}
+
+model DetailOrderBahanBakuDistributor {
+  id                              Int                       @id @default(autoincrement())
+  order_bahan_baku_distributor    OrderBahanBakuDistributor @relation(fields: [order_bahan_baku_distributor_id], references: [id], onDelete: Cascade)
+  order_bahan_baku_distributor_id Int
+  material_distributor            MaterialDistributor       @relation(fields: [material_distributor_id], references: [id], onDelete: Cascade)
+  material_distributor_id         Int
+  amount_received                 Float?
+  amount                          Float
+  price                           Float
+  sub_total                       Float
 }

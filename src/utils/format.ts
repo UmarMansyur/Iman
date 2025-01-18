@@ -12,8 +12,16 @@ const formatWithComma = (value: string) => {
   return parts.length > 1 ? `${integerPart},${parts[1]}` : integerPart;
 };
 
-const parseFormattedNumber = (value: string) => {
-  return Number(value.replace(/\./g, '').replace(',', '.'));
+const formatNumberWithComma = (value: string) => {
+  if (!value) return '';
+  const stringValue = value.toString();
+  const parts = stringValue.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return parts.length > 1 ? `${parts[0]},${parts[1]}` : parts[0];
 };
 
-export { formatNumber, formatWithComma, parseFormattedNumber };
+const parseFormattedNumber = (value: string) => {
+  return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+};
+
+export { formatNumber, formatWithComma, formatNumberWithComma, parseFormattedNumber };

@@ -249,6 +249,21 @@ const data = {
       icon: Home,
     },
     {
+      title: "Bahan Baku",
+      url: "/distributor/bahan-baku",
+      icon: Combine,
+      items: [
+        {
+          title: "Daftar Bahan Baku",
+          url: "/distributor/bahan-baku",
+        },
+        {
+          title: "Order Bahan Baku",
+          url: "/distributor/order-bahan-baku",
+        },
+      ]
+    },
+    {
       title: "Data Produk",
       url: "/distributor/data-produk",
       icon: PackageSearch,
