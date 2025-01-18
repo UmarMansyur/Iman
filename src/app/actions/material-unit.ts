@@ -42,7 +42,7 @@ export default async function createMaterialUnit(
       existingMaterialId = Number(existingMaterial.id);
     }
 
-    if (id) {
+    if (id && id !== "undefined" && id !== "null" && id !== "") {
       await prisma.materialUnit.update({
         where: { id: parseInt(id) },
         data: {
