@@ -219,7 +219,7 @@ export async function PATCH(request: Request, { params }: any) {
 
           const detailOrder = await tx.detailOrderMaterialUnit.update({
             where: { id: parseInt(id) },
-            data: { amount_received: parseInt(amount_received) },
+            data: { amount_received: Number(amount_received) },
           });
 
           const existingMaterialStock = await tx.materialStock.findFirst({
@@ -233,13 +233,13 @@ export async function PATCH(request: Request, { params }: any) {
           if(existingMaterialStock) {
             await tx.materialStock.update({
               where: { id: existingMaterialStock.id },
-              data: { amount: parseInt(amount_received) },
+              data: { amount: Number(amount_received) },
             });
           } else {
             await tx.materialStock.create({
               data: {
                 material_unit_id: existingDetailOrder.material_unit_id,
-                amount: parseInt(amount_received),
+                amount: Number(amount_received),
                 factory_id: parseInt(factory_id),
                 order_material_unit_id: parseInt(orderId),
                 status: "In" as MaterialStockStatus,
@@ -260,13 +260,13 @@ export async function PATCH(request: Request, { params }: any) {
           if (log) {
             await tx.logOrderDetailMaterialUnit.update({
               where: { id: log.id },
-              data: { amount_received: parseInt(amount_received) },
+              data: { amount_received: Number(amount_received) },
             });
           } else {
             await tx.logOrderDetailMaterialUnit.create({
               data: {
                 detail_order_material_unit_id: detailOrder.id,
-                amount_received: parseInt(amount_received),
+                amount_received: Number(amount_received),
                 materialUnitId: parseInt(id),
               },
             });

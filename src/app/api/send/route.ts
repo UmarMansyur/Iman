@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
 
     const { data, error } = await resend.emails.send({
-      from: 'no-reply@sinikendp.com',
+      from: 'no-replyinderadistribution.com',
       to: [email.toString()],
       subject: 'Undangan Keanggotaan Pabrik',
       react: EmailTemplate({ senderName: senderName?.toString(), recipientName: name.toString(), subject: 'Undangan Keanggotaan Pabrik', message: 'Hai ' + name.toString() + ' kami mengundang anda untuk menjadi anggota pabrik kami. Silakan klik tombol di bawah ini untuk mengaktifkan undangan anda.', token: token }),

@@ -45,7 +45,7 @@ export function DataTableColumnHeader({
   };
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild className="flex items-center">
         <Button 
           variant="ghost" 

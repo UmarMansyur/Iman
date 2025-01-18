@@ -1,7 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
+'use client'
 import MainPage from "@/components/main";
 import {
   Card,
@@ -34,7 +32,8 @@ import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
 import EmptyData from "@/components/views/empty-data";
 import { TableCell } from "@/components/ui/table";
-import { formatNumber } from "@/utils/format";
+import { formatWithComma, parseFormattedNumber } from "@/utils/format";
+
 interface DetailOrder {
   material_unit_id: string;
   amount: number;
@@ -42,24 +41,33 @@ interface DetailOrder {
   sub_total: number;
 }
 
+// Fungsi untuk memformat angka dengan koma sebagai pemisah ribuan
+
+
 export default function OrderPage() {
   const [details, setDetails] = useState<DetailOrder[]>([]);
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
 
   const router = useRouter();
 
   const [currentMaterial, setCurrentMaterial] = useState("");
-  const [currentAmount, setCurrentAmount] = useState<string>("");
+  const [currentAmount, setCurrentAmount] = useState("");
+
+  const calculateTotal = (amount: string, price: string) => {
+    const numAmount = parseFormattedNumber(amount || "0");
+    const numPrice = parseFormattedNumber(price || "0");
+    return numAmount * numPrice;
+  };
 
   const addDetail = () => {
     if (!currentMaterial) {
       toast.error("Pilih bahan baku terlebih dahulu");
       return;
     }
-    if (!currentAmount || Number(currentAmount) <= 0) {
+    if (!currentAmount || parseFormattedNumber(currentAmount) <= 0) {
       toast.error("Jumlah harus lebih dari 0");
       return;
     }
@@ -73,23 +81,26 @@ export default function OrderPage() {
       );
       return;
     }
+
     setDetails([
       ...details,
       {
         material_unit_id: currentMaterial,
-        amount: Number(currentAmount.replace(/,/g, "")),
-        price: Number(`${price}`.replace(/,/g, "")),
-        sub_total: Number(`${totalPrice}`.replace(/,/g, "")),
+        amount: parseFormattedNumber(currentAmount),
+        price: parseFormattedNumber(price),
+        sub_total: calculateTotal(currentAmount, price),
       },
     ]);
 
     setCurrentMaterial("");
     setCurrentAmount("");
-    setPrice(0);
+    setPrice("");
     setTotalPrice(0);
   };
+
   const { user } = useUserStore();
   const [materials, setMaterials] = useState<any[]>([]);
+  
   useEffect(() => {
     const fetchMaterials = async () => {
       const response = await fetch("/api/material-unit?limit=1000&page=1&factory_id=" + user?.factory_selected?.id);
@@ -194,7 +205,6 @@ export default function OrderPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
-                  // error jika tidak diisi
                   aria-invalid={!description}
                 />
               </div>
@@ -233,15 +243,9 @@ export default function OrderPage() {
                     type="text"
                     value={currentAmount}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, "");
-                      if (/^\d*$/.test(value) || value === "") {
-                        setCurrentAmount(formatNumber(value));
-                        const amountInput = value.replace(/,/g, "");
-                        setTotalPrice(
-                          Number(`${price}`.replace(/,/g, "")) *
-                            Number(amountInput)
-                        );
-                      }
+                      const formattedValue = formatWithComma(e.target.value);
+                      setCurrentAmount(formattedValue);
+                      setTotalPrice(calculateTotal(formattedValue, price));
                     }}
                     placeholder="Jumlah"
                   />
@@ -250,15 +254,11 @@ export default function OrderPage() {
                   <label>Harga</label>
                   <Input
                     type="text"
-                    value={price || ""}
+                    value={price}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, "");
-                      if (/^\d*$/.test(value) || value === "") {
-                        setPrice(formatNumber(`${value}`));
-                        const priceInput = value.replace(/,/g, "");
-                        const amountInput = currentAmount.replace(/,/g, "");
-                        setTotalPrice(Number(priceInput) * Number(amountInput));
-                      }
+                      const formattedValue = formatWithComma(e.target.value);
+                      setPrice(formattedValue);
+                      setTotalPrice(calculateTotal(currentAmount, formattedValue));
                     }}
                     placeholder="Rp. 0"
                   />
@@ -310,7 +310,7 @@ export default function OrderPage() {
                           }
                         </td>
                         <td className="px-4 py-2">
-                          {formatNumber(detail.amount.toString())}
+                          {formatWithComma(detail.amount.toString())}
                         </td>
                         <td className="px-4 py-2">
                           {formatIdr(detail.price)}

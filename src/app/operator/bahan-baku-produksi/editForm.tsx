@@ -73,8 +73,23 @@ export default function EditMaterialStockReport({
   const { user } = useUserStore();
 
   const formatNumber = (value: string) => {
-    const number = value.replace(/\D/g, "");
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    let number = value.replace(/[^\d,.]/g, "");
+    
+    number = number.replace(/\./g, "");
+    
+    const parts = number.split(",");
+    if (parts.length > 2) {
+      number = parts[0] + "," + parts[1];
+    }
+    
+    const [integerPart, decimalPart] = number.split(",");
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    
+    return decimalPart !== undefined ? `${formattedInteger},${decimalPart}` : formattedInteger;
+  };
+
+  const parseAmount = (value: string): number => {
+    return parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
   };
 
   useEffect(() => {
@@ -96,7 +111,9 @@ export default function EditMaterialStockReport({
       toast.error("Pilih material terlebih dahulu");
       return;
     }
-    if (!currentAmount || Number(currentAmount) <= 0) {
+
+    const amount = parseAmount(currentAmount);
+    if (!amount || amount <= 0) {
       toast.error("Jumlah harus lebih dari 0");
       return;
     }
@@ -106,13 +123,9 @@ export default function EditMaterialStockReport({
     );
 
     if (existingDetail) {
-      // update amount
       const updatedDetails = details.map((detail) =>
         detail.material_unit_id === currentMaterial
-          ? {
-              ...detail,
-              amount: Number(currentAmount.replace(/,/g, "")) + detail.amount,
-            }
+          ? { ...detail, amount: parseFloat((amount + detail.amount).toFixed(2)) }
           : detail
       );
       setDetails(updatedDetails);
@@ -121,7 +134,7 @@ export default function EditMaterialStockReport({
         ...details,
         {
           material_unit_id: currentMaterial,
-          amount: Number(currentAmount.replace(/,/g, "")),
+          amount: parseFloat(amount.toFixed(2)),
         },
       ]);
     }
@@ -146,9 +159,9 @@ export default function EditMaterialStockReport({
         factory_id: user?.factory_selected?.id,
         details: details.map((detail) => ({
           material_unit_id: detail.material_unit_id,
-          amount: detail.amount,
+          amount: parseFloat(detail.amount.toFixed(2)),
         })),
-        total_amount: details.reduce((acc, curr) => acc + curr.amount, 0),
+        total_amount: parseFloat(details.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)),
       };
 
       const response = await fetch(
@@ -239,10 +252,8 @@ export default function EditMaterialStockReport({
                 type="text"
                 value={currentAmount}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/,/g, "");
-                  if (/^\d*$/.test(value) || value === "") {
-                    setCurrentAmount(formatNumber(value));
-                  }
+                  const formatted = formatNumber(e.target.value);
+                  setCurrentAmount(formatted);
                 }}
                 placeholder="Jumlah"
               />
@@ -281,7 +292,7 @@ export default function EditMaterialStockReport({
                       }
                     </td>
                     <td className="px-4 py-2">
-                      {formatNumber(detail.amount.toString())}
+                      {formatNumber(detail.amount.toString().replace(".", ","))}
                     </td>
                     <td className="px-4 py-2">
                       <Button

@@ -138,7 +138,7 @@ const PrintInvoice = ({ params }: { params: any }) => {
                   <tr className="border-b border-gray-300">
                     <th className="text-left py-1">No</th>
                     <th className="text-left py-1">Produk</th>
-                    <th className="text-right py-1">Jumlah</th>
+                    <th className="text-right py-1">Jumlah (Pack)</th>
                     <th className="text-right py-1">Harga</th>
                     <th className="text-right py-1">Total</th>
                   </tr>

@@ -63,8 +63,9 @@ export async function PATCH(
       });
 
       if (detailInvoice.length > 0) {
+        
         const productStock = await tx.stockProduct.groupBy({
-          by: ["product_id"],
+          by: ["product_id", "type"],
           where: {
             product_id: {
               in: detailInvoice
@@ -79,50 +80,33 @@ export async function PATCH(
           },
         });
 
-        const outProductStock = await tx.stockProduct.groupBy({
-          by: ["product_id"],
-          where: {
-            product_id: {
-              in: detailInvoice
-                .map((item) => item.product_id)
-                .filter((item) => item !== null),
-            },
-            type: "Out",
-          },
-
-          _sum: {
-            amount: true,
-          },
-        });
-        // Calculate stock for each product by subtracting Out from In amounts
-        const stocks = productStock.map((inStock) => {
-          const outStock = outProductStock.find(
-            (out) => out.product_id === inStock.product_id
-          );
-          const inAmount = inStock._sum.amount || 0;
-          const outAmount = outStock?._sum.amount || 0;
-          return {
-            product_id: inStock.product_id,
-            amount: inAmount - outAmount,
-          };
+        const dataProduct = await tx.product.findMany({
+          where: { id: { in: detailInvoice.map((item) => item.product_id).filter((item) => item !== null) } },
         });
 
-        // jika ada stok product yang kurang dari jumlah detailInvoice
         detailInvoice.map((item) => {
-          const stock = stocks.find(
-            (stock) => stock.product_id === item.product_id
-          );
-          if (stock && stock.amount < item.amount) {
+          const stockIn = productStock.find(
+            (stock) => stock.product_id === item.product_id && stock.type === "In"
+          )?._sum.amount || 0;
+          const stockOut = productStock.find(
+            (stock) => stock.product_id === item.product_id && stock.type === "Out"
+          )?._sum.amount || 0;
+
+          const stock = (stockIn - stockOut) / 200;
+
+          if (stock < item.amount) {
+            const exist = dataProduct.find((p) => p.id === item.product_id);
             throw new Error(
-              `Stok product ${item.product_id} kurang dari jumlah ${item.amount}`
+              `Stok product ${exist?.name + " " + exist?.type || ""} tidak mencukupi`
             );
           }
         });
 
+
         await tx.stockProduct.createMany({
-          data: stocks.map((item) => ({
-            product_id: item.product_id,
-            amount: item.amount,
+          data: detailInvoice.map((item) => ({
+            product_id: Number(item.product_id),
+            amount: item.amount * (dataProduct.find((p: any) => p.id === item.product_id)?.per_bal || 200),
             type: "Out",
             invoice_id: Number(id),
           })),

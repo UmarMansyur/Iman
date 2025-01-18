@@ -4,15 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { columns } from "./column";
 import { DataTable } from "./data-table";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Loader2, PlusCircle, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import MainPage from "@/components/main";
 import LoaderScreen from "@/components/views/loader";
 import { Input } from "@/components/ui/input";
 import debounce from "lodash/debounce";
 import { PaymentSetting } from "@/lib/definitions";
 import { useUserStore } from "@/store/user-store";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function PabrikPage() {
   const [data, setData] = useState<PaymentSetting[]>([]);
@@ -50,8 +48,6 @@ export default function PabrikPage() {
         type_preorder: "1",
       });
 
-  
-  
       const response = await fetch(`/api/transaction?${queryParams}&user_id=${user?.id}`);
       const data = await response.json();
 
@@ -103,6 +99,10 @@ export default function PabrikPage() {
     }));
   };
 
+  useEffect(() => {
+    document.title = "Data Order - Indera Distribution";
+  }, []);
+
   return (
     <MainPage>
       {loading ? (
@@ -128,12 +128,6 @@ export default function PabrikPage() {
                 />
               </div>
             </div>
-            <Link href="/distributor/pre-order">
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Tambah Order
-              </Button>
-            </Link>
           </div>
           {loadingSearch ? (
             <div className="flex justify-center items-center h-24">

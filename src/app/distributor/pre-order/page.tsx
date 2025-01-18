@@ -133,8 +133,8 @@ export default function CreateTransaction() {
         product.find((item: any) => item.id === product_id)?.name +
         " - " +
         product.find((item: any) => item.id === product_id)?.type,
-      jumlah: jumlah,
-      harga: priceProductBall,
+      jumlah: jumlah * (product.find((item: any) => item.id === product_id)?.per_bal || 200),
+      harga: priceProduct,
       total: totalPrice,
       diskon: diskon,
       total_harga: totalHarga,
@@ -178,7 +178,7 @@ export default function CreateTransaction() {
     setProductId(selectedProduct?.id);
     setTotalHarga(0);
     setTotalPrice(0);
-    setPriceProductBall(selectedProduct?.price * 200);
+    setPriceProductBall(selectedProduct?.price * (selectedProduct?.per_bal || 200));
     // ambil factory_distributor_id dari selectedProduct
   };
 
@@ -203,7 +203,7 @@ export default function CreateTransaction() {
       return;
     }
 
-    const packAmount = jumlah * 200;
+    const packAmount = jumlah * (product.find((item: any) => item.id === product_id)?.per_bal || 200);
     const subTotal = packAmount * priceProduct;
 
     setAmountPack(packAmount);
@@ -305,7 +305,7 @@ export default function CreateTransaction() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label className="font-medium text-sm">Jumlah Bal</Label>
+                <Label className="font-medium text-sm">Jumlah (Bal)</Label>
                 <Input
                   type="text"
                   placeholder="Masukkan jumlah bal"
@@ -398,8 +398,8 @@ export default function CreateTransaction() {
                 <TableRow className="bg-muted">
                   <TableHead className="text-center w-16">No</TableHead>
                   <TableHead>Nama Produk</TableHead>
-                  <TableHead className="text-center">Jumlah(Bal)</TableHead>
-                  <TableHead className="text-end">Harga Produk/Bal</TableHead>
+                  <TableHead className="text-center">Jumlah(Pack)</TableHead>
+                  <TableHead className="text-end">Harga Produk/Pack</TableHead>
                   <TableHead className="text-end">Total</TableHead>
                   <TableHead className="text-center w-20">Aksi</TableHead>
                 </TableRow>
@@ -410,7 +410,9 @@ export default function CreateTransaction() {
                     <TableCell className=" text-center">{index + 1}</TableCell>
                     <TableCell className="">{item.desc}</TableCell>
                     <TableCell className=" text-center">
-                      {item.jumlah}
+                      {
+                        new Intl.NumberFormat("id-ID").format(item.jumlah)
+                      }
                     </TableCell>
                     <TableCell className="text-end">
                       {new Intl.NumberFormat("id-ID", {

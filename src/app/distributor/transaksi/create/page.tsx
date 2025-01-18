@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Search, SearchCheckIcon, ShoppingCart, Trash2 } from "lucide-react";
 import EmptyData from "@/components/views/empty-data";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function CreateTransaction() {
   const { user } = useUserStore();
@@ -71,20 +72,21 @@ export default function CreateTransaction() {
   const [open, setOpen] = useState(false);
   const [searchBuyer, setSearchBuyer] = useState<string>("");
   const [filteredBuyer, setFilteredBuyer] = useState<any[]>([]);
+  const [purchaseUnit, setPurchaseUnit] = useState<
+    "pack" | "slop" | "bal" | "karton"
+  >("pack");
 
   const getProduct = async () => {
     const response = await fetch(
       `/api/distributor-product?user_id=${user?.id}`
     );
     const data = await response.json();
-    
+
     if (!data.products) {
-      toast.error(
-        "Terjadi kesalahan saat mengambil data produk"
-      );
+      toast.error("Terjadi kesalahan saat mengambil data produk");
       return;
     }
-    
+
     if (data.products.length === 0) {
       toast.error(
         "Tidak ada data produk yang tersedia, Silahkan hubungi operator pabrik dan set harga di halaman data produk"
@@ -96,7 +98,7 @@ export default function CreateTransaction() {
 
   const handleSelectProduct = (value: string) => {
     setSelectedProduct(value);
-    
+
     // Ambil produk yang dipilih
     const selectedProductData = product.find((item: any) => item.id == value);
     // Set harga langsung dari data produk
@@ -122,7 +124,7 @@ export default function CreateTransaction() {
   // Fungsi untuk mendapatkan data yang ditampilkan di halaman saat ini
   const getCurrentPageData = () => {
     if (!filteredBuyer?.length) return [];
-    
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredBuyer.slice(startIndex, endIndex);
@@ -130,7 +132,7 @@ export default function CreateTransaction() {
 
   const handleSearchBuyer = async () => {
     if (!existingBuyers) return;
-    
+
     const filteredBuyer = existingBuyers.filter((buyer: any) =>
       buyer.name.toLowerCase().includes(searchBuyer.toLowerCase())
     );
@@ -161,13 +163,28 @@ export default function CreateTransaction() {
 
   const addToCart = () => {
     if (!selectedProduct) return;
-    const productData = product.find(
-      (item: any) => item.id == selectedProduct
-    );
+    const productData = product.find((item: any) => item.id == selectedProduct);
 
     if (quantity <= 0 || price <= 0) {
       toast.error("Jumlah dan harga harus lebih dari 0");
       return;
+    }
+
+    // Konversi quantity berdasarkan unit yang dipilih
+    let convertedQuantity = quantity;
+
+    switch (purchaseUnit) {
+      case "slop":
+        convertedQuantity = quantity * (productData?.per_slop || 10); // 1 slop = 10 pack
+        break;
+      case "bal":
+        convertedQuantity = quantity * (productData?.per_bal || 200); // 1 bal = 200 pack
+        break;
+      case "karton":
+        convertedQuantity = quantity * (productData?.per_karton || 800); // 1 karton = 100 pack
+        break;
+      default:
+        break;
     }
 
     // jika sudah ada di cart maka tambahkan quantitynya
@@ -175,8 +192,8 @@ export default function CreateTransaction() {
       (item) => item.product_id === selectedProduct
     );
     if (existingItem) {
-      existingItem.quantity += quantity;
-      existingItem.subtotal = existingItem.quantity * (price * 200);
+      existingItem.quantity += convertedQuantity;
+      existingItem.subtotal = existingItem.quantity * price;
     } else {
       setCart([
         ...cart,
@@ -184,9 +201,10 @@ export default function CreateTransaction() {
           product_id: selectedProduct,
           product_name: productData?.name + " - " + productData?.type,
           product_type: productData?.type,
-          quantity: quantity,
-          price: price * 200,
-          subtotal: quantity * price * 200,
+          quantity: convertedQuantity,
+          price: price,
+          subtotal: convertedQuantity * price,
+          purchase_unit: purchaseUnit,
         },
       ]);
     }
@@ -264,7 +282,7 @@ export default function CreateTransaction() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Terjadi kesalahan");
       } else {
@@ -312,8 +330,24 @@ export default function CreateTransaction() {
   }, [user?.id]);
 
   useEffect(() => {
-    setSubtotal(quantity * (price * 200));
-  }, [quantity, price]);
+    if (!selectedProduct) return;
+    // jika purchase unit adalah pack maka harga per pack
+    if (purchaseUnit === "pack") {
+      setSubtotal(quantity * price);
+    }
+    // jika purchase unit adalah slop maka harga per slop
+    if (purchaseUnit === "slop") {
+      setSubtotal(quantity * price * (product.find((item: any) => item.id == selectedProduct)?.per_slop || 10));
+    }
+    // jika purchase unit adalah bal maka harga per bal
+    if (purchaseUnit === "bal") {
+      setSubtotal(quantity * price * (product.find((item: any) => item.id == selectedProduct)?.per_bal || 200));
+    }
+    // jika purchase unit adalah karton maka harga per karton
+    if (purchaseUnit === "karton") {
+      setSubtotal(quantity * price * (product.find((item: any) => item.id == selectedProduct)?.per_karton || 800));
+    }
+  }, [quantity, price, purchaseUnit, selectedProduct]);
 
   useEffect(() => {
     const total = cart.reduce((acc, item) => acc + item.subtotal, 0);
@@ -329,7 +363,7 @@ export default function CreateTransaction() {
         </CardHeader>
         <CardContent>
           <form>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2 mb-3">
                 <Label>Produk</Label>
                 <Select
@@ -343,21 +377,51 @@ export default function CreateTransaction() {
                             (item: any) => item.id == selectedProduct
                           )?.name +
                           " - " +
-                          product.find(
-                            (item) => item.id == selectedProduct
-                          )?.type
+                          product.find((item) => item.id == selectedProduct)
+                            ?.type
                         : "Pilih Produk"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {product.map((item: any) => (
-                      <SelectItem
-                        key={item.id}
-                        value={item.id.toString()}
-                      >
+                      <SelectItem key={item.id} value={item.id.toString()}>
                         {item.name} - {item.type}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Satuan Pembelian</Label>
+                <Select
+                  value={purchaseUnit}
+                  onValueChange={(value: "pack" | "slop" | "bal" | "karton") =>
+                    setPurchaseUnit(value)
+                  }
+                >
+                  <SelectTrigger disabled={!selectedProduct}>
+                    <SelectValue placeholder="Pilih Satuan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pack">Pack</SelectItem>
+                    <SelectItem value="slop">
+                      Slop (
+                      {product.find((item: any) => item.id == selectedProduct)
+                        ?.per_slop || 10}{" "}
+                      Pack){" "}
+                    </SelectItem>
+                    <SelectItem value="bal">
+                      Bal (
+                      {product.find((item: any) => item.id == selectedProduct)
+                        ?.per_bal || 200}{" "}
+                      Pack)
+                    </SelectItem>
+                    <SelectItem value="karton">
+                      Karton (
+                      {product.find((item: any) => item.id == selectedProduct)
+                        ?.per_karton || 800}{" "}
+                      Pack)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -379,10 +443,24 @@ export default function CreateTransaction() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label>Harga Per Ball</Label>
+                <Label>Harga Per {purchaseUnit}</Label>
                 <Input
                   type="text"
-                  value={formatRibuan(price * 200)}
+                  value={
+                    // jika purchase unit adalah pack maka harga per pack
+                    purchaseUnit === "pack"
+                      ? formatRibuan(price)
+                      : // jika purchase unit adalah slop maka harga per slop
+                        purchaseUnit === "slop"
+                      ? formatRibuan(price * (product.find((item: any) => item.id == selectedProduct)?.per_slop || 10))
+                      : // jika purchase unit adalah bal maka harga per bal
+                        purchaseUnit === "bal"
+                      ? formatRibuan(price * (product.find((item: any) => item.id == selectedProduct)?.per_bal || 200))
+                      : // jika purchase unit adalah karton maka harga per karton
+                        purchaseUnit === "karton"
+                      ? formatRibuan(price * (product.find((item: any) => item.id == selectedProduct)?.per_karton || 800))
+                      : ""
+                  }
                   onChange={(e) => {
                     const value = e.target.value.replace(/\./g, "");
                     setPrice(Number(value));
@@ -413,6 +491,11 @@ export default function CreateTransaction() {
         </CardHeader>
         <CardContent>
           <div className="relative overflow-x-auto">
+            {/* berikan alert bahwa jumlah akan dikonversi ke pack */}
+            <Alert variant="default" className="mb-4">
+              <AlertTitle>Perhatian</AlertTitle>
+              <AlertDescription>Jumlah akan dikonversi ke pack oleh sistem secara otomatis jika satuan pembelian bukan pack!</AlertDescription>
+            </Alert>
             <table className="w-full text-sm text-left rtl:text-right">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>

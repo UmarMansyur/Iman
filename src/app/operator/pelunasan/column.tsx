@@ -2,8 +2,8 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
+import StatusPayment from "@/components/status-payment";
 
 export const columns = (
   page: number,
@@ -49,46 +49,7 @@ export const columns = (
     ),
     cell: ({ row }) => {
       const status = row.original.payment_status;
-      if (status === "Pending") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}
-          >
-            {status}
-          </Badge>
-        );
-      }
-      if (status === "Paid") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}
-          >
-            {status}
-          </Badge>
-        );
-      }
-      if (status === "Failed") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            {status}
-          </Badge>
-        );
-      }
-      if (status === "Cancelled") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            {status}
-          </Badge>
-        );
-      }
+      return <StatusPayment status={status} />
     },
   },
   {

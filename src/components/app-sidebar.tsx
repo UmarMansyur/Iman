@@ -206,21 +206,21 @@ const data = {
         },
       ],
     },
-    {
-      title: "Transaksi Produk",
-      url: "/operator/transaksi",
-      icon: ShoppingBagIcon,
-      items: [
-        {
-          title: "Daftar Transaksi",
-          url: "/operator/transaksi",
-        },
-        {
-          title: "Pengiriman",
-          url: "/operator/transaksi/pengiriman",
-        },
-      ],
-    },
+    // {
+    //   title: "Transaksi Produk",
+    //   url: "/operator/transaksi",
+    //   icon: ShoppingBagIcon,
+    //   items: [
+    //     {
+    //       title: "Daftar Transaksi",
+    //       url: "/operator/transaksi",
+    //     },
+    //     {
+    //       title: "Pengiriman",
+    //       url: "/operator/transaksi/pengiriman",
+    //     },
+    //   ],
+    // },
     {
       title: "Data Layanan Jasa",
       url: "/operator/service",
@@ -259,8 +259,16 @@ const data = {
       icon: SendToBack,
       items: [
         {
-          title: "Data Order",
+          title: "Tambah Order",
+          url: "/distributor/pre-order",
+        },
+        {
+          title: "Daftar Order",
           url: "/distributor/data-order",
+        },
+        {
+          title: "Upload Bukti Pembayaran",
+          url: "/distributor/upload-bukti-pembayaran",
         },
         {
           title: "Konfirmasi Penerimaan Order",

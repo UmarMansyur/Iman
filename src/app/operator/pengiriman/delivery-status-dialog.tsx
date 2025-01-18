@@ -29,7 +29,6 @@ import {
   CalendarIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +40,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { UseBaseMutationResult, useMutation, useQueryClient } from "@tanstack/react-query";
+import StatusDelivery from "@/components/StatusDelivery";
 
 export default function DeliveryStatusDialog({
   invoice,
@@ -61,7 +61,7 @@ export default function DeliveryStatusDialog({
     invoice?.deliveryTracking[0]?.sales_man || ""
   );
 
-  const [desc, setDesc] = useState(invoice?.deliveryTracking[0]?.desc || "");
+  const [desc, setDesc] = useState(invoice?.deliveryTracking[0]?.desc || "Paket sedang dalam perjalanan menuju alamat tujuan");
 
   const [recipient, setRecipient] = useState(
     invoice?.deliveryTracking[0]?.recipient || ""
@@ -112,22 +112,6 @@ export default function DeliveryStatusDialog({
 
   const { mutate } = useHandleSubmit();
 
-
-
-  const statusColors = {
-    Process: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    Sent: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    Done: "bg-green-500/10 text-green-500 border-green-500/20",
-    Cancel: "bg-red-500/10 text-red-500 border-red-500/20",
-  };
-
-  const statusText = {
-    Process: "Sedang Diproses",
-    Sent: "Sedang Dikirim",
-    Done: "Pengiriman Selesai",
-    Cancel: "Pengiriman Dibatalkan",
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -143,11 +127,11 @@ export default function DeliveryStatusDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="ghost"
-          className="w-full justify-start px-2 hover:bg-secondary"
+          variant="default"
+          size="sm"
+          className="justify-center"
         >
-          <Truck className="w-4 h-4 mr-1" />
-          Ubah Status Pengiriman
+          <Truck className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -198,18 +182,18 @@ export default function DeliveryStatusDialog({
 
                 <Separator />
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <div className="flex items-center text-muted-foreground">
                       <User className="w-4 h-4 mr-1" />
                       <span className="text-sm">Distributor</span>
                     </div>
                     <p className="font-medium">{invoice?.buyer.name}</p>
                   </div>
-                  <div className="space-y-2">
+                  <div>
                     <div className="flex items-center text-muted-foreground">
                       <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">Alamat Pengiriman</span>
+                      <span className="text-sm">Alamat Pembeli</span>
                     </div>
                     <p className="font-medium">{invoice?.buyer.address}</p>
                   </div>
@@ -260,14 +244,12 @@ export default function DeliveryStatusDialog({
                   <span className="text-sm text-muted-foreground">
                     Status Saat Ini
                   </span>
-                  <Badge
-                    variant="outline"
-                    className={`text-sm px-3 py-1 ${
-                      statusColors[status as keyof typeof statusColors]
-                    }`}
-                  >
-                    {statusText[status as keyof typeof statusText]}
-                  </Badge>
+                  <br />
+                  <StatusDelivery status={status} />
+                </div>
+                <div className="flex flex-col justify-between">
+                  <p className="text-sm text-muted-foreground">Alamat Pengiriman</p>
+                  <p className="font-medium">{invoice?.deliveryTracking[0]?.location.name}</p>
                 </div>
               </CardContent>
             </Card>
@@ -276,7 +258,7 @@ export default function DeliveryStatusDialog({
           <Card className="mt-4">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold">
-                Perbarui Status
+                Informasi Pengiriman & Jatuh Tempo
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -288,13 +270,13 @@ export default function DeliveryStatusDialog({
                       className="w-full justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date
+                      <span className="text-sm text-muted-foreground">{date
                         ? date.toLocaleDateString("id-ID", {
                             day: "numeric",
                             month: "long",
                             year: "numeric",
                           })
-                        : "Pilih tanggal pengiriman"}
+                        : "Tanggal Jatuh Tempo"}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">

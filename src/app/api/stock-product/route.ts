@@ -12,17 +12,11 @@ export async function GET(request: Request) {
       where: {
         factory_id: parseInt(factoryId || "0"),
       },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        price: true,
-      },
       distinct: ["id"],
     });
 
     const stockProduct = await prisma.stockProduct.groupBy({
-      by: ["product_id"],
+      by: ["product_id", "type"],
       _sum: {
         amount: true,
       },
@@ -30,36 +24,23 @@ export async function GET(request: Request) {
         product_id: {
           in: products.map((product) => product.id),
         },
-        type: "In",
-      },
-    });
-
-    const soldProduct = await prisma.stockProduct.groupBy({
-      by: ["product_id"],
-      _sum: {
-        amount: true,
-      },
-      where: {
-        product_id: {
-          in: products.map((product) => product.id),
-        },
-        type: "Out",
       },
     });
 
     const data = products.map((product) => {
-      const stock =
-        stockProduct.find((stock) => stock.product_id === product.id)?._sum
-          .amount || 0;
-      const sold =
-        soldProduct.find((sold) => sold.product_id === product.id)?._sum
-          .amount || 0;
-          // stock konvert ke karton sisanya ke bal sisanya ke slop/press dan sisanya ke pack
+      const stockIn = stockProduct.find(
+        (stock) => stock.product_id === product.id && stock.type === "In"
+      )?._sum.amount || 0;
+      const stockOut = stockProduct.find(
+        (stock) => stock.product_id === product.id && stock.type === "Out"
+      )?._sum.amount || 0;
+      const stock = stockIn - stockOut;
+      // stock konvert ke karton sisanya ke bal sisanya ke slop/press dan sisanya ke pack
       
-      const Karton = Math.floor(stock / 800);
-      const balAmount = Math.floor((stock - (Karton * 800)) / 200);
-      const pressAmount = Math.floor((stock - ((Karton * 800) + (balAmount * 200))) / 10);
-      const packAmount = Math.floor(stock - ((Karton * 800) + (balAmount * 200) + (pressAmount * 10)));
+      const Karton = Math.floor(stock / (product.per_karton || 800));
+      const balAmount = Math.floor((stock - (Karton * (product.per_karton || 800))) / (product.per_bal || 200));
+      const pressAmount = Math.floor((stock - ((Karton * (product.per_karton || 800)) + (balAmount * (product.per_bal || 200)))) / (product.per_slop || 10));
+      const packAmount = Math.floor(stock - ((Karton * (product.per_karton || 800)) + (balAmount * (product.per_bal || 200)) + (pressAmount * (product.per_slop || 10))));
       
       return {
         id: product.id,
@@ -71,7 +52,10 @@ export async function GET(request: Request) {
         stock_press: pressAmount,
         stock_bal: balAmount,
         stock_karton: Karton,
-        sold: sold,
+        sold: stockOut,
+        per_bal: product.per_bal,
+        per_karton: product.per_karton,
+        per_slop: product.per_slop,
       };
     });
 

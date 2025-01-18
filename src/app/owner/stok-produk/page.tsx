@@ -42,6 +42,9 @@ interface Product {
   stock_press: number;
   stock_bal: number;
   stock_karton: number;
+  per_bal: number;
+  per_karton: number;
+  per_slop: number;
 }
 
 export default function Layout() {
@@ -193,7 +196,7 @@ export default function Layout() {
                         style: "currency",
                         currency: "IDR",
                       })
-                        .format(product.price * 200)
+                        .format(product.price * (product.per_bal || 200))
                         .slice(0, -3)}
                     </TableCell>
                     <TableCell className="text-end">

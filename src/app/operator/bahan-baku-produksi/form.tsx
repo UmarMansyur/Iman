@@ -41,8 +41,29 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
   const { user } = useUserStore();
 
   const formatNumber = (value: string) => {
-    const number = value.replace(/\D/g, "");
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // Remove any character that's not a digit, comma, or dot
+    let number = value.replace(/[^\d,.]/g, "");
+    
+    // Replace all dots with empty string to handle thousand separators
+    number = number.replace(/\./g, "");
+    
+    // Ensure only one comma exists
+    const parts = number.split(",");
+    if (parts.length > 2) {
+      number = parts[0] + "," + parts[1];
+    }
+    
+    // Format the integer part with thousand separators
+    const [integerPart, decimalPart] = number.split(",");
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    
+    // Return the formatted number with or without decimal part
+    return decimalPart !== undefined ? `${formattedInteger},${decimalPart}` : formattedInteger;
+  };
+
+  const parseAmount = (value: string): number => {
+    // Replace thousand separators (dots) and convert comma to dot for parseFloat
+    return parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
   };
 
   useEffect(() => {
@@ -64,7 +85,9 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
       toast.error("Pilih material terlebih dahulu");
       return;
     }
-    if (!currentAmount || Number(currentAmount) <= 0) {
+
+    const amount = parseAmount(currentAmount);
+    if (!amount || amount <= 0) {
       toast.error("Jumlah harus lebih dari 0");
       return;
     }
@@ -74,24 +97,21 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
     );
 
     if (existingDetail) {
-      // update amount
       const updatedDetails = details.map((detail) =>
         detail.material_unit_id === currentMaterial
-          ? { ...detail, amount: Number(currentAmount.replace(/,/g, "")) + detail.amount }
+          ? { ...detail, amount: parseFloat((amount + detail.amount).toFixed(2)) }
           : detail
       );
       setDetails(updatedDetails);
-    } else{
+    } else {
       setDetails([
         ...details,
         {
           material_unit_id: currentMaterial,
-          amount: Number(currentAmount.replace(/,/g, "")),
+          amount: parseFloat(amount.toFixed(2)),
         },
       ]);
-
     }
-
 
     setCurrentMaterial("");
     setCurrentAmount("");
@@ -115,7 +135,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
           amount: detail.amount,
         })),
         factory_id: user?.factory_selected?.id,
-        total_amount: details.reduce((acc, curr) => acc + curr.amount, 0),
+        total_amount: parseFloat(details.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)),
       };
 
       const response = await fetch("/api/material-stock/production", {
@@ -204,10 +224,8 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
                 type="text"
                 value={currentAmount}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/,/g, "");
-                  if (/^\d*$/.test(value) || value === "") {
-                    setCurrentAmount(formatNumber(value));
-                  }
+                  const formatted = formatNumber(e.target.value);
+                  setCurrentAmount(formatted);
                 }}
                 placeholder="Jumlah"
               />
@@ -246,7 +264,7 @@ export default function CreateMaterialStockReport({ fetchData }: { fetchData: ()
                       }
                     </td>
                     <td className="px-4 py-2">
-                      {formatNumber(detail.amount.toString())}
+                      {formatNumber(detail.amount.toString().replace(".", ","))}
                     </td>
                     <td className="px-4 py-2">
                       <Button

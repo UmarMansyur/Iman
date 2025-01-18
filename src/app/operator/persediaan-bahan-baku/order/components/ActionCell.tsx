@@ -33,39 +33,49 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
   const { user } = useUserStore();
 
   const handleChange = (e: any, id: number, amount: number) => {
-    const numericValue = e.target.value.replace(/\D/g, '');
-    let formattedValue = numericValue ? parseInt(numericValue).toLocaleString('id-ID') : '';
-    const existingData = data?.find((item: any) => item.id == id);
-
-    if(Number(numericValue) > amount) {
-      toast.error("Jumlah diterima tidak boleh lebih besar dari jumlah order");
-      formattedValue = existingData?.amount_received || '';
+    const inputValue = e.target.value.replace(/[^\d,]/g, ''); // Hanya izinkan angka dan koma
+    const numericValue = inputValue.replace(/,/g, '.'); // Ganti koma dengan titik untuk parsing angka
+  
+    if (isNaN(Number(numericValue))) {
+      toast.error("Masukkan nilai yang valid");
       return;
     }
-
-    if(existingData){
+  
+    if (Number(numericValue) > amount) {
+      toast.error("Jumlah diterima tidak boleh lebih besar dari jumlah order");
+      return;
+    }
+  
+    const formattedValue = numericValue
+      ? numericValue.replace(/\./g, ',') // Tampilkan kembali dalam format koma
+      : '';
+  
+    const existingData = data?.find((item: any) => item.id === id);
+  
+    if (existingData) {
       existingData.amount_received = formattedValue;
     } else {
-      setData(data ? [...data, {
-        id: id,
-        amount_received: formattedValue
-      }] : [{
-        id: id,
-        amount_received: formattedValue
-      }]);
+      setData(data ? [...data, { id, amount_received: formattedValue }] : [{ id, amount_received: formattedValue }]);
     }
+  
     setReceivedAmounts({
       ...receivedAmounts,
-      [id]: formattedValue
+      [id]: formattedValue,
     });
   };
+  
 
   const handleSubmit = async () => {
     setIsLoading(true);
+    const formattedData = data?.map((item) => ({
+      id: item.id,
+      amount_received: item.amount_received.replace(/,/g, '.'), // Ganti koma dengan titik
+    }));
+  
     const response = await fetch(`/api/order/${row.original.id}`, {
       method: "PATCH",
       body: JSON.stringify({
-        items: data,
+        items: formattedData,
         factory_id: user?.factory_selected?.id
       })
     });
@@ -176,7 +186,14 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                               {detail.amount.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2 text-right w-56">
-                              <Input type="text" className="w-full" placeholder={detail.amount_received || 'Jumlah Diterima'} value={receivedAmounts[detail.id] || ''} onChange={(e: any) => handleChange(e, detail.id, detail.amount)} />
+                              <Input 
+                                type="text" 
+                                className="w-full" 
+                                
+                                placeholder={detail.amount_received} 
+                                value={receivedAmounts[detail.id] || ''} 
+                                onChange={(e: any) => handleChange(e, detail.id, detail.amount)} 
+                              />
                             </td>
                           </tr>
                         )

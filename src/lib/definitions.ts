@@ -273,6 +273,9 @@ export type PaymentSetting = {
   id: number;
   name: string;
   price: number;
+  per_slop: number;
+  per_bal: number;
+  per_karton: number;
 };
 
 export type Product = {
@@ -288,6 +291,9 @@ export const ProductSchema = z.object({
   type: z.enum(["Kretek", "Gabus"]),
   factory_id: z.string(),
   price: z.string(),
+  per_slop: z.string().optional(),
+  per_bal: z.string().optional(),
+  per_karton: z.string().optional(),
 });
 
 export type ProductFormState =
@@ -296,6 +302,9 @@ export type ProductFormState =
         name?: string[];
         type?: string[];
         price?: string[];
+        per_slop?: string[];
+        per_bal?: string[];
+        per_karton?: string[];
       };
       message?: string;
     }

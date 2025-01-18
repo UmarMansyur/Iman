@@ -21,6 +21,7 @@ import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
 import { Label } from "@/components/ui/label";
 import EmptyData from "@/components/views/empty-data";
+import { formatWithComma, parseFormattedNumber } from "@/utils/format";
 
 interface DetailOrder {
   material_unit_id: string;
@@ -41,11 +42,6 @@ export default function OrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [subTotal, setSubTotal] = useState(0);
 
-  const formatNumber = (value: string) => {
-    const number = value.replace(/\D/g, "");
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
   const addDetail = () => {
     if (!currentMaterial) {
       toast.error("Pilih material terlebih dahulu");
@@ -60,44 +56,20 @@ export default function OrderPage() {
       (detail) => detail.material_unit_id == currentMaterial
     );
 
-    if (existingDetailIndex !== -1) {
-      // Jika material sudah ada, update jumlahnya
-      const updatedDetails = [...details];
-      const newAmount =
-        updatedDetails[existingDetailIndex].amount +
-        Number(currentAmount.replace(/,/g, ""));
-      updatedDetails[existingDetailIndex] = {
-        ...updatedDetails[existingDetailIndex],
-        amount: newAmount,
-        total: newAmount * updatedDetails[existingDetailIndex].price,
-      };
-      setDetails(updatedDetails);
-    } else {
-      // Jika material belum ada, tambahkan sebagai item baru
-      setDetails([
-        ...details,
-        {
-          material_unit_id: currentMaterial,
-          amount: Number(currentAmount.replace(/,/g, "")),
-          price: Number(currentPrice.replace(/,/g, "")),
-          total:
-            Number(currentAmount.replace(/,/g, "")) *
-            Number(currentPrice.replace(/,/g, "")),
-        },
-      ]);
+    if(existingDetailIndex) {
+      toast.error("Bahan baku sudah ada dalam keranjang, silahkan edit data yang sudah ada!")
+      return;
     }
 
-    // setDetails([
-    //   ...details,
-    //   {
-    //     material_unit_id: currentMaterial,
-    //     amount: Number(currentAmount.replace(/,/g, "")),
-    //     price: Number(currentPrice.replace(/,/g, "")),
-    //     total:
-    //       Number(currentAmount.replace(/,/g, "")) *
-    //       Number(currentPrice.replace(/,/g, "")),
-    //   },
-    // ]);
+    setDetails([
+      ...details,
+      {
+        material_unit_id: currentMaterial,
+        amount: parseFormattedNumber(currentAmount),
+        price: parseFormattedNumber(currentPrice),
+        total: calculateTotal(currentAmount, currentPrice),
+      },
+    ]);
 
     setCurrentMaterial("");
     setCurrentAmount("");
@@ -123,6 +95,12 @@ export default function OrderPage() {
     const newDetails = details.filter((_, i) => i !== index);
     setDetails(newDetails);
   };
+
+  const splitDot = (value: string) => {
+    const parts = value.split('.');
+    return parts.length > 1 ? `${parts[0]},${parts[1]}` : parts[0];
+  }
+
   useEffect(() => {
     const fetchOrder = async () => {
       const orderId = params?.id;
@@ -139,12 +117,19 @@ export default function OrderPage() {
 
         setDescription(data.desc);
         setDetails(
-          data.DetailOrderMaterialUnit.map((detail: any) => ({
-            material_unit_id: detail.material_unit_id,
-            amount: detail.amount,
-            price: detail.price,
-            total: detail.amount * detail.price,
-          }))
+          data.DetailOrderMaterialUnit.map((detail: any) => {
+            // cek apakah amount adalah float
+            const isFloat = !Number.isInteger(detail.amount);
+            // jika koma split by titik dan ganti koma dengan titik
+            const amount = isFloat ? splitDot(detail.amount.toString()) : detail.amount;
+            return {
+              material_unit_id: detail.material_unit_id,
+              // amount is 10.5 -> coba ubah ke 10,5
+              amount: amount,
+              price: detail.price,
+              total: detail.amount * detail.price,
+            };
+          })
         );
       } catch (error: any) {
         toast.error(error.message);
@@ -172,7 +157,7 @@ export default function OrderPage() {
         user_id: user?.id,
         details: details.map((detail) => ({
           material_unit_id: detail.material_unit_id,
-          amount: detail.amount,
+          amount: parseFormattedNumber(detail.amount.toString()),
           price: detail.price,
         })),
       };
@@ -195,7 +180,7 @@ export default function OrderPage() {
       toast.success(
         orderId ? "Order berhasil diupdate" : "Order berhasil dibuat"
       );
-      // window.location.href = "/operator/persediaan-bahan-baku";
+      router.push("/operator/persediaan-bahan-baku");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -206,6 +191,12 @@ export default function OrderPage() {
   const handleReset = () => {
     setDetails([]);
     setDescription("");
+  };
+
+  const calculateTotal = (amount: string, price: string) => {
+    const numAmount = parseFormattedNumber(amount || "0");
+    const numPrice = parseFormattedNumber(price || "0");
+    return numAmount * numPrice;
   };
 
   if (isLoading) {
@@ -294,13 +285,9 @@ export default function OrderPage() {
                     type="text"
                     value={currentAmount}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, "");
-                      if (/^\d*$/.test(value) || value === "") {
-                        setCurrentAmount(formatNumber(value));
-                      }
-                      setSubTotal(
-                        Number(value) * Number(currentPrice.replace(/,/g, ""))
-                      );
+                      const formattedValue = formatWithComma(e.target.value);
+                      setCurrentAmount(formattedValue);
+                      setSubTotal(calculateTotal(formattedValue, currentPrice));
                     }}
                     placeholder="Jumlah"
                   />
@@ -311,14 +298,9 @@ export default function OrderPage() {
                     type="text"
                     value={currentPrice}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, "");
-                      if (/^\d*$/.test(value) || value === "") {
-                        setCurrentPrice(formatNumber(value));
-                        setSubTotal(
-                          Number(currentAmount.replace(/,/g, "")) *
-                            Number(value)
-                        );
-                      }
+                      const formattedValue = formatWithComma(e.target.value);
+                      setCurrentPrice(formattedValue);
+                      setSubTotal(calculateTotal(currentAmount, formattedValue));
                     }}
                     placeholder="Harga"
                   />
@@ -375,7 +357,8 @@ export default function OrderPage() {
                           }
                         </td>
                         <td className="px-4 py-2">
-                          {formatNumber(detail.amount.toString())}
+                          {/* detail amoun */}
+                          {formatWithComma(detail.amount.toString())}
                         </td>
                         <td className="px-4 py-2">
                           {new Intl.NumberFormat("id-ID", {
@@ -424,7 +407,7 @@ export default function OrderPage() {
                   className="bg-blue-500 hover:bg-blue-600"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Menyimpan..." : "Simpan Order"}
+                  {isSubmitting ? "Menyimpan..." : "Simpan"}
                 </Button>
               </div>
             </form>

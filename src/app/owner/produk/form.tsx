@@ -31,7 +31,7 @@ export default function Form({
   product,
   fetchData,
 }: {
-  product?: { id: number; name: string; type: ProductType; price: number };
+  product?: { id: number; name: string; type: ProductType; price: number; per_bal: number; per_karton: number; per_slop: number };
   fetchData: () => Promise<void>;
 }) {
   const [state, setState] = useState<ProductFormState>();
@@ -58,11 +58,11 @@ export default function Form({
     if (to === "Pack") {
       return result;
     } else if (to === "Bal") {
-      return result * 200;
+      return result * (product?.per_bal || 200);
     } else if (to === "Slop/Press") {
-      return result * 10;
+      return result * (product?.per_slop || 10);
     } else if (to === "Karton") {
-      return result * 800;
+      return result * (product?.per_karton || 800);
     } else {
       return result;
     }

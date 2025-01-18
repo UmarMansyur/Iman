@@ -38,6 +38,11 @@ interface ProductFormState {
   unit: string;
   product_type?: string;
   purchase_price?: number;
+  purchase_unit?: string;
+  per_slop?: number;
+  per_bal?: number;
+  per_karton?: number;
+  per_pack?: number;
 }
 
 export default function Form({
@@ -64,6 +69,23 @@ export default function Form({
       setProduct(
         productsArray.find((product: any) => product.id == data.product_id)
       );
+      console.log(product, data)
+      // Update state dengan data yang ada
+      setState(prevState => ({
+        ...prevState,
+        product_id: data.product_id,
+        sale_price: data.sale_price,
+        id: data.id,
+        factory_id: data.factory_id,
+        unit: data.unit || "pack",
+        per_slop: data?.per_slop,
+        per_bal: data?.per_bal,
+        per_karton: data?.per_karton,
+        purchase_price: data.purchase_price || 0,
+        purchase_unit: data.purchase_unit || "pack",
+        product_type: data.product_type || "",
+      }));
+      console.log(state)
     }
   }, [data]);
 
@@ -76,52 +98,87 @@ export default function Form({
     unit: "pack",
     product_type: "",
     purchase_price: 0,
+    purchase_unit: "pack",
+    per_slop: product?.per_slop || 10,
+    per_bal: product?.per_bal || 200,
+    per_karton: product?.per_karton || 800,
+    per_pack: 1,
   });
 
-  const convertToPackPrice = (price: number, unit: string): number => {
+  const convertToPackPrice = (price: number, unit: string, product_perbal: number, product_perkarton: number, product_perslop: number): number => {
+    if (!price) return 0;
+    
     switch (unit) {
       case "slop":
-        return price / 10;
+        return price / (product_perslop || 1);
       case "bal":
-        return price / 200;
+        return price / (product_perbal || 1);
       case "karton":
-        return price / 800;
+        return price / (product_perkarton || 1);
       default:
         return price;
     }
   };
 
   const createProduct = async () => {
-    let response;
-    // state.factory_id = ambil dari data product yang dipilih
-    state.user_id = user?.id.toString() || "";
+    try {
+      state.user_id = user?.id.toString() || "";
 
-    const packPrice = convertToPackPrice(state.sale_price, state.unit);
+      // Konversi harga jual ke harga per pack
+      const packPrice = convertToPackPrice(
+        state.sale_price, 
+        state.unit, 
+        product?.per_bal || state.per_bal,
+        product?.per_karton || state.per_karton,
+        product?.per_slop || state.per_slop
+      );
+      
+      let payload: any = {
+        ...state,
+        sale_price: packPrice,
+        per_karton: product?.per_karton || state.per_karton,
+        per_bal: product?.per_bal || state.per_bal,
+        per_slop: product?.per_slop || state.per_slop,
+        per_pack: 1,
+      };
 
-    const payload = {
-      ...state,
-      sale_price: packPrice,
-      ...(isOtherProduct && {
-        product_type: state.product_type,
-        purchase_price: state.purchase_price,
-      }),
-    };
+      // Logika untuk produk baru
+      if (isOtherProduct) {
+        // Konversi harga beli ke harga per pack
+        const purchasePrice = convertToPackPrice(
+          state.purchase_price || 0, 
+          state.purchase_unit || "pack", 
+          product?.per_bal || state.per_bal,
+          product?.per_karton || state.per_karton,
+          product?.per_slop || state.per_slop
+        );
 
-    if (state.id) {
-      response = await fetch("/api/distributor/data-produk", {
-        method: "PUT",
+        payload = {
+          ...payload,
+          product_type: state.product_type,
+          purchase_price: purchasePrice,
+          per_slop: product?.per_slop || state.per_slop,
+          per_bal: product?.per_bal || state.per_bal,
+          per_karton: product?.per_karton || state.per_karton,
+          per_pack: 1,
+        };
+      }
+
+      console.log(state)
+
+      const response = await fetch(`/api/distributor/data-produk${state.id ? "" : "/"}`, {
+        method: state.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-    } else {
-      response = await fetch("/api/distributor/data-produk/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Terjadi kesalahan");
+      
+      return result;
+    } catch (error: any) {
+      throw new Error(error.message || "Terjadi kesalahan saat menyimpan data");
     }
-    const data = await response.json();
-    return data;
   };
 
   const useAddProductPrice = () => {
@@ -144,6 +201,7 @@ export default function Form({
           unit: "pack",
           product_type: "",
           purchase_price: 0,
+          purchase_unit: "pack",
         });
       },
       onError: (error: any) => {
@@ -297,14 +355,14 @@ export default function Form({
             }
           </div>
           {!isOtherProduct && (
-            <>
+            <div className="grid grid-cols-3 gap-4 py-4">
               <div className="grid gap-4 py-4">
                 <Label htmlFor="cost">Harga Beli/Pack (Pabrik)</Label>
                 <Input
                   id="cost"
                   name="cost"
                   className="col-span-3"
-                  value={formatCurrency(product?.price || 0)}
+                  value={formatCurrency(data?.price || product?.price || 0)}
                   disabled
                 />
               </div>
@@ -314,11 +372,21 @@ export default function Form({
                   id="cost"
                   name="cost"
                   className="col-span-3"
-                  value={formatCurrency(product?.price * 200 || 0)}
+                  value={formatCurrency((data?.price * data?.per_bal) || (product?.price * product?.per_bal) || 0)}
                   disabled
                 />
               </div>
-            </>
+              <div className="grid gap-4 py-4">
+                <Label htmlFor="cost">Harga Beli/Karton (Pabrik)</Label>
+                <Input
+                  id="cost"
+                  name="cost"
+                  className="col-span-3"
+                  value={formatCurrency((data?.price * data?.per_karton) || (product?.price * product?.per_karton) || 0)}
+                  disabled
+                />
+              </div>
+            </div>
           )}
           {isOtherProduct && (
             <>
@@ -339,8 +407,75 @@ export default function Form({
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-3 gap-4 py-4">
+                <div>
+                  <Label htmlFor="per_slop">Pack per Slop</Label>
+                  <Input
+                    id="per_slop"
+                    name="per_slop"
+                    type="number"
+                    className="mt-2"
+                    value={product?.per_slop || state.per_slop || 10}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        per_slop: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="per_bal">Pack per Bal</Label>
+                  <Input
+                    id="per_bal"
+                    name="per_bal"
+                    type="number"
+                    className="mt-2"
+                    value={product?.per_bal || state.per_bal || 200}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        per_bal: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="per_karton">Pack per Karton</Label>
+                  <Input
+                    id="per_karton"
+                    name="per_karton"
+                    type="number"
+                    className="mt-2"
+                    value={product?.per_karton || state.per_karton || 800}
+                    onChange={(e) =>
+                      setState({
+                        ...state,
+                        per_karton: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 my-3">
+                <Label htmlFor="purchase_unit">Satuan Harga Beli</Label>
+                <Select
+                  value={state.purchase_unit || "pack"}
+                  onValueChange={(value) => setState({ ...state, purchase_unit: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Satuan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pack">Pack</SelectItem>
+                    <SelectItem value="slop">Slop/Press ({product?.per_slop} Pack)</SelectItem>
+                    <SelectItem value="bal">Bal ({product?.per_bal} Pack)</SelectItem>
+                    <SelectItem value="karton">Karton ({product?.per_karton} Pack)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-4 py-4">
-                <Label htmlFor="purchase_price">Harga Beli/Pack</Label>
+                <Label htmlFor="purchase_price">Harga Beli per {state.purchase_unit || "pack"}</Label>
                 <Input
                   id="purchase_price"
                   name="purchase_price"
@@ -367,9 +502,9 @@ export default function Form({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pack">Pack</SelectItem>
-                <SelectItem value="slop">Slop/Press (10 Pack)</SelectItem>
-                <SelectItem value="bal">Bal (200 Pack)</SelectItem>
-                <SelectItem value="karton">Karton (800 Pack)</SelectItem>
+                <SelectItem value="slop">Slop/Press ({product?.per_slop} Pack)</SelectItem>
+                <SelectItem value="bal">Bal ({product?.per_bal} Pack)</SelectItem>
+                <SelectItem value="karton">Karton ({product?.per_karton} Pack)</SelectItem>
               </SelectContent>
             </Select>
           </div>

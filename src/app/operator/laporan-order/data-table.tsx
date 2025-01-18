@@ -89,8 +89,10 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="text-black text-[13px] font-bold uppercase"
+                      // jika aksi maka buat center
+                      className={`text-black text-[13px] font-bold uppercase ${header.id.toString().toLowerCase() === "action" ? "text-center" : ""}`}
                     >
+                      
                       {header.isPlaceholder
                         ? null
                         : flexRender(

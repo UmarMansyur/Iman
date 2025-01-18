@@ -15,6 +15,8 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import StatusPayment from "@/components/status-payment";
+import StatusDelivery from "@/components/StatusDelivery";
 
 interface DetailDialogProps {
   invoice: any;
@@ -95,13 +97,7 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 <CreditCard className="w-4 h-4" />
                 <p className="text-sm text-muted-foreground">Status Pembayaran</p>
               </div>
-              <Badge className={`${
-                invoice.payment_status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                invoice.payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
-                'bg-red-100 text-red-800'
-              } border-0`}>
-                {invoice.payment_status}
-              </Badge>
+              <StatusPayment status={invoice.payment_status} />
             </Card>
 
             <Card className="p-4">
@@ -109,16 +105,7 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                 <Truck className="w-4 h-4" />
                 <p className="text-sm text-muted-foreground">Status Pengiriman</p>
               </div>
-              <Badge className={`${
-                invoice.deliveryTracking[0]?.status === 'Process' ? 'bg-blue-100 text-blue-800' :
-                invoice.deliveryTracking[0]?.status === 'Done' ? 'bg-green-100 text-green-800' :
-                invoice.deliveryTracking[0]?.status === 'Cancel' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              } border-0`}>
-                {invoice.deliveryTracking[0]?.status === 'Process' ? 'Dalam Pengiriman' :
-                 invoice.deliveryTracking[0]?.status === 'Done' ? 'Terkirim' :
-                 invoice.deliveryTracking[0]?.status === 'Cancel' ? 'Dibatalkan' : 'Menunggu'}
-              </Badge>
+              <StatusDelivery status={invoice.deliveryTracking[0]?.status} />
             </Card>
 
             <Card className="p-4">
@@ -180,7 +167,7 @@ export default function DetailDialog({ invoice }: DetailDialogProps) {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <p className="text-sm text-muted-foreground">Down Payment</p>
+                    <p className="text-sm text-muted-foreground">Sisa Pembayaran</p>
                     <p className="font-medium">{formatCurrency(invoice.down_payment)}</p>
                   </div>
                   <div className="flex justify-between">

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   });
 
   const { error } = await resend.emails.send({
-    from: "no-reply@sinikendp.com",
+    from: "no-replyinderadistribution.com",
     to: [email],
     subject: "Reset Password",
     react: EmailTemplate({

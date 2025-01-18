@@ -144,19 +144,19 @@ export async function POST(req: Request) {
             .filter((item: any) => item.Product.factory_id == whereFactory)
             .reduce((acc: any, item: any) => {
               const productPrice = product.find((p: any) => p.id === item.product_id)?.price || 0;
-              return acc + (item.amount * productPrice * 200);
+              return acc + (item.amount * productPrice);
             }, 0) - Number(down_payment),
           total: transaction.DetailTransactionDistributor
             .filter((item: any) => item.Product.factory_id == whereFactory)
             .reduce((acc: any, item: any) => {
               const productPrice = product.find((p: any) => p.id === item.product_id)?.price || 0;
-              return acc + (item.amount * productPrice * 200);
+              return acc + (item.amount * productPrice);
             }, 0),
           sub_total: transaction.DetailTransactionDistributor
             .filter((item: any) => item.Product.factory_id == whereFactory)
             .reduce((acc: any, item: any) => {
               const productPrice = product.find((p: any) => p.id === item.product_id)?.price || 0;
-              return acc + (item.amount * productPrice * 200);
+              return acc + (item.amount * productPrice);
             }, 0),
           payment_method_id: Number(payment_method_id),
           proof_of_payment: proof_payment_url,
@@ -168,10 +168,10 @@ export async function POST(req: Request) {
             .map((item: any) => ({
               product_id: item.product_id,
               amount: item.amount,
-              price: (product.find((p: any) => p.id === item.product_id)?.price || 0) * 200,
+              price: (product.find((p: any) => p.id === item.product_id)?.price || 0),
               desc: product.find((p: any) => p.id === item.product_id)?.name + " - " + product.find((p: any) => p.id === item.product_id)?.type,
               discount: 0,
-              sub_total: (product.find((p: any) => p.id === item.product_id)?.price || 0) * 200 * item.amount,
+              sub_total: (product.find((p: any) => p.id === item.product_id)?.price || 0) * item.amount,
             })),
           },
           notes: desc_delivery,
@@ -235,15 +235,28 @@ export async function PATCH(req: Request) {
       await deleteFile(invoice.proof_of_payment);
     }
 
+    const payment_status = invoice.factory_id === null ? "Paid" : "Pending";
+
     const result = await prisma.invoice.update({
       where: {
         id: Number(invoice_id),
       },
       data: {
         proof_of_payment: proof_payment_url,
-        payment_status: "Pending",
+        payment_status: payment_status,
       },
     });
+
+    if(invoice.factory_id === null) {
+      await prisma.deliveryTracking.updateMany({
+        where: {
+          invoice_id: Number(invoice_id),
+        },
+        data: {
+          status: "Done",
+        },
+      });
+    }
 
     return NextResponse.json({ message: "Bukti pembayaran berhasil diupload", result });
   } catch (error: any) {

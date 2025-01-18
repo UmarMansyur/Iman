@@ -27,6 +27,8 @@ import {
 import DeliveryStatusDialog from "./delivery-status-dialog";
 import PembayaranDialog from "./pembayaran";
 import OrderPabrik from "./order-pabrik";
+import StatusPayment from "@/components/status-payment";
+import StatusDelivery from "@/components/StatusDelivery";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -39,16 +41,32 @@ const formatCurrency = (value: number) => {
 
 export const columns = (products: any, metodePembayaran: any): ColumnDef<any>[] => [
   {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tanggal" />
+    ),
+    cell: ({ row }) => {
+      return new Date(row.original.created_at).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    },
+  },
+  {
     accessorKey: "invoice_code",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Kode Invoice" />
     ),
   },
   {
-    accessorKey: "buyer.name",
+    accessorKey: "buyer_id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Nama Pembeli" />
     ),
+    cell: ({ row }) => {
+      return row.original.buyer.name;
+    },
   },
   {
     accessorKey: "remaining_balance",
@@ -89,35 +107,14 @@ export const columns = (products: any, metodePembayaran: any): ColumnDef<any>[] 
     ),
     cell: ({ row }) => {
       const status = row.original.status_payment;
-      return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            status === "Paid"
-              ? "bg-green-100 text-green-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
-        >
-          {status}
-        </span>
-      );
+      return <StatusPayment status={status} />
     },
   },
   {
     accessorKey: "status_delivery",
     header: "Status Pengiriman",
     cell: ({ row }) => {
-      const status = row.original.status_delivery;
-      return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            status === "Delivered"
-              ? "bg-green-100 text-green-800"
-              : "bg-blue-100 text-blue-800"
-          }`}
-        >
-          {status}
-        </span>
-      );
+      return <StatusDelivery status={row.original.status_delivery} />
     },
   },
   {
@@ -247,8 +244,7 @@ export const columns = (products: any, metodePembayaran: any): ColumnDef<any>[] 
             </Dialog>
             <PembayaranDialog invoice={data} />
             {
-              
-              (data.status_payment === "Paid" || data.status_payment === "Paid_Off") && (
+              (data.status_payment === "Paid" || data.status_payment === "Paid_Off" || data.status_payment === "Pending") && (
                 <OrderPabrik invoice={data} products={products} metodePembayaran={metodePembayaran} />
               )
             }

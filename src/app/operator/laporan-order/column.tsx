@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
-import DetailDialog from "./detail-dialog";
+import DetailDialog from "@/components/DetailDialog";
 
 export const columns = (
   page: number,

@@ -8,11 +8,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
-import DetailDialog from "./detail-dialog";
+import DetailDialog from "@/components/DetailDialog";
 import DeleteButton from "@/components/delete-button";
 import Link from "next/link";
-import UploadBukti from "./upload-bukti";
+import StatusPayment from "@/components/status-payment";
 export const columns = (
   fetchData: () => Promise<void>,
   page: number,
@@ -55,66 +54,7 @@ export const columns = (
     ),
     cell: ({ row }) => {
       const status = row.original.payment_status;
-      if (status === "Unpaid") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 dark:bg-yellow-800 dark:text-yellow-300 border-0`}
-          >
-           Belum Bayar
-          </Badge>
-        );
-      }
-      if (status === "Pending") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}
-          >
-            Menunggu Konfirmasi
-          </Badge>
-        );
-      }
-      if (status === "Paid") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}
-          >
-            Dibayar Sebagian
-          </Badge>
-        );
-      }
-      if (status === "Failed") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            Gagal
-          </Badge>
-        );
-      }
-      if (status === "Cancelled") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}
-          >
-            Ditolak
-          </Badge>
-        );
-      }
-      if (status === "Paid_Off") {
-        return (
-          <Badge
-            variant="outline"
-            className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}
-          >
-            Lunas
-          </Badge>
-        );
-      }
+      return <StatusPayment status={status} />;
     },
   },
   {
@@ -180,13 +120,6 @@ export const columns = (
           .slice(0, -3)}
       </div>
     ),
-  },
-  {
-    accessorKey: "proof_of_payment",
-    header: "Bukti Pembayaran",
-    cell: ({ row }) => {
-      return <UploadBukti data={row.original} fetchProducts={fetchData} />;
-    },
   },
   {
     accessorKey: "print",

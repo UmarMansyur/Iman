@@ -8,9 +8,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
 import DetailDialog from "./detail-dialog";
 import SelesaiButton from "@/components/selesai-button";
+import StatusPayment from "@/components/status-payment";
+import StatusDelivery from "@/components/StatusDelivery";
 
 export const columns = (fetchData: () => Promise<void>, page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -51,34 +52,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       <DataTableColumnHeader column={column} title="Status Pembayaran"/>
     ),
     cell: ({ row }) => {
-      const status = row.original.payment_status;
-      // const variants: { [key: string]: string } = {
-      //   PENDING: "bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300",
-      //   PAID: "bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300",
-      //   FAILED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300",
-      //   CANCELLED: "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300"
-      // };
-      
-      if(status === 'Pending') {
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Paid') {
-        return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Failed') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
-        </Badge>
-      }
-      if(status === 'Cancelled') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          {status}
-        </Badge>
-      }
+      return <StatusPayment status={row.original.payment_status} />
     }
   },
   {
@@ -98,30 +72,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
       <DataTableColumnHeader column={column} title="Status Pengiriman"/>
     ),
     cell: ({ row }) => {
-      const status = row.original.deliveryTracking[0]?.status;
-
-      if(status === 'Process') {
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Menunggu Proses Pengiriman
-        </Badge>
-      }
-
-      if(status === 'Sent') { 
-        return <Badge variant="outline" className={`bg-gray-100 text-gray-800 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 border-0`}>
-          Dikirim
-        </Badge>
-      }
-      if(status === 'Done') {
-        return <Badge variant="outline" className={`bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-800 dark:text-green-300 border-0`}>
-          Selesai
-        </Badge>
-      }
-
-      if(status === 'Cancel') {
-        return <Badge variant="outline" className={`bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-800 dark:text-red-300 border-0`}>
-          Batal
-        </Badge>
-      }
+      return <StatusDelivery status={row.original.deliveryTracking[0]?.status} />
     }
   },
   // tampilkan 

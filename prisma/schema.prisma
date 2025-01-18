@@ -355,6 +355,9 @@ model Product {
   name                         String
   type                         ProductType
   price                        Float
+  per_slop                     Float?                         @default(10)
+  per_bal                      Float?                         @default(200)
+  per_karton                   Float?                         @default(800)
   stockProducts                StockProduct[]
   reportProducts               ReportProduct[]
   MemberPriceProduct           MemberPriceProduct[]

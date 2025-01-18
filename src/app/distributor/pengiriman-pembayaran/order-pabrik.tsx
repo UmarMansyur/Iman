@@ -415,7 +415,7 @@ export default function TransactionDialog({
                             Produk
                           </th>
                           <th scope="col" className="px-6 py-3 text-center">
-                            Jumlah
+                            Jumlah (Pack)
                           </th>
                           <th scope="col" className="px-6 py-3 text-end">
                             Harga Distributor
@@ -440,11 +440,11 @@ export default function TransactionDialog({
                                 {formatCurrency(item.price)}
                               </td>
                               <td className="px-6 py-4 text-end">
-                                {formatCurrency(item.Product.price * 200)}
+                                {formatCurrency(item.Product.price)}
                               </td>
                               <td className="px-6 py-4 text-end">
                                 {formatCurrency(
-                                  item.Product.price * 200 * item.amount
+                                  item.Product.price * item.amount
                                 )}
                               </td>
                             </tr>
@@ -461,7 +461,7 @@ export default function TransactionDialog({
                               factoryData.products.reduce(
                                 (total: number, item: any) =>
                                   total +
-                                  item.Product.price * 200 * item.amount,
+                                  item.Product.price * item.amount,
                                 0
                               )
                             )}
@@ -501,7 +501,7 @@ export default function TransactionDialog({
                           value={formatCurrency(
                             factoryData.products.reduce(
                               (total: number, item: any) =>
-                                total + item.Product.price * 200 * item.amount,
+                                total + item.Product.price * item.amount,
                               0
                             ) -
                               Number(

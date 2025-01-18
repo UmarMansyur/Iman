@@ -209,7 +209,7 @@ export default function CreateTransaction() {
     setStockBal(bal);
     setTotalHarga(0);
     setTotalPrice(0);
-    setPriceProductBall(selectedProduct?.price * 200);
+    setPriceProductBall(selectedProduct?.price * (selectedProduct?.per_bal || 200));
   };
 
   const handleChangeJumlah = (e: any) => {
@@ -237,7 +237,7 @@ export default function CreateTransaction() {
 
     if (jumlah > maxBal) {
       setJumlah(maxBal);
-      const packAmount = maxBal * 200;
+      const packAmount = maxBal * (product.find((item: any) => item.id === product_id)?.per_bal || 200);
       const subTotal = packAmount * priceProduct;
       const potongan = (subTotal * diskon) / 100;
 
@@ -248,7 +248,7 @@ export default function CreateTransaction() {
       return;
     }
 
-    const packAmount = jumlah * 200;
+    const packAmount = jumlah * (product.find((item: any) => item.id === product_id)?.per_bal || 200);
     const subTotal = packAmount * priceProduct;
     const potongan = (subTotal * diskon) / 100;
 
@@ -422,7 +422,7 @@ export default function CreateTransaction() {
             total: item.sub_total,
             diskon: item.discount,
             total_harga: item.sub_total,
-            total_pack: item.amount * 200, // Assuming 1 bal = 200 pack
+            total_pack: item.amount * (product.find((item: any) => item.id === item.product_id)?.per_bal || 200),
             total_bal: item.amount,
             is_product: item.is_product,
           }))

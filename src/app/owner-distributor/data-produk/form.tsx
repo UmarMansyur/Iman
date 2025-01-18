@@ -314,7 +314,7 @@ export default function Form({
                   id="cost"
                   name="cost"
                   className="col-span-3"
-                  value={formatCurrency(product?.price * 200 || 0)}
+                  value={formatCurrency(product?.price * (product?.per_bal || 200) || 0)}
                   disabled
                 />
               </div>

@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import {  Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { debounce } from "lodash";

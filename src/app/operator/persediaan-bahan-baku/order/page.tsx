@@ -20,6 +20,20 @@ interface DetailOrder {
   total: number;
 }
 
+const formatNumber = (value: string | number): string => {
+  if (!value) return '';
+  const stringValue = value.toString();
+  const parts = stringValue.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return parts.length > 1 ? `${parts[0]},${parts[1]}` : parts[0];
+};
+
+const parseFormattedNumber = (value: string): number => {
+  if (!value) return 0;
+  const normalizedValue = value.replace(/\./g, '').replace(',', '.');
+  return parseFloat(normalizedValue) || 0;
+};
+
 export default function OrderPage() {
   const router = useRouter();
 
@@ -31,21 +45,43 @@ export default function OrderPage() {
   const [currentPrice, setCurrentPrice] = useState<string>('');
   const [currentTotal, setCurrentTotal] = useState<string>('');
 
-  const formatNumber = (value: string) => {
-    const number = value.replace(/\D/g, '');
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const calculateTotal = (amount: string, price: string) => {
+    const numAmount = parseFormattedNumber(amount || "0");
+    const numPrice = parseFormattedNumber(price || "0");
+    return numAmount * numPrice;
   };
+
+  const handleAmountChange = (value: string) => {
+    if (/^[\d.,]*$/.test(value)) {
+      const normalizedValue = value.replace(/\./g, '').replace(',', '.');
+      const formattedValue = formatNumber(normalizedValue);
+      setCurrentAmount(formattedValue);
+    }
+  };
+
+  const handlePriceChange = (value: string) => {
+    if (/^[\d.,]*$/.test(value)) {
+      const normalizedValue = value.replace(/\./g, '').replace(',', '.');
+      const formattedValue = formatNumber(normalizedValue);
+      setCurrentPrice(formattedValue);
+    }
+  };
+  
+  useEffect(() => {
+    const total = calculateTotal(currentAmount, currentPrice);
+    setCurrentTotal(formatNumber(total));
+  }, [currentAmount, currentPrice]);
 
   const addDetail = () => {
     if (!currentMaterial) {
       toast.error('Pilih material terlebih dahulu');
       return;
     }
-    if (!currentAmount || Number(currentAmount) <= 0) {
+    if (!currentAmount || parseFormattedNumber(currentAmount) <= 0) {
       toast.error('Jumlah harus lebih dari 0');
       return;
     }
-    if (!currentPrice || Number(currentPrice) <= 0) {
+    if (!currentPrice || parseFormattedNumber(currentPrice) <= 0) {
       toast.error('Harga harus lebih dari 0');
       return;
     }
@@ -55,11 +91,16 @@ export default function OrderPage() {
       toast.error('Material sudah ada dalam detail order, edit jumlah atau harga');
       return;
     }
+
+    const amount = parseFormattedNumber(currentAmount);
+    const price = parseFormattedNumber(currentPrice);
+    const total = amount * price;
+
     setDetails([...details, { 
       material_unit_id: currentMaterial, 
-      amount: Number(currentAmount.replace(/,/g, '')), 
-      price: Number(currentPrice.replace(/,/g, '')),
-      total: Number(currentAmount.replace(/,/g, '')) * Number(currentPrice.replace(/,/g, ''))
+      amount,
+      price,
+      total
     }]);
 
     setCurrentMaterial('');
@@ -67,12 +108,6 @@ export default function OrderPage() {
     setCurrentPrice('');
     setCurrentTotal('');
   };
-  
-  useEffect(() => {
-    const amount = Number(currentAmount.replace(/,/g, ''));
-    const price = Number(currentPrice.replace(/,/g, ''));
-    setCurrentTotal(Number(amount * price).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
-  }, [currentAmount, currentPrice]);
 
   const [materials, setMaterials] = useState<any[]>([]);
   const { user } = useUserStore();
@@ -90,15 +125,15 @@ export default function OrderPage() {
     setDetails(newDetails);
   };
 
-
   const grandTotal = details.reduce((sum, detail) => sum + detail.total, 0);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       const payload = {
-        factory_id: user?.factory_selected?.id, // Adjust based on your needs
+        factory_id: user?.factory_selected?.id,
         desc: description,
         user_id: user?.id,
         type_preorder: true,
@@ -116,7 +151,7 @@ export default function OrderPage() {
         },
         body: JSON.stringify(payload),
       });
-      const data = await response.json()
+      const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setDetails([]);
       toast.success('Order berhasil dibuat');
@@ -133,7 +168,7 @@ export default function OrderPage() {
     setDescription('');
   };
 
-  return(
+  return (
     <MainPage>
       <div className="container mx-auto">
         <Card>
@@ -167,7 +202,6 @@ export default function OrderPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
-                  // error jika tidak diisi
                   aria-invalid={!description}
                 />
               </div>
@@ -200,12 +234,7 @@ export default function OrderPage() {
                   <Input 
                     type="text"
                     value={currentAmount}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, '');
-                      if (/^\d*$/.test(value) || value === '') {
-                        setCurrentAmount(formatNumber(value));
-                      }
-                    }}
+                    onChange={(e) => handleAmountChange(e.target.value)}
                     placeholder="Jumlah"
                   />
                 </div>
@@ -214,12 +243,7 @@ export default function OrderPage() {
                   <Input 
                     type="text"
                     value={currentPrice}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/,/g, '');
-                      if (/^\d*$/.test(value) || value === '') {
-                        setCurrentPrice(formatNumber(value));
-                      }
-                    }}
+                    onChange={(e) => handlePriceChange(e.target.value)}
                     placeholder="Harga per unit"
                   />
                 </div>
@@ -228,7 +252,7 @@ export default function OrderPage() {
                   <Input 
                     type="text"
                     className="bg-gray-50 text-black text-lg font-semibold text-end"
-                    value={currentTotal || ''}
+                    value={currentTotal}
                     disabled
                   />
                 </div>
@@ -241,6 +265,7 @@ export default function OrderPage() {
                   Tambah
                 </Button>
               </div>
+
               <h1 className="text-lg font-semibold">Detail Order</h1>
               <div className="border rounded-lg">
                 <table className="w-full">
@@ -260,9 +285,9 @@ export default function OrderPage() {
                           {materials.find(m => m.id == detail.material_unit_id)?.material} / 
                           {materials.find(m => m.id == detail.material_unit_id)?.unit}
                         </td>
-                        <td className="px-4 py-2">{formatNumber(detail.amount.toString())}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.price.toString())}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.total.toString())}</td>
+                        <td className="px-4 py-2">{formatNumber(detail.amount)}</td>
+                        <td className="px-4 py-2">Rp {formatNumber(detail.price)}</td>
+                        <td className="px-4 py-2">Rp {formatNumber(detail.total)}</td>
                         <td className="px-4 py-2">
                           <Button 
                             type="button"
@@ -275,13 +300,11 @@ export default function OrderPage() {
                         </td>
                       </tr>
                     ))}
-                    {
-                      !details.length && (
-                        <tr>
-                          <td colSpan={5} className="text-center py-10">Tidak ada data</td>
-                        </tr>
-                      )
-                    }
+                    {!details.length && (
+                      <tr>
+                        <td colSpan={5} className="text-center py-10">Tidak ada data</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -293,7 +316,7 @@ export default function OrderPage() {
                 <div className="flex items-center space-x-3">
                   <span className="text-lg font-medium">Rp</span>
                   <span className="font-bold text-4xl tracking-tight">
-                    {grandTotal.toLocaleString('id-ID')}
+                    {formatNumber(grandTotal)}
                   </span>
                 </div>
               </div>
@@ -314,13 +337,11 @@ export default function OrderPage() {
                   className="bg-blue-500 hover:bg-blue-600"
                   disabled={isSubmitting}
                 >
-                  {
-                    isSubmitting ? (
-                      <Loader2 className="w-4 h-4 mr-1" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-1" />
-                    )
-                  }
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 mr-1" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-1" />
+                  )}
                   {isSubmitting ? 'Sedang menyimpan...' : 'Simpan Order'}
                 </Button>
               </div>
@@ -329,5 +350,5 @@ export default function OrderPage() {
         </Card>
       </div>
     </MainPage>
-  )
+  );
 }

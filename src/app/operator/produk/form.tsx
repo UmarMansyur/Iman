@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProductFormState } from "@/lib/definitions";
 import { Pencil, PlusCircle } from "lucide-react";
 import { DialogClose } from "@radix-ui/react-dialog";
@@ -31,7 +31,7 @@ export default function Form({
   product,
   fetchData,
 }: {
-  product?: { id: number; name: string; type: ProductType; price: number };
+  product?: { id: number; name: string; type: ProductType; price: number; per_slop: number; per_bal: number; per_karton: number };
   fetchData: () => Promise<void>;
 }) {
   const [state, setState] = useState<ProductFormState>();
@@ -43,53 +43,24 @@ export default function Form({
     return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  const convertPrice = (value: number, to: string) => {
-    let result = 0;
-    if (selectedUnit === "Bal") {
-      result = value / 200;
-    } else if (selectedUnit === "Karton") {
-      result = value / 800;
-    } else if (selectedUnit === "Slop") {
-      result = value / 10;
-    } else if (selectedUnit === "Pack") {
-      result = value;
-    }
-
-    if (to === "Pack") {
-      return result;
-    } else if (to === "Bal") {
-      return result * 200;
-    } else if (to === "Slop/Press") {
-      return result * 10;
-    } else if (to === "Karton") {
-      return result * 800;
-    } else {
-      return result;
-    }
-  };
-
-  const handleUnitChange = (value: string) => {
-    const priceInput = document.getElementById("price") as HTMLInputElement;
-    const price = convertPrice(Number(priceInput.value.replace(/\./g, "")), value);
-    setSelectedUnit(value);
-    priceInput.value = price.toLocaleString("id-ID").replace(/,/g, ".");
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const price = formData.get("price")?.toString().replace(/\./g, "") || "";
+    const per_slop = formData.get("per_slop")?.toString().replace(/\./g, "") || "10";
+    const per_bal = formData.get("per_bal")?.toString().replace(/\./g, "") || "200";
+    const per_karton = formData.get("per_karton")?.toString().replace(/\./g, "") || "800";
 
     if (selectedUnit === "Pack") {
       formData.set("price", price);
     } else if (selectedUnit === "Bal") {
-      formData.set("price", (Number(price) / 200).toString());
+      formData.set("price", (Number(price) / Number(per_bal)).toString());
     } else if (selectedUnit === "Slop/Press") {
-      formData.set("price", (Number(price) / 10).toString());
+      formData.set("price", (Number(price) / Number(per_slop)).toString());
     } else if (selectedUnit === "Karton") {
-      formData.set("price", (Number(price) / 800).toString());
+      formData.set("price", (Number(price) / Number(per_karton)).toString());
     }
 
     formData.append("id", product?.id?.toString() || "");
@@ -108,6 +79,23 @@ export default function Form({
     await fetchData();
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!product) {
+      const per_slop = document.getElementById("per_slop") as HTMLInputElement;
+      const per_bal = document.getElementById("per_bal") as HTMLInputElement;
+      const per_karton = document.getElementById("per_karton") as HTMLInputElement;
+      if (per_slop) {
+        per_slop.value = "10";
+      }
+      if (per_bal) {
+        per_bal.value = "200";
+      }
+      if (per_karton) {
+        per_karton.value = "800";
+      }
+    }
+  }, [product]);
 
   return (
     <Dialog>
@@ -173,8 +161,60 @@ export default function Form({
               )}
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="per_slop">Pack to Slop</Label>
+              <Input
+                id="per_slop"
+                name="per_slop"
+                defaultValue={product?.per_slop?.toString()}
+                placeholder="10"
+                className="col-span-3"
+                // isi nilai default
+                onChange={(e) => {
+                  e.target.value = formatPrice(e.target.value);
+                }}
+              />
+              {state?.errors?.per_slop && (
+                <p className="text-red-500 col-span-3 col-start-2">
+                  {state.errors.per_slop.join(", ")}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="per_bal">Pack to Bal</Label>
+              <Input
+                id="per_bal"
+                name="per_bal"
+                defaultValue={product?.per_bal?.toString()}
+                placeholder="200"
+                className="col-span-3"
+                onChange={(e) => {
+                  e.target.value = formatPrice(e.target.value);
+                }}
+              />
+              {state?.errors?.per_bal && (
+                <p className="text-red-500 col-span-3 col-start-2">
+                  {state.errors.per_bal.join(", ")}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="per_karton">Pack to Karton</Label>
+              <Input
+                id="per_karton"
+                name="per_karton"
+                defaultValue={product?.per_karton?.toString()}
+                placeholder="800"
+                className="col-span-3"
+              />
+              {state?.errors?.per_karton && (
+                <p className="text-red-500 col-span-3 col-start-2">
+                  {state.errors.per_karton.join(", ")}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="price">Satuan Harga</Label>
-              <Select value={selectedUnit} onValueChange={handleUnitChange}>
+              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Pilih Status" />
                 </SelectTrigger>

@@ -10,6 +10,7 @@ import {
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import DetailDialog from "./detail-dialog";
 import DeleteButtonQuery from "@/components/DeleteButton";
+import StatusPayment from "@/components/status-payment";
 
 export const columns = (page: number, limit: number): ColumnDef<any>[] => [
   {
@@ -71,6 +72,9 @@ export const columns = (page: number, limit: number): ColumnDef<any>[] => [
     accessorKey: "payment_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status Pembayaran"/>
+    ),
+    cell: ({ row }) => (
+      <StatusPayment status={row.original.payment_status} />
     ),
   },
   {

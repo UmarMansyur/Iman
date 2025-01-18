@@ -42,16 +42,6 @@ export async function GET(req: Request) {
       where.factory_distributor_id = memberDistributor.factory_distributor_id;
     }
 
-    const listProduct = await prisma.product.findMany();
-
-    const listProducts = listProduct.map((item) => {
-      return {
-        id: item.id,
-        name: item.name + " - " + item.type,
-        price: item.price,
-        factory_id: item.factory_id,
-      };
-    });
 
     if (search) {
       where.OR = [
@@ -93,6 +83,29 @@ export async function GET(req: Request) {
       },
     });
 
+    const listProduct = await prisma.product.findMany({
+      where: {
+        NOT: {
+          id: {
+            in: response.map((item: any) => item.product_id),
+          },
+        },
+      }
+    });
+
+    const listProducts = listProduct.map((item) => {
+      return {
+        id: item.id,
+        name: item.name + " - " + item.type,
+        price: item.price,
+        factory_id: item.factory_id,
+        per_bal: item.per_bal,
+        per_karton: item.per_karton,
+        per_slop: item.per_slop,
+      };
+    });
+
+
     const data = response.map((item: any) => {
       return {
         id: item.id,
@@ -101,6 +114,12 @@ export async function GET(req: Request) {
         price: item.price,
         sale_price: item.sale_price,
         factory_id: item.factory_id,
+        factory: {
+          name: item.factory?.name || "Non Pabrik",
+        },
+        per_bal: item.product.per_bal,
+        per_karton: item.product.per_karton,
+        per_slop: item.product.per_slop,
       };
     });
 
@@ -135,6 +154,9 @@ export async function POST(req: Request) {
       factory_distributor_id,
       product_type,
       purchase_price,
+      per_bal,
+      per_karton,
+      per_slop,
     } = await req.json();
     let factory_distributor = null;
 
@@ -168,80 +190,92 @@ export async function POST(req: Request) {
 
     if (!isNaN(Number(product_id))) {
       where.product_id = parseInt(product_id);
-    }
-
-    const existingMemberPriceProduct =
-      await prisma.memberPriceProduct.findFirst({
-        where: {
-          ...where,
-          factory_distributor_id: Number(factory_distributor),
-        },
-      });
-
-    if (existingMemberPriceProduct) {
-      throw new Error(
-        "Produk sudah ditambahkan!, edit produk untuk mengubah harga"
-      );
-    }
-
-    let memberPriceProduct = null;
-    // jika product_id di convert tidak nan
-    if (!isNaN(Number(product_id))) {
-      const existProduct = await prisma.product.findFirst({
-        where: {
-          id: parseInt(product_id),
-        },
-      });
-
-      if (!existProduct) {
-        throw new Error("Produk tidak ditemukan");
-      }
-
-      memberPriceProduct = await prisma.memberPriceProduct.create({
-        data: {
-          ...where,
-          product_id: parseInt(product_id),
-          price: existProduct.price,
-          sale_price: Number(sale_price),
-          factory_distributor_id: Number(factory_distributor),
-        },
-      });
     } else {
-      // check exist product
-      const existProducts = await prisma.product.findFirst({
-        where: {
-          name: product_id,
-          type: product_type,
-        },
-      });
-
-      if (existProducts) {
-        throw new Error("Produk sudah ada!");
+      where.product = {
+        name: product_id,
+        type: product_type,
       }
+    }
 
-      const product = await prisma.product.create({
-        data: {
-          name: product_id,
-          type: product_type,
-          price: Number(purchase_price),
-        },
-      });
+    // jika factory_distributor tidak ada maka throw error
+    if (!factory_distributor) {
+      throw new Error("Factory distributor tidak ditemukan!");
+    }
 
-      memberPriceProduct = await prisma.memberPriceProduct.create({
-        data: {
+    return await prisma.$transaction(async (tx) => {
+      // Cek existing product
+      const existingMemberPriceProduct = await tx.memberPriceProduct.findFirst({
+        where: {
           ...where,
-          product_id: product.id,
-          price: Number(purchase_price),
-          sale_price: Number(sale_price),
           factory_distributor_id: Number(factory_distributor),
         },
       });
-    }
 
-    return NextResponse.json({
-      message: "Produk berhasil ditambahkan",
-      data: memberPriceProduct,
+      if (existingMemberPriceProduct) {
+        throw new Error("Produk sudah ditambahkan!, edit produk untuk mengubah harga");
+      }
+
+      let memberPriceProduct = null;
+      
+      if (!isNaN(Number(product_id))) {
+        const existProduct = await tx.product.findFirst({
+          where: {
+            id: parseInt(product_id),
+          },
+        });
+
+        if (!existProduct) {
+          throw new Error("Produk tidak ditemukan");
+        }
+
+        memberPriceProduct = await tx.memberPriceProduct.create({
+          data: {
+            product_id: parseInt(product_id),
+            price: existProduct.price,
+            sale_price: Number(sale_price),
+            factory_distributor_id: Number(factory_distributor),
+          },
+        });
+      } else {
+        // Check exist product
+        const existProducts = await tx.product.findFirst({
+          where: {
+            name: product_id,
+            type: product_type,
+          },
+        });
+
+        if (existProducts) {
+          throw new Error("Produk sudah ada!");
+        }
+
+        const product = await tx.product.create({
+          data: {
+            name: product_id,
+            type: product_type,
+            price: Number(purchase_price),
+            per_bal: Number(per_bal),
+            per_karton: Number(per_karton),
+            per_slop: Number(per_slop),
+          },
+        });
+
+        memberPriceProduct = await tx.memberPriceProduct.create({
+          data: {
+            product_id: product.id,
+            price: Number(purchase_price),
+            sale_price: Number(sale_price),
+            factory_distributor_id: Number(factory_distributor),
+          },
+        });
+      }
+
+      return NextResponse.json({
+        message: "Produk berhasil ditambahkan",
+        data: memberPriceProduct,
+      });
     });
+
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

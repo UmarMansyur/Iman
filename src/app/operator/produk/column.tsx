@@ -47,7 +47,7 @@ export const columns = (fetchData: () => Promise<void>, page: number, limit: num
     header: "Harga/Ball",
     cell: ({ row }) => (
       <div className="text-start">
-        {(row.original.price * 200).toLocaleString("id-ID", { style: "currency", currency: "IDR" }).slice(0, -3)}
+        {(row.original.price * row.original.per_bal).toLocaleString("id-ID", { style: "currency", currency: "IDR" }).slice(0, -3)}
       </div>
     ),
   },

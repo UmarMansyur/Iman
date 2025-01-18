@@ -11,7 +11,6 @@ export async function POST(req: Request) {
       payment_method_id,
       buyer_name,
       buyer_address,
-      is_new_buyer,
       ppn,
       discount,
       cost,
@@ -25,8 +24,14 @@ export async function POST(req: Request) {
     let buyer_id: number;
     let location_distributor_id: number;
 
-    // check dulu apakan buyer ada atau tidak
-    if (is_new_buyer) {
+    const existBuyer = await prisma.buyerDistributor.findFirst({
+      where: {
+        name: buyer_name,
+        distributor_id: Number(distributor_id),
+      },
+    });
+
+    if (!existBuyer) {
       const newBuyer = await prisma.buyerDistributor.create({
         data: {
           name: buyer_name,
@@ -48,24 +53,11 @@ export async function POST(req: Request) {
 
       location_distributor_id = newLocation.id;
     } else {
-      const existBuyer = await prisma.buyerDistributor.findFirst({
-        where: {
-          name: buyer_name,
-          distributor_id: Number(distributor_id),
-        },
-      });
-      if (!existBuyer) {
-        return NextResponse.json(
-          { message: "Buyer tidak ditemukan" },
-          { status: 400 }
-        );
-      }
-
       buyer_id = existBuyer.id;
 
       const existLocation = await prisma.locationDistributor.findFirst({
         where: {
-          name: buyer_name,
+          name: buyer_address,
           distributor_id: Number(distributor_id),
         },
       });
@@ -243,6 +235,7 @@ export async function GET(req: Request) {
     const transactions = await prisma.transactionDistributor.findMany({
       where,
       include: {
+        Factory: true,
         buyer: true,
         location_distributor: true,
         payment_method: true,

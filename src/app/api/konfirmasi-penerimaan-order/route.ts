@@ -7,7 +7,7 @@ export async function PUT(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const { recipient, user_id, factory_id } = await req.json();
+    const { recipient } = await req.json();
     const response = await prisma.invoice.findFirst({
       where: {
         id: parseInt(id || ""),

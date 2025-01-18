@@ -176,7 +176,7 @@ export default function CreateTransaction() {
     );
     if (existingItem) {
       existingItem.quantity += quantity;
-      existingItem.subtotal = existingItem.quantity * (price * 200);
+      existingItem.subtotal = existingItem.quantity * (price * (productData?.per_bal || 200));
     } else {
       setCart([
         ...cart,
@@ -185,8 +185,8 @@ export default function CreateTransaction() {
           product_name: productData?.name + " - " + productData?.type,
           product_type: productData?.type,
           quantity: quantity,
-          price: price * 200,
-          subtotal: quantity * price * 200,
+          price: price * (productData?.per_bal || 200),
+          subtotal: quantity * price * (productData?.per_bal || 200),
         },
       ]);
     }
@@ -312,7 +312,7 @@ export default function CreateTransaction() {
   }, [user?.id]);
 
   useEffect(() => {
-    setSubtotal(quantity * (price * 200));
+    setSubtotal(quantity * (price * (product.find((item: any) => item.id === selectedProduct)?.per_bal || 200)));
   }, [quantity, price]);
 
   useEffect(() => {
@@ -382,7 +382,7 @@ export default function CreateTransaction() {
                 <Label>Harga Per Ball</Label>
                 <Input
                   type="text"
-                  value={formatRibuan(price * 200)}
+                  value={formatRibuan(price * (product.find((item: any) => item.id === selectedProduct)?.per_bal || 200))}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\./g, "");
                     setPrice(Number(value));
