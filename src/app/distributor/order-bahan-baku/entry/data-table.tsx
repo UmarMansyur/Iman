@@ -125,11 +125,11 @@ export function DataTable<TData, TValue>({
                   colSpan={7}
                   className="h-24 text-center"
                 >
-                  <EmptyData text="Tidak ada data Stok Bahan Baku. Silahkan entry data Stok Bahan Baku Terlebih Dahulu!" />
-                  <Link href="/operator/persediaan-bahan-baku/entry">
+                  <EmptyData text="Tidak ada data Bahan Baku. Silahkan entry data Bahan Baku Terlebih Dahulu!" />
+                  <Link href="/distributor/order-bahan-baku/entry">
                     <Button variant="outline" size="sm" className="mt-2 bg-primary2 text-white border-none shadow-primary2/50 shadow-sm hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white">
                     <PlusCircleIcon className="w-4 h-4" />
-                    Entry Stock Bahan Baku
+                    Entry Bahan Baku
                   </Button>
                   </Link>
                 </TableCell>

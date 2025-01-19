@@ -105,6 +105,8 @@ export async function GET(req: Request) {
       };
     });
 
+    console.log(listProducts)
+
 
     const data = response.map((item: any) => {
       return {
@@ -115,7 +117,7 @@ export async function GET(req: Request) {
         sale_price: item.sale_price,
         factory_id: item.factory_id,
         factory: {
-          name: item.factory?.name || "Non Pabrik",
+          name: item.factory,
         },
         per_bal: item.product.per_bal,
         per_karton: item.product.per_karton,

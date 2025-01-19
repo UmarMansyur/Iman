@@ -49,9 +49,20 @@ export async function PUT(req: Request, { params }: { params: any }) {
     const paramsId = await params;
     const id = paramsId.id;
 
-    const { name, factory_distributor_id, user_id, desc, type_preorder, detail_order} = await req.json();
+    const { name, user_id, desc, type_preorder, details: detail_order} = await req.json();
 
     const response = await prisma.$transaction(async (tx) => {
+
+      const exist = await tx.orderBahanBakuDistributor.findUnique({
+        where: {
+          id: Number(id),
+        },
+      });
+
+      if (!exist) {
+        throw new Error("Order tidak ditemukan");
+      }
+
       await tx.detailOrderBahanBakuDistributor.deleteMany({
         where: {
           order_bahan_baku_distributor_id: Number(id),
@@ -64,10 +75,20 @@ export async function PUT(req: Request, { params }: { params: any }) {
         },
         data: {
           factory: name,
-          factory_distributor_id: Number(factory_distributor_id),
           distributor_id: Number(user_id),
           desc,
-          type_preorder: type_preorder ? true : false,
+          type_preorder: type_preorder,
+          DetailOrderBahanBakuDistributor: {
+            createMany: {
+              data: detail_order.map((item: any) => ({
+                material_distributor_id: Number(item.material_distributor_id),
+                amount: Number(item.amount),
+                amount_received: type_preorder == false ? Number(item.amount) : 0,
+                price: Number(item.price),
+                sub_total: Number(item.sub_total),
+              })),
+            },
+          },
           total: detail_order.reduce((acc: number, item: any) => acc + Number(item.sub_total), 0),
         },
       });
@@ -76,7 +97,7 @@ export async function PUT(req: Request, { params }: { params: any }) {
     });
 
     return NextResponse.json({
-      message: "Order update berhasil",
+      message: "Update order bahan baku berhasil",
       data: response,
     });
 
@@ -84,6 +105,54 @@ export async function PUT(req: Request, { params }: { params: any }) {
     return NextResponse.json({
       message: error.message,
       error: error,
+    }, {
+      status: 500,
+    });
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: any }) {
+  try {
+    const paramId = await params;
+    const id = paramId.id;
+    const { items } = await req.json();
+
+    const response = await prisma.$transaction(async (tx) => {
+      const exist = await tx.orderBahanBakuDistributor.findUnique({
+        where: {
+          id: Number(id),
+        },
+      });
+
+      if (!exist) {
+        throw new Error("Order tidak ditemukan");
+      }
+
+      await Promise.all(items.map(async (item: any) => {
+        await tx.detailOrderBahanBakuDistributor.update({
+          where: {
+            id: Number(item.id),
+          },
+          data: {
+            amount_received: Number(item.amount_received),
+          },
+        });
+      }));
+    });
+
+    return NextResponse.json({
+      message: "Update order bahan baku berhasil",
+      data: response,
+    }, {
+      status: 200,
+    });
+
+  } catch (error: any) {
+    return NextResponse.json({
+      message: error.message,
+      error: error,
+    }, {
+      status: 500,
     });
   }
 }

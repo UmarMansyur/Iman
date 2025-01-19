@@ -107,6 +107,8 @@ export async function POST(req: Request) {
       });
     }
 
+    console.log(type_preorder)
+
     const order = await prisma.orderBahanBakuDistributor.create({
       data: {
         distributor_id: Number(user_id),
@@ -123,7 +125,7 @@ export async function POST(req: Request) {
             data: detail_order.map((item: any) => ({
               material_distributor_id: Number(item.material_distributor_id),
               amount: Number(item.amount),
-              amount_received: type_preorder ? Number(item.amount) : 0,
+              amount_received: type_preorder == false ? Number(item.amount) : 0,
               price: Number(item.price),
               sub_total: Number(item.sub_total),
             })),

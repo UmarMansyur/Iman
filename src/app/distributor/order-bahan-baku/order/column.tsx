@@ -15,7 +15,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { ActionCell } from "./components/ActionCell";
 import { Eye, PrinterCheckIcon } from "lucide-react";
 import Link from "next/link";
@@ -46,74 +45,52 @@ export const columns = (
         })}
       </div>
     ),
-
   },
   {
-    accessorKey: "user",
+    accessorKey: "distributor",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Operator Pemesan" />
+      <DataTableColumnHeader column={column} title="Distributor" />
     ),
     cell: ({ row }) => (
       <div className="text-start flex items-center gap-2">
         <Avatar>
-          <AvatarImage src={row.original.user?.thumbnail} />
+          <AvatarImage src={row.original.distributor?.thumbnail} />
           <AvatarFallback>
-            {row.original.user?.username?.charAt(0)}
+            {row.original.distributor?.username?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <div className="text-start">
-          <p>{row.original.user?.username}</p>
+          <p>{row.original.distributor?.username}</p>
           <p className="text-xs text-muted-foreground">
-            {row.original.user?.email}
+            {row.original.distributor?.email}
           </p>
         </div>
       </div>
     ),
   },
   {
-    accessorKey: "price",
+    accessorKey: "total",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Total Harga Pemesanan" />
     ),
     cell: ({ row }) => (
       <div className="text-start">
-        Rp. {new Intl.NumberFormat("id-ID").format(row.original.price)}
+        Rp. {new Intl.NumberFormat("id-ID").format(row.original.total)}
       </div>
     ),
   },
   {
-    accessorKey: "Item",
+    accessorKey: "DetailOrderBahanBakuDistributor",
     header: "Item",
     cell: ({ row }) => (
       <div className="text-start">
-        {row.original.DetailOrderMaterialUnit?.map((item: any) => (
+        {row.original.DetailOrderBahanBakuDistributor?.map((item: any) => (
           <div key={item.id}>
-            {item.materialUnit?.material?.name} / {item.materialUnit?.unit?.name}
+            {item.material_distributor?.name} / {item.material_distributor?.unit?.name}
           </div>
         ))}
       </div>
     ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.original.status;
-      switch (status) {
-        case "Pending":
-          return (
-            <Badge variant="outline" className="bg-yellow-500 text-white border-none">
-              Menunggu
-            </Badge>
-          );
-        case "Approved":
-          return <Badge className="bg-blue-500 text-white">Diterima</Badge>;
-        case "Rejected":
-          return <Badge className="bg-red-500 text-white">Ditolak</Badge>;
-        default:
-          return <Badge>{status}</Badge>;
-      }
-    },
   },
   {
     accessorKey: "desc",
@@ -136,20 +113,20 @@ export const columns = (
             <div className="grid gap-4">
               <div className="flex justify-between">
                 <div>
-                  <Label>Operator Pemesan</Label>
+                  <Label>Distributor</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Avatar>
-                      <AvatarImage src={row.original.user?.thumbnail} />
+                      <AvatarImage src={row.original.distributor?.thumbnail} />
                       <AvatarFallback>
-                        {row.original.user?.username?.charAt(0)}
+                        {row.original.distributor?.username?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">
-                        {row.original.user?.username}
+                        {row.original.distributor?.username}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {row.original.user?.email}
+                        {row.original.distributor?.email}
                       </p>
                     </div>
                   </div>
@@ -165,21 +142,17 @@ export const columns = (
                       }
                     )}
                   </div>
-                  {row.original.status === "Pending" && (
-                    <Badge
-                      variant="outline"
-                      className="bg-yellow-500 text-white border-none"
-                    >
-                      Menunggu
-                    </Badge>
-                  )}
-                  {row.original.status === "Approved" && (
-                    <Badge className="bg-blue-500 text-white border-none">Diterima</Badge>
-                  )}
-                  {row.original.status === "Rejected" && (
-                    <Badge className="bg-red-500 text-white border-none">Ditolak</Badge>
-                  )}
                 </div>
+              </div>
+
+              <div>
+                <Label>Factory</Label>
+                <p className="mt-1">{row.original.factory}</p>
+              </div>
+
+              <div>
+                <Label>Factory Distributor</Label>
+                <p className="mt-1">{row.original.factoryDistributor?.name}</p>
               </div>
 
               <div>
@@ -188,8 +161,8 @@ export const columns = (
               </div>
 
               <div>
-                <Label>Status</Label>
-                <p className="mt-1">{row.original.status}</p>
+                <Label>Type</Label>
+                <p className="mt-1">{row.original.type_preorder ? 'Pre Order' : 'Ready Stock'}</p>
               </div>
 
               <div>
@@ -206,13 +179,12 @@ export const columns = (
                       </tr>
                     </thead>
                     <tbody>
-                      {row.original.DetailOrderMaterialUnit?.map(
+                      {row.original.DetailOrderBahanBakuDistributor?.map(
                         (detail: any, index: number) => (
                           <tr key={index} className="border-t">
                             <td className="px-4 py-2">
-                              {/* {JSON.stringify(detail)} */}
-                              {detail.materialUnit?.material?.name} /{" "}
-                              {detail.materialUnit?.unit?.name}
+                              {detail.material_distributor?.name} /{" "}
+                              {detail.material_distributor?.unit?.name}
                             </td>
                             <td className="px-4 py-2">
                               {detail.amount.toLocaleString("id-ID")}
@@ -224,10 +196,7 @@ export const columns = (
                               Rp {detail.price.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2">
-                              Rp{" "}
-                              {(detail.amount * detail.price).toLocaleString(
-                                "id-ID"
-                              )}
+                              Rp {detail.sub_total.toLocaleString("id-ID")}
                             </td>
                           </tr>
                         )
@@ -242,12 +211,7 @@ export const columns = (
                           Total Keseluruhan:
                         </td>
                         <td className="px-4 py-2 font-bold">
-                          Rp{" "}
-                          {row.original.DetailOrderMaterialUnit?.reduce(
-                            (sum: number, detail: any) =>
-                              sum + detail.amount * detail.price,
-                            0
-                          ).toLocaleString("id-ID")}
+                          Rp {row.original.total.toLocaleString("id-ID")}
                         </td>
                       </tr>
                     </tfoot>
@@ -269,7 +233,7 @@ export const columns = (
     accessorKey: "Cetak",
     header: "Cetak",
     cell: ({ row }) => (
-      <Link href={`/operator/persediaan-bahan-baku/order/${row.original.id}/print`} target="_blank">
+      <Link href={`/distributor/order-bahan-baku/order/${row.original.id}/print`} target="_blank">
         <Button
           variant="outline"
           size="sm"

@@ -235,7 +235,7 @@ export const columns = (
                 <Button variant="outline">Tutup</Button>
               </DialogClose>
               <DialogClose asChild>
-                <a href={`/distributor/order-bahan-baku/order/${row.original.id}/print`} target="_blank" className="bg-yellow-500 text-white border-none shadow-yellow-500/50 shadow-sm hover:bg-yellow-600 hover:shadow-yellow-600/50 hover:text-white rounded-md px-4 py-2 flex items-center gap-2">
+                <a href={`/distributor/order-bahan-baku/entry/${row.original.id}/print`} target="_blank" className="bg-yellow-500 text-white border-none shadow-yellow-500/50 shadow-sm hover:bg-yellow-600 hover:shadow-yellow-600/50 hover:text-white rounded-md px-4 py-2 flex items-center gap-2">
                   <PrinterCheckIcon className="w-4 h-4" /> Cetak
                 </a>
               </DialogClose>
@@ -250,7 +250,7 @@ export const columns = (
     header: "Cetak",
     cell: ({ row }) => (
       <Link
-        href={`/distributor/order-bahan-baku/order/${row.original.id}/print`}
+        href={`/distributor/order-bahan-baku/entry/${row.original.id}/print`}
         target="_blank"
       >
         <Button

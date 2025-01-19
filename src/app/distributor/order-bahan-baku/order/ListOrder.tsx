@@ -16,7 +16,7 @@ export default function PabrikPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const router = useRouter()
+  const router = useRouter();
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -33,11 +33,11 @@ export default function PabrikPage() {
 
   // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
-  const { user } = useUserStore()
+  const { user } = useUserStore();
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      if(!user) return;
+      if (!user) return;
       const factoryId = user?.factory_selected?.id;
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
@@ -47,11 +47,13 @@ export default function PabrikPage() {
         sortOrder: filters.sortOrder,
       });
 
-      if(factoryId) {
+      if (factoryId) {
         queryParams.set("factoryId", factoryId.toString());
       }
-  
-      const response = await fetch(`/api/order?${queryParams}&type_preorder=true`);
+
+      const response = await fetch(
+        `/api/distributor/order-bahan-baku?${queryParams}&type_preorder=true`
+      );
       const data = await response.json();
 
       setData(data.data);
@@ -60,7 +62,7 @@ export default function PabrikPage() {
         total: data.pagination.total,
         totalPages: data.pagination.totalPages,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -78,7 +80,6 @@ export default function PabrikPage() {
     filters.sortOrder,
     user,
   ]);
-
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
@@ -122,9 +123,11 @@ export default function PabrikPage() {
               </div>
             </div>
             <div>
-              <Button 
-                  className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
-                onClick={() => router.push('/operator/persediaan-bahan-baku/order')}
+              <Button
+                className="bg-primary2 text-white hover:bg-primary2/80 hover:shadow-primary2/60 hover:text-white"
+                onClick={() =>
+                  router.push("/distributor/order-bahan-baku/order")
+                }
               >
                 <PlusCircle className="w-4 h-4 mr-1" />
                 Tambah Order Bahan Baku
@@ -137,7 +140,11 @@ export default function PabrikPage() {
             </div>
           ) : (
             <DataTable
-              columns={columns(fetchProducts, pagination.page, pagination.limit)}
+              columns={columns(
+                fetchProducts,
+                pagination.page,
+                pagination.limit
+              )}
               data={data}
               pagination={pagination}
               sorting={(sortBy, sortOrder) => {
@@ -152,6 +159,5 @@ export default function PabrikPage() {
         </div>
       )}
     </div>
-
   );
 }

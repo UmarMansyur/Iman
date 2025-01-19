@@ -847,17 +847,20 @@ model OrderBahanBakuDistributor {
   created_at                      DateTime
   updated_at                      DateTime
   DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+
+  @@map("order_bahan_baku_distributors")
 }
 
 model MaterialDistributor {
   id                              Int                               @id @default(autoincrement())
-  order_code                      String                            @unique
   name                            String                            @db.VarChar(200)
   factoryDistributor              FactoryDistributor                @relation(fields: [factory_distributor_id], onDelete: Cascade, references: [id])
   factory_distributor_id          Int
   unit                            Unit                              @relation(fields: [unit_id], references: [id], onDelete: Cascade)
   unit_id                         Int
   DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+
+  @@map("material_distributors")
 }
 
 model DetailOrderBahanBakuDistributor {
@@ -870,4 +873,6 @@ model DetailOrderBahanBakuDistributor {
   amount                          Float
   price                           Float
   sub_total                       Float
+
+  @@map("detail_order_bahan_baku_distributors")
 }

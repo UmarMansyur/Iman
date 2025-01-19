@@ -16,9 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useUserStore } from "@/store/user-store";
 import { Check, Loader2, PencilLine } from "lucide-react";
 
 interface ActionCellProps {
@@ -30,11 +28,10 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
   const [receivedAmounts, setReceivedAmounts] = useState<{[key: number]: string}>({});
   const [data, setData] = useState<any[]>();
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useUserStore();
 
   const handleChange = (e: any, id: number, amount: number) => {
-    const inputValue = e.target.value.replace(/[^\d,]/g, ''); // Hanya izinkan angka dan koma
-    const numericValue = inputValue.replace(/,/g, '.'); // Ganti koma dengan titik untuk parsing angka
+    const inputValue = e.target.value.replace(/[^\d,]/g, '');
+    const numericValue = inputValue.replace(/,/g, '.');
   
     if (isNaN(Number(numericValue))) {
       toast.error("Masukkan nilai yang valid");
@@ -47,7 +44,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
     }
   
     const formattedValue = numericValue
-      ? numericValue.replace(/\./g, ',') // Tampilkan kembali dalam format koma
+      ? numericValue.replace(/\./g, ',')
       : '';
   
     const existingData = data?.find((item: any) => item.id === id);
@@ -63,20 +60,21 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
       [id]: formattedValue,
     });
   };
-  
 
   const handleSubmit = async () => {
     setIsLoading(true);
     const formattedData = data?.map((item) => ({
       id: item.id,
-      amount_received: item.amount_received.replace(/,/g, '.'), // Ganti koma dengan titik
+      amount_received: item.amount_received.replace(/,/g, '.'),
     }));
   
-    const response = await fetch(`/api/order/${row.original.id}`, {
+    const response = await fetch(`/api/distributor/order-bahan-baku/${row.original.id}`, {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        items: formattedData,
-        factory_id: user?.factory_selected?.id
+        items: formattedData
       })
     });
     const responseData = await response.json();
@@ -87,7 +85,6 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
       fetchData();
     }
     setIsLoading(false);
-
   }
 
   return (
@@ -109,20 +106,20 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
             <div className="grid gap-4">
               <div className="flex justify-between">
                 <div>
-                  <Label>Operator Pemesan</Label>
+                  <Label>Distributor</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Avatar>
-                      <AvatarImage src={row.original.user?.thumbnail} />
+                      <AvatarImage src={row.original.distributor?.thumbnail} />
                       <AvatarFallback>
-                        {row.original.user?.username?.charAt(0)}
+                        {row.original.distributor?.username?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium">
-                        {row.original.user?.username}
+                        {row.original.distributor?.username}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {row.original.user?.email}
+                        {row.original.distributor?.email}
                       </p>
                     </div>
                   </div>
@@ -138,21 +135,17 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                       }
                     )}
                   </div>
-                  {row.original.status === "Pending" && (
-                    <Badge
-                      variant="outline"
-                      className="bg-yellow-500 text-white border-none"
-                    >
-                      Menunggu
-                    </Badge>
-                  )}
-                  {row.original.status === "Approved" && (
-                    <Badge className="bg-blue-500 text-white border-none">Diterima</Badge>
-                  )}
-                  {row.original.status === "Rejected" && (
-                    <Badge className="bg-red-500 text-white border-none">Ditolak</Badge>
-                  )}
                 </div>
+              </div>
+
+              <div>
+                <Label>Factory</Label>
+                <p className="mt-1">{row.original.factory}</p>
+              </div>
+
+              <div>
+                <Label>Factory Distributor</Label>
+                <p className="mt-1">{row.original.factoryDistributor?.name}</p>
               </div>
 
               <div>
@@ -173,14 +166,14 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {row.original.DetailOrderMaterialUnit?.map(
+                      {row.original.DetailOrderBahanBakuDistributor?.map(
                         (detail: any, index: number) => (
                           <tr key={index} className="border-t">
                             <td className="px-4 py-2">
-                              {detail.materialUnit?.material?.name}
+                              {detail.material_distributor?.name}
                             </td>
                             <td className="px-4 py-2 text-center">
-                              {detail.materialUnit?.unit?.name}
+                              {detail.material_distributor?.unit?.name}
                             </td>
                             <td className="px-4 py-2 text-right">
                               {detail.amount.toLocaleString("id-ID")}
@@ -189,8 +182,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                               <Input 
                                 type="text" 
                                 className="w-full" 
-                                
-                                placeholder={detail.amount_received} 
+                                placeholder={detail.amount_received?.toLocaleString("id-ID") || "0"} 
                                 value={receivedAmounts[detail.id] || ''} 
                                 onChange={(e: any) => handleChange(e, detail.id, detail.amount)} 
                               />
@@ -232,12 +224,12 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {row.original.DetailOrderMaterialUnit?.map(
+                      {row.original.DetailOrderBahanBakuDistributor?.map(
                         (detail: any, index: number) => (
                           <tr key={index} className="border-t">
                             <td className="px-4 py-2">
-                              {detail.materialUnit?.material?.name} /{" "}
-                              {detail.materialUnit?.unit?.name}
+                              {detail.material_distributor?.name} /{" "}
+                              {detail.material_distributor?.unit?.name}
                             </td>
                             <td className="px-4 py-2">
                               {detail.amount.toLocaleString("id-ID")}
@@ -246,10 +238,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                               Rp {detail.price.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2">
-                              Rp{" "}
-                              {(detail.amount * detail.price).toLocaleString(
-                                "id-ID"
-                              )}
+                              Rp {detail.sub_total.toLocaleString("id-ID")}
                             </td>
                           </tr>
                         )
@@ -264,12 +253,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                           Total Keseluruhan:
                         </td>
                         <td className="px-4 py-2 font-bold">
-                          Rp{" "}
-                          {row.original.DetailOrderMaterialUnit?.reduce(
-                            (sum: number, detail: any) =>
-                              sum + detail.amount * detail.price,
-                            0
-                          ).toLocaleString("id-ID")}
+                          Rp {row.original.total.toLocaleString("id-ID")}
                         </td>
                       </tr>
                     </tfoot>

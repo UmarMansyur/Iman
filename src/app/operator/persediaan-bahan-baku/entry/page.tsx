@@ -32,7 +32,7 @@ import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
 import EmptyData from "@/components/views/empty-data";
 import { TableCell } from "@/components/ui/table";
-import { formatWithComma, parseFormattedNumber } from "@/utils/format";
+import { formatWithComma, parseFormattedNumber, toNumber, toRupiah } from "@/utils/format";
 
 interface DetailOrder {
   material_unit_id: string;
@@ -82,13 +82,15 @@ export default function OrderPage() {
       return;
     }
 
+    console.log(toNumber(currentAmount), toNumber(price))
+
     setDetails([
       ...details,
       {
         material_unit_id: currentMaterial,
-        amount: parseFormattedNumber(currentAmount),
-        price: parseFormattedNumber(price),
-        sub_total: calculateTotal(currentAmount, price),
+        amount: toNumber(currentAmount),
+        price: toNumber(price),
+        sub_total: toNumber(currentAmount) * toNumber(price),
       },
     ]);
 
@@ -155,17 +157,6 @@ export default function OrderPage() {
   const handleReset = () => {
     setDetails([]);
     setDescription("");
-  };
-
-  // format idr
-  const formatIdr = (value: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-    })
-      .format(value)
-      .replace(/,/g, ".")
-      .slice(0, -3);
   };
 
   return (
@@ -267,7 +258,7 @@ export default function OrderPage() {
                   <label>Sub Total</label>
                   <Input
                     type="text"
-                    value={formatIdr(totalPrice)}
+                    value={toRupiah(totalPrice)}
                     placeholder="Rp. 0"
                     disabled
                   />
@@ -310,13 +301,13 @@ export default function OrderPage() {
                           }
                         </td>
                         <td className="px-4 py-2">
-                          {formatWithComma(detail.amount.toString())}
+                          {toRupiah(detail.amount)}
                         </td>
                         <td className="px-4 py-2">
-                          {formatIdr(detail.price)}
+                          {toRupiah(detail.price)}
                         </td>
                         <td className="px-4 py-2">
-                          {formatIdr(detail.sub_total)}
+                          {toRupiah(detail.sub_total)}
                         </td>
                         <td className="px-4 py-2">
                           <Button

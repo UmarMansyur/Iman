@@ -24,4 +24,13 @@ const parseFormattedNumber = (value: string) => {
   return parseFloat(value.replace(/\./g, '').replace(',', '.'));
 };
 
-export { formatNumber, formatWithComma, formatNumberWithComma, parseFormattedNumber };
+
+const toNumber = (value: string) => {
+  return parseFloat(value.replace(/\./g, '').replace(/,/g, '.'));
+};
+
+const toRupiah = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'decimal', currency: 'IDR' }).format(value);
+};
+
+export { formatNumber, formatWithComma, formatNumberWithComma, parseFormattedNumber, toNumber, toRupiah };

@@ -4,6 +4,7 @@ import { SessionContext } from "@/lib/context";
 import { SessionPayload } from "@/lib/definitions";
 import { getClientSession } from "@/lib/sessionClient";
 import { useUserStore } from "@/store/user-store";
+import { redirect } from "next/navigation";
 
 
 export default function SessionProvider({
@@ -17,6 +18,10 @@ export default function SessionProvider({
     if(userStore) return;
     const getUser = async () => {
       const user = await getClientSession();
+      if(!user) {
+        redirect("/login");
+        return;
+      };
       setUserStore(user);
       setUser(user);
     }

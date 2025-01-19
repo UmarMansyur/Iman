@@ -1,161 +1,166 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import MainPage from "@/components/main";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { Trash2, RotateCcw, ArrowLeft, Save, Loader2, ShoppingCart } from "lucide-react";
+import {
+  Trash2,
+  RotateCcw,
+  ArrowLeft,
+  Save,
+  Loader2,
+  ShoppingCart,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUserStore } from "@/store/user-store";
-
-interface DetailOrder {
-  material_unit_id: string;
-  amount: number;
-  price: number;
-  total: number;
-}
-
-const formatNumber = (value: string | number): string => {
-  if (!value) return '';
-  const stringValue = value.toString();
-  const parts = stringValue.split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return parts.length > 1 ? `${parts[0]},${parts[1]}` : parts[0];
-};
-
-const parseFormattedNumber = (value: string): number => {
-  if (!value) return 0;
-  const normalizedValue = value.replace(/\./g, '').replace(',', '.');
-  return parseFloat(normalizedValue) || 0;
-};
+import { formatNumberWithComma, formatWithComma, parseFormattedNumber } from "@/utils/format";
+import EmptyData from "@/components/views/empty-data";
 
 export default function OrderPage() {
+  const [details, setDetails] = useState<any[]>([]);
+  const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [price, setPrice] = useState("");
+  const [totalPrice, setTotalPrice] = useState('');
+  const [subTotal, setSubTotal] = useState('');
+
   const router = useRouter();
 
-  const [details, setDetails] = useState<DetailOrder[]>([]);
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentMaterial, setCurrentMaterial] = useState('');
-  const [currentAmount, setCurrentAmount] = useState<string>('');
-  const [currentPrice, setCurrentPrice] = useState<string>('');
-  const [currentTotal, setCurrentTotal] = useState<string>('');
+  const [currentMaterial, setCurrentMaterial] = useState("");
+  const [currentAmount, setCurrentAmount] = useState("");
 
   const calculateTotal = (amount: string, price: string) => {
     const numAmount = parseFormattedNumber(amount || "0");
     const numPrice = parseFormattedNumber(price || "0");
-    return numAmount * numPrice;
+    const result = Number(numAmount) * Number(numPrice);
+    setSubTotal(result.toString());
+    return result;
   };
 
-  const handleAmountChange = (value: string) => {
-    if (/^[\d.,]*$/.test(value)) {
-      const normalizedValue = value.replace(/\./g, '').replace(',', '.');
-      const formattedValue = formatNumber(normalizedValue);
-      setCurrentAmount(formattedValue);
-    }
-  };
-
-  const handlePriceChange = (value: string) => {
-    if (/^[\d.,]*$/.test(value)) {
-      const normalizedValue = value.replace(/\./g, '').replace(',', '.');
-      const formattedValue = formatNumber(normalizedValue);
-      setCurrentPrice(formattedValue);
-    }
-  };
-  
-  useEffect(() => {
-    const total = calculateTotal(currentAmount, currentPrice);
-    setCurrentTotal(formatNumber(total));
-  }, [currentAmount, currentPrice]);
+  const toNumber = (value: string) => {
+    return Number(value.replace(/\./g, '').replace(/,/g, '.'));
+  }
 
   const addDetail = () => {
     if (!currentMaterial) {
-      toast.error('Pilih material terlebih dahulu');
+      toast.error("Pilih bahan baku terlebih dahulu");
       return;
     }
+
     if (!currentAmount || parseFormattedNumber(currentAmount) <= 0) {
-      toast.error('Jumlah harus lebih dari 0');
-      return;
-    }
-    if (!currentPrice || parseFormattedNumber(currentPrice) <= 0) {
-      toast.error('Harga harus lebih dari 0');
+      toast.error("Jumlah harus lebih dari 0");
       return;
     }
 
-    const existingDetail = details.find(detail => detail.material_unit_id === currentMaterial);
+    const existingDetail = details.find(
+      (detail) => detail.material_id === currentMaterial
+    );
+
     if (existingDetail) {
-      toast.error('Material sudah ada dalam detail order, edit jumlah atau harga');
+      toast.error(
+        "Bahan baku sudah ada dalam keranjang, silahkan edit data yang sudah ada!"
+      );
       return;
     }
 
-    const amount = parseFormattedNumber(currentAmount);
-    const price = parseFormattedNumber(currentPrice);
-    const total = amount * price;
+    const amount = toNumber(currentAmount.toString());
+    const currentPrice = toNumber(price.toString());
+    const subTotal = amount * currentPrice;
 
-    setDetails([...details, { 
-      material_unit_id: currentMaterial, 
-      amount,
-      price,
-      total
-    }]);
+    setDetails([
+      ...details,
+      {
+        material_distributor_id: currentMaterial,
+        amount: amount,
+        price: currentPrice,
+        sub_total: subTotal,
+      },
+    ]);
 
-    setCurrentMaterial('');
-    setCurrentAmount('');
-    setCurrentPrice('');
-    setCurrentTotal('');
+    setCurrentMaterial("");
+    setCurrentAmount("");
+    setPrice("");
+    setTotalPrice('');
   };
 
-  const [materials, setMaterials] = useState<any[]>([]);
   const { user } = useUserStore();
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [factory, setFactory] = useState('');
+
+  const fetchMaterials = async () => {
+    if (!user) return;
+    const queryParams = new URLSearchParams({
+      page: "1",
+      limit: "1000",
+      user_id: user?.id || "",
+    });
+
+    const response = await fetch(`/api/distributor/bahan-baku?${queryParams}`);
+    const data = await response.json();
+
+    setMaterials(data.data);
+  };
+
   useEffect(() => {
-    const fetchMaterials = async () => {
-      const response = await fetch("/api/material-unit?limit=1000&page=1&factory_id=" + user?.factory_selected?.id);
-      const data = await response.json();
-      setMaterials(data.data);
-    };
     fetchMaterials();
-  }, [user?.factory_selected?.id]);
+  }, [user?.id]);
 
   const removeDetail = (index: number) => {
     const newDetails = details.filter((_, i) => i !== index);
     setDetails(newDetails);
   };
 
-  const grandTotal = details.reduce((sum, detail) => sum + detail.total, 0);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       const payload = {
-        factory_id: user?.factory_selected?.id,
         desc: description,
+        name: factory,
         user_id: user?.id,
         type_preorder: true,
-        details: details.map(detail => ({
-          material_unit_id: detail.material_unit_id,
+        details: details.map((detail: any) => ({
+          material_distributor_id: detail.material_distributor_id,
           amount: detail.amount,
           price: detail.price,
-        }))
+          sub_total: detail.sub_total,
+        })),
       };
 
-      const response = await fetch('/api/order', {
-        method: 'POST',
+      const response = await fetch("/api/distributor/order-bahan-baku", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
+
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      if (!response.ok) throw new Error(data.message);
+
       setDetails([]);
-      toast.success('Order berhasil dibuat');
-      router.push("/operator/persediaan-bahan-baku");
+
+      toast.success("Order berhasil dibuat");
+      router.push("/distributor/order-bahan-baku");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -165,7 +170,11 @@ export default function OrderPage() {
 
   const handleReset = () => {
     setDetails([]);
-    setDescription('');
+    setDescription("");
+    setCurrentMaterial("");
+    setCurrentAmount("");
+    setPrice("");
+    setTotalPrice('');
   };
 
   return (
@@ -175,11 +184,11 @@ export default function OrderPage() {
           <CardHeader>
             <CardTitle>
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Tambah Data Order</h3>
-                <Button 
-                  type="button" 
+                <h3 className="text-lg font-semibold">Order Bahan Baku</h3>
+                <Button
+                  type="button"
                   className="bg-gray-400 hover:bg-gray-500 text-white shadow-sm shadow-gray-400/50"
-                  onClick={() => router.push('/operator/persediaan-bahan-baku')}
+                  onClick={() => router.push("/distributor/order-bahan-baku")}
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Kembali
@@ -188,17 +197,31 @@ export default function OrderPage() {
             </CardTitle>
             <CardDescription>
               <p>
-                Tambah data order persediaan bahan baku, pastikan data yang sudah diinputkan telah benar. Form inputan tidak dapat diedit dan dihapus setelah order dibuat. Alternatifnya silahkan hubungi owner untuk mengubah data.
+                Entry bahan baku, pastikan data yang sudah diinputkan telah
+                benar. Form inputan tidak dapat diedit dan dihapus setelah order
+                dibuat. Alternatifnya silahkan hubungi owner untuk mengubah
+                data.
               </p>
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
+                <label>Nama Pabrik:</label>
+                <Input
+                  type="text"
+                  value={factory}
+                  onChange={(e) => setFactory(e.target.value)}
+                  placeholder="Masukkan nama pabrik"
+                  required
+                  aria-invalid={!factory}
+                />
+              </div>
+              <div className="grid gap-2">
                 <label>Deskripsi:</label>
-                <Textarea 
-                  placeholder="Masukkan deskripsi order bahan baku" 
-                  rows={4} 
+                <Textarea
+                  placeholder="Masukkan deskripsi order bahan baku"
+                  rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
@@ -208,22 +231,27 @@ export default function OrderPage() {
 
               <div className="grid grid-cols-5 gap-4 items-end">
                 <div className="grid gap-2">
-                  <label>Material</label>
-                  <Select 
+                  <label>Bahan Baku</label>
+                  <Select
                     value={currentMaterial}
                     onValueChange={setCurrentMaterial}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Pilih Material">
-                        {materials.find(m => m.id == currentMaterial)?.material}
-                        {materials.find(m => m.id == currentMaterial) ? ' / ' : ''}
-                        {materials.find(m => m.id == currentMaterial)?.unit}
+                      <SelectValue placeholder="Pilih Bahan Baku">
+                        {
+                          materials.find((m) => m.id == currentMaterial)
+                            ?.name
+                        }
+                        {materials.find((m) => m.id == currentMaterial)
+                          ? " / "
+                          : ""}
+                        {materials.find((m) => m.id == currentMaterial)?.unit?.name}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {materials.map((material) => (
+                      {materials?.map((material) => (
                         <SelectItem key={material.id} value={material.id}>
-                          {material.material} / {material.unit}
+                          {material?.name} / {material?.unit?.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -231,50 +259,55 @@ export default function OrderPage() {
                 </div>
                 <div className="grid gap-2">
                   <label>Jumlah</label>
-                  <Input 
+                  <Input
                     type="text"
                     value={currentAmount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
+                    onChange={(e) => {
+                      const formattedValue = formatWithComma(e.target.value);
+                      setCurrentAmount(formattedValue);
+                      setTotalPrice(calculateTotal(formattedValue, price).toString());
+                    }}
                     placeholder="Jumlah"
                   />
                 </div>
                 <div className="grid gap-2">
                   <label>Harga</label>
-                  <Input 
+                  <Input
                     type="text"
-                    value={currentPrice}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                    placeholder="Harga per unit"
+                    value={price}
+                    onChange={(e) => {
+                      const formattedValue = formatWithComma(e.target.value);
+                      setPrice(formattedValue);
+                      setTotalPrice(
+                        calculateTotal(currentAmount, formattedValue).toString()
+                      );
+                    }}
+                    placeholder="Rp. 0"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label>Total</label>
-                  <Input 
+                  <label>Sub Total</label>
+                  <Input
                     type="text"
-                    className="bg-gray-50 text-black text-lg font-semibold text-end"
-                    value={currentTotal}
+                    value={'Rp. ' + formatNumberWithComma(subTotal)}
+                    placeholder="Rp. 0"
                     disabled
                   />
                 </div>
-                <Button 
-                  type="button"
-                  onClick={addDetail}
-                  className="bg-danger2 hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white"
-                >
+                <Button type="button" onClick={addDetail} variant="outline">
                   <ShoppingCart className="w-4 h-4 mr-1" />
                   Tambah
                 </Button>
               </div>
-
               <h1 className="text-lg font-semibold">Detail Order</h1>
               <div className="border rounded-lg">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-2 text-left">Material</th>
+                      <th className="px-4 py-2 text-left">Bahan Baku</th>
                       <th className="px-4 py-2 text-left">Jumlah</th>
                       <th className="px-4 py-2 text-left">Harga</th>
-                      <th className="px-4 py-2 text-left">Total</th>
+                      <th className="px-4 py-2 text-left">Sub Total</th>
                       <th className="px-4 py-2 text-left">Aksi</th>
                     </tr>
                   </thead>
@@ -282,18 +315,34 @@ export default function OrderPage() {
                     {details.map((detail, index) => (
                       <tr key={index} className="border-t">
                         <td className="px-4 py-2">
-                          {materials.find(m => m.id == detail.material_unit_id)?.material} / 
-                          {materials.find(m => m.id == detail.material_unit_id)?.unit}
+                          {
+                            materials.find(
+                              (m) => m.id == detail.material_distributor_id
+                            )?.name
+                          }{" "}
+                          /
+                          {
+                            materials.find(
+                              (m) => m.id == detail.material_distributor_id
+                            )?.unit?.name
+                          }
                         </td>
-                        <td className="px-4 py-2">{formatNumber(detail.amount)}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.price)}</td>
-                        <td className="px-4 py-2">Rp {formatNumber(detail.total)}</td>
                         <td className="px-4 py-2">
-                          <Button 
+                          { new Intl.NumberFormat('id-ID', { style: 'decimal', currency: 'IDR' }).format(detail.amount)}
+                        </td>
+                        <td className="px-4 py-2">
+                          Rp. { new Intl.NumberFormat('id-ID', { style: 'decimal', currency: 'IDR' }).format(detail.price)}
+                          </td>
+                        <td className="px-4 py-2">
+                          Rp. { new Intl.NumberFormat('id-ID', { style: 'decimal', currency: 'IDR' }).format(detail.sub_total)}
+                        </td>
+                        <td className="px-4 py-2">
+                          <Button
                             type="button"
                             variant="destructive"
                             onClick={() => removeDetail(index)}
                             size="sm"
+                            className="bg-danger2 hover:bg-danger2/80 hover:shadow-danger2/60 hover:text-white"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -302,29 +351,19 @@ export default function OrderPage() {
                     ))}
                     {!details.length && (
                       <tr>
-                        <td colSpan={5} className="text-center py-10">Tidak ada data</td>
+                        <td colSpan={5} className="h-24 text-center">
+                          <EmptyData text="Keranjang kosong" />
+                        </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-              <div className="flex justify-between items-center border p-4 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-medium">Total Keseluruhan</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg font-medium">Rp</span>
-                  <span className="font-bold text-4xl tracking-tight">
-                    {formatNumber(grandTotal)}
-                  </span>
-                </div>
-              </div>
-
               <div className="flex justify-between">
                 <div className="space-x-2">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     className="bg-white border border-gray-300 hover:bg-gray-100 text-black"
                     onClick={handleReset}
                   >
@@ -332,8 +371,8 @@ export default function OrderPage() {
                     Reset
                   </Button>
                 </div>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="bg-blue-500 hover:bg-blue-600"
                   disabled={isSubmitting}
                 >
@@ -342,7 +381,7 @@ export default function OrderPage() {
                   ) : (
                     <Save className="w-4 h-4 mr-1" />
                   )}
-                  {isSubmitting ? 'Sedang menyimpan...' : 'Simpan Order'}
+                  {isSubmitting ? "Sedang menyimpan..." : "Simpan Order"}
                 </Button>
               </div>
             </form>

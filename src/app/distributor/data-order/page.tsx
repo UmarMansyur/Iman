@@ -32,7 +32,6 @@ export default function PabrikPage() {
     document.title = "Data Order - Indera Distribution";
   }, []);
 
-  // Tambahkan state baru untuk nilai input search
   const [searchInput, setSearchInput] = useState("");
   const { user } = useUserStore()
   const fetchProducts = async () => {

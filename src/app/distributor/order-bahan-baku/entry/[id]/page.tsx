@@ -38,7 +38,6 @@ import {
   parseFormattedNumber,
 } from "@/utils/format";
 import EmptyData from "@/components/views/empty-data";
-import { fetchData } from "next-auth/client/_utils";
 
 export default function OrderPage() {
   const [details, setDetails] = useState<any[]>([]);
@@ -122,16 +121,6 @@ export default function OrderPage() {
 
     const response = await fetch(`/api/distributor/bahan-baku?${queryParams}`);
     const data = await response.json();
-    setDescription(data.data.description);
-    setFactory(data.data.name);
-    setDetails(
-      data.data.DetailOrderBahanBakuDistributor.map((detail: any) => ({
-        material_distributor_id: detail.material_distributor_id,
-        amount: detail.amount,
-        price: detail.price,
-        sub_total: detail.sub_total,
-      }))
-    );
     setMaterials(data.data);
   };
 
@@ -139,12 +128,18 @@ export default function OrderPage() {
     fetchMaterials();
   }, [user?.id]);
 
+  useEffect(() => {
+    console.log(materials);
+  }, [materials]);
+
   const [data, setData] = useState<any>(null);
 
   const getDataOrder = async (id: string) => {
     const response = await fetch(`/api/distributor/order-bahan-baku/${id}`);
     const data = await response.json();
     setData(data.data);
+    setFactory(data.data.factory || "");
+    setDescription(data.data.desc || "");
     setDetails(
       data.data.DetailOrderBahanBakuDistributor.map((detail: any) => ({
         material_distributor_id: detail.material_distributor_id,
@@ -181,10 +176,8 @@ export default function OrderPage() {
         })),
       };
 
-      console.log(payload);
-
-      const response = await fetch("/api/distributor/order-bahan-baku", {
-        method: "POST",
+      const response = await fetch(`/api/distributor/order-bahan-baku/${id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -196,7 +189,7 @@ export default function OrderPage() {
 
       setDetails([]);
 
-      toast.success("Order berhasil dibuat");
+      toast.success("Update order bahan baku berhasil");
       router.push("/distributor/order-bahan-baku");
     } catch (error: any) {
       toast.error(error.message);

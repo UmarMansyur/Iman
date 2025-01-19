@@ -61,7 +61,6 @@ export default function Form({
   );
   const [isOtherProduct, setIsOtherProduct] = useState(false);
 
-  // Konversi products ke array jika undefined atau bukan array
   const productsArray = Array.isArray(products) ? products : [];
 
   useEffect(() => {
@@ -69,8 +68,6 @@ export default function Form({
       setProduct(
         productsArray.find((product: any) => product.id == data.product_id)
       );
-      console.log(product, data)
-      // Update state dengan data yang ada
       setState(prevState => ({
         ...prevState,
         product_id: data.product_id,
@@ -85,7 +82,8 @@ export default function Form({
         purchase_unit: data.purchase_unit || "pack",
         product_type: data.product_type || "",
       }));
-      console.log(state)
+      console.log(data.factory_id)
+      setIsOtherProduct(data.factory_id == null)
     }
   }, [data]);
 
@@ -163,9 +161,6 @@ export default function Form({
           per_pack: 1,
         };
       }
-
-      console.log(state)
-
       const response = await fetch(`/api/distributor/data-produk${state.id ? "" : "/"}`, {
         method: state.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
