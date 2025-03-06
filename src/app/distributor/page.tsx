@@ -50,6 +50,7 @@ export default function Layout() {
       value: new Intl.NumberFormat("id-ID", { style: "decimal", currency: "IDR" }).format(data?.total_preorder),
       startDate: formatDateIndonesia(date?.from),
       endDate: formatDateIndonesia(date?.to),
+      color: "blue",
     },
     {
       icon: <Box />,
@@ -57,6 +58,7 @@ export default function Layout() {
       value: new Intl.NumberFormat("id-ID", { style: "decimal", currency: "IDR" }).format(data?.total_transaction),
       startDate: formatDateIndonesia(date?.from),
       endDate: formatDateIndonesia(date?.to),
+      color: "green",
     },
     {
       icon: <FileText />,
@@ -64,6 +66,7 @@ export default function Layout() {
       value: new Intl.NumberFormat("id-ID", { style: "decimal", currency: "IDR" }).format(data?.order_pending),
       startDate: formatDateIndonesia(date?.from),
       endDate: formatDateIndonesia(date?.to),
+      color: "yellow",
     },
     {
       icon: <ShoppingCart />,
@@ -71,6 +74,7 @@ export default function Layout() {
       value: new Intl.NumberFormat("id-ID", { style: "decimal", currency: "IDR" }).format(data?.order_success),
       startDate: formatDateIndonesia(date?.from),
       endDate: formatDateIndonesia(date?.to),
+      color: "red",
     },
   ];
 
@@ -114,8 +118,8 @@ export default function Layout() {
   ) : (
     <MainPage>
       <h2 className="text-3xl font-bold tracking-tight mb-0">Dashboard</h2>
-      <p className="text-muted-foreground">Selamat Datang {user?.username}</p>
-      <div>
+      <p className="text-muted-foreground">Selamat Datang, {user?.username}</p>
+      <div className="flex items-center justify-between">
         <div className={cn("grid gap-2")}>
           <Popover>
             <PopoverTrigger asChild>
@@ -164,6 +168,7 @@ export default function Layout() {
             value={data.value}
             startDate={data.startDate}
             endDate={data.endDate}
+            color={data.color}
           />
         ))}
       </div>

@@ -17,21 +17,17 @@ import {
   SquarePercent,
   Users,
 } from "lucide-react";
-
-import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/user-store";
+import Image from "next/image";
 
-// This is sample data.
 const data = {
   navAdmin: [
     {
@@ -267,6 +263,16 @@ const data = {
       title: "Data Produk",
       url: "/distributor/data-produk",
       icon: PackageSearch,
+      items: [
+        {
+          title: "Produk Pabrik",
+          url: "/distributor/data-produk",
+        },
+        {
+          title: "Produk Non Pabrik",
+          url: "/distributor/data-produk-non-pabrik",
+        },
+      ],
     },
     {
       title: "Data Order",
@@ -378,16 +384,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="h-16 flex items-center justify-between px-4 bg-white/10 backdrop-blur">
         {user?.factory_selected &&
           !user?.factory_selected.position.includes("Distributor") &&
-          !user?.factory_selected.position.includes("Owner Distributor") && <TeamSwitcher />}
+          !user?.factory_selected.position.includes("Owner Distributor") && <TeamSwitcher />
+        }
+      
+        {
+          user?.factory_selected &&
+          (user?.factory_selected.position.includes("Distributor") ||
+          user?.factory_selected.position.includes("Owner Distributor")) && <div className="flex h-16">
+            <Image src="/logo.svg" alt="logo" width={90} height={90} />
+          </div>
+        }
       </SidebarHeader>
-      <SidebarContent>{getNavItems()}</SidebarContent>
-      <SidebarFooter>
-        <NavUser />
-      </SidebarFooter>
-      <SidebarRail />
+      <SidebarContent className="bg-white/10 backdrop-blur">{getNavItems()}</SidebarContent>
     </Sidebar>
   );
 }

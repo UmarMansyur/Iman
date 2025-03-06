@@ -57,6 +57,8 @@ export async function GET(req: Request) {
       where,
     });
 
+    const total_satuan = await prisma.unit.count();
+
     return NextResponse.json({
       message: "Berhasil, bahan baku berhasil diambil",
       data: materials,
@@ -65,6 +67,7 @@ export async function GET(req: Request) {
       },
       pagination: {
         total,
+        total_satuan: total_satuan,
         page: Number(page),
         limit: Number(limit),
         totalPages: Math.ceil(total / Number(limit)),

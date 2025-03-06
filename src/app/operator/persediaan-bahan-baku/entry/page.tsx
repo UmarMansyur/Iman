@@ -81,9 +81,7 @@ export default function OrderPage() {
       );
       return;
     }
-
-    console.log(toNumber(currentAmount), toNumber(price))
-
+    
     setDetails([
       ...details,
       {

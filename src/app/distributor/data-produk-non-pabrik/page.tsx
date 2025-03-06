@@ -32,7 +32,7 @@ interface DataProduct {
   options: any;
 }
 
-export default function DataProduk() {
+export default function LokasiPengirimanPage() {
   // Separate state for local input and query parameters
   const [searchInput, setSearchInput] = useState("");
   const [queryParams, setQueryParams] = useState<

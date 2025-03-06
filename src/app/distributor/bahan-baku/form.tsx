@@ -102,10 +102,10 @@ export default function Form({
         ) : (
           <Button
             variant="ghost"
-            className="bg-blue-500 hover:bg-blue-600 flex justify-end px-4 text-white hover:text-white"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-600 flex justify-end px-4 text-white hover:text-white rounded-md"
           >
             <PlusCircle className="w-4 h-4" />
-            Tambah
+            Tambah Bahan Baku
           </Button>
         )}
       </DialogTrigger>

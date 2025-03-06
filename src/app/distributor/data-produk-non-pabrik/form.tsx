@@ -48,6 +48,7 @@ interface ProductFormState {
 export default function Form({
   data,
   products,
+  factory,
 }: {
   data?: any;
   products?: any[];
@@ -55,6 +56,9 @@ export default function Form({
 }) {
   const { user } = useUserStore();
   const [product, setProduct] = useState<any>(null);
+  const [factorySelected, setFactorySelected] = useState<any>(
+    data?.factory_id == null ? "all" : data?.factory_id
+  );
   const [isOtherProduct, setIsOtherProduct] = useState(false);
 
   const productsArray = Array.isArray(products) ? products : [];
@@ -241,9 +245,38 @@ export default function Form({
             mutate();
           }}
         >
-          <div className="grid grid-cols-2 gap-2 py-4">
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {
+              !data && (
+            
+            <div className="flex flex-col gap-4">
+              <Label htmlFor="product_id">Kategori Produk: </Label>
+              <Select
+                value={factorySelected?.id}
+                onValueChange={(value) => {
+                  // jika value adalah all maka set isOtherProduct menjadi true
+                  if (value == "all") {
+                    setIsOtherProduct(true);
+                  } else {
+                    setIsOtherProduct(false);
+                  }
+                  setFactorySelected(factory?.find((factory: any) => factory.id == value));
+                }}
+                disabled={factory?.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Kategori"></SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Baru</SelectItem>
+                  <SelectItem value="exist">Sudah ada</SelectItem>
+                </SelectContent>
+              </Select>
+              </div>
+            )}
+
             {!data && (
-              <div className="flex flex-col gap-2 col-span-2">
+              <div className="flex flex-col gap-4">
                 <Label htmlFor="product_id">
                   {isOtherProduct ? "Nama Produk" : "Pilih Produk"}
                 </Label>
@@ -259,7 +292,6 @@ export default function Form({
                     }
                   />
                 ) : (
-                  <div className="col-span-2">
                   <Select
                     onValueChange={(value) => {
                       const selectedProduct = products?.find(
@@ -271,6 +303,11 @@ export default function Form({
                         factory_id: selectedProduct?.factory_id || "",
                       });
                       setProduct(selectedProduct);
+                      // set pilihan kategori produk ke exist
+                      setFactorySelected({
+                        id: "exist",
+                        name: "Sudah ada",
+                      });
                     }}
                     value={state.product_id}
                     disabled={products?.length === 0}
@@ -283,8 +320,8 @@ export default function Form({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {products?.filter((product: any) => product.factory_id != null).map((product: any) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
+                      {products?.map((product: any) => (
+                        <SelectItem key={product.id} value={product.id}>
                           {product.name}
                         </SelectItem>
                       ))}
@@ -293,8 +330,6 @@ export default function Form({
                       )}
                     </SelectContent>
                   </Select>
-
-                  </div>
                 )}
               </div>
             )}
@@ -314,7 +349,7 @@ export default function Form({
             }
           </div>
           {!isOtherProduct && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 py-4">
               <div className="grid gap-4 py-4">
                 <Label htmlFor="cost">Harga Beli/Pack (Pabrik)</Label>
                 <Input

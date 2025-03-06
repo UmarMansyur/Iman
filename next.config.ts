@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ik.imagekit.io",
       },
+      {
+        protocol: "https",
+        hostname: "github.com",
+      }
     ],
+    domains: ["https://github.com"]
   },
   experimental: {
     serverActions: {

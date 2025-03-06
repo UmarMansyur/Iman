@@ -78,7 +78,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="overflow-x-auto w-full px-4">
+    <div className="overflow-x-auto w-full">
       <div className="rounded-md border">
         <Table className="w-full">
           <TableHeader className="text-black text-[13px] font-bold uppercase">

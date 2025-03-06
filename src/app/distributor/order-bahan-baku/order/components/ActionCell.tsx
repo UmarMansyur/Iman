@@ -17,7 +17,19 @@ import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2, PencilLine } from "lucide-react";
+import { Check, Loader2, PencilLine, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 interface ActionCellProps {
   row: any;
@@ -25,36 +37,36 @@ interface ActionCellProps {
 }
 
 export function ActionCell({ row, fetchData }: ActionCellProps) {
-  const [receivedAmounts, setReceivedAmounts] = useState<{[key: number]: string}>({});
+  const [receivedAmounts, setReceivedAmounts] = useState<{ [key: number]: string }>({});
   const [data, setData] = useState<any[]>();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: any, id: number, amount: number) => {
     const inputValue = e.target.value.replace(/[^\d,]/g, '');
     const numericValue = inputValue.replace(/,/g, '.');
-  
+
     if (isNaN(Number(numericValue))) {
       toast.error("Masukkan nilai yang valid");
       return;
     }
-  
+
     if (Number(numericValue) > amount) {
       toast.error("Jumlah diterima tidak boleh lebih besar dari jumlah order");
       return;
     }
-  
+
     const formattedValue = numericValue
       ? numericValue.replace(/\./g, ',')
       : '';
-  
+
     const existingData = data?.find((item: any) => item.id === id);
-  
+
     if (existingData) {
       existingData.amount_received = formattedValue;
     } else {
       setData(data ? [...data, { id, amount_received: formattedValue }] : [{ id, amount_received: formattedValue }]);
     }
-  
+
     setReceivedAmounts({
       ...receivedAmounts,
       [id]: formattedValue,
@@ -67,7 +79,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
       id: item.id,
       amount_received: item.amount_received.replace(/,/g, '.'),
     }));
-  
+
     const response = await fetch(`/api/distributor/order-bahan-baku/${row.original.id}`, {
       method: "PATCH",
       headers: {
@@ -78,7 +90,7 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
       })
     });
     const responseData = await response.json();
-    if(!response.ok) {
+    if (!response.ok) {
       toast.error(responseData.error);
     } else {
       toast.success(responseData.message);
@@ -87,13 +99,28 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
     setIsLoading(false);
   }
 
+  const handleDelete = async () => {
+    const response = await fetch(`/api/distributor/order-bahan-baku/${row.original.id}`, {
+      method: "DELETE",
+    });
+    const responseData = await response.json();
+    if (!response.ok) {
+      toast.error(responseData.error);
+    } else {
+      toast.success(responseData.message);
+      await fetchData();
+    }
+  }
+
   return (
-    <div>
+    <div className="flex items-center gap-2">
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <PencilLine className="w-4 h-4" /> 
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <PencilLine className="w-4 h-4" />
+            </Button>
+          </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
@@ -179,12 +206,12 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
                               {detail.amount.toLocaleString("id-ID")}
                             </td>
                             <td className="px-4 py-2 text-right w-56">
-                              <Input 
-                                type="text" 
-                                className="w-full" 
-                                placeholder={detail.amount_received?.toLocaleString("id-ID") || "0"} 
-                                value={receivedAmounts[detail.id] || ''} 
-                                onChange={(e: any) => handleChange(e, detail.id, detail.amount)} 
+                              <Input
+                                type="text"
+                                className="w-full"
+                                placeholder={detail.amount_received?.toLocaleString("id-ID") || "0"}
+                                value={receivedAmounts[detail.id] || ''}
+                                onChange={(e: any) => handleChange(e, detail.id, detail.amount)}
                               />
                             </td>
                           </tr>
@@ -269,6 +296,26 @@ export function ActionCell({ row, fetchData }: ActionCellProps) {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apakah anda yakin ingin menghapus order ini?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hapus order ini akan menghapus semua data yang terkait dengan order ini.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">Hapus</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

@@ -42,7 +42,6 @@ export async function GET(req: Request) {
       where.factory_distributor_id = memberDistributor.factory_distributor_id;
     }
 
-
     if (search) {
       where.OR = [
         {
@@ -66,7 +65,11 @@ export async function GET(req: Request) {
         ...where,
       },
       include: {
-        product: true,
+        product: {
+          include: {
+            factory: true,
+          },
+        },
         factory: true,
       },
       orderBy: {
@@ -90,7 +93,7 @@ export async function GET(req: Request) {
             in: response.map((item: any) => item.product_id),
           },
         },
-      }
+      },
     });
 
     const listProducts = listProduct.map((item) => {
@@ -105,9 +108,6 @@ export async function GET(req: Request) {
       };
     });
 
-    console.log(listProducts)
-
-
     const data = response.map((item: any) => {
       return {
         id: item.id,
@@ -116,8 +116,9 @@ export async function GET(req: Request) {
         price: item.price,
         sale_price: item.sale_price,
         factory_id: item.factory_id,
+        product_type: item.product.type,
         factory: {
-          name: item.factory,
+          name: item.product?.factory?.name || "Non Pabrik",
         },
         per_bal: item.product.per_bal,
         per_karton: item.product.per_karton,
@@ -132,12 +133,8 @@ export async function GET(req: Request) {
       totalPages: Math.ceil(total / limit),
     };
 
-    const factory = await prisma.factory.findMany();
-
-    // const options = [...listProducts, ...factory];
     const options = {
       products: [...listProducts],
-      factory: [...factory],
     };
 
     return NextResponse.json({ data, pagination, options });
@@ -162,7 +159,6 @@ export async function POST(req: Request) {
     } = await req.json();
     let factory_distributor = null;
 
-
     if (!factory_distributor_id) {
       const memberFactory = await prisma.memberDistributor.findFirst({
         where: {
@@ -176,7 +172,6 @@ export async function POST(req: Request) {
     } else {
       factory_distributor = factory_distributor_id;
     }
-
 
     const where: any = {};
 
@@ -196,7 +191,7 @@ export async function POST(req: Request) {
       where.product = {
         name: product_id,
         type: product_type,
-      }
+      };
     }
 
     // jika factory_distributor tidak ada maka throw error
@@ -214,11 +209,13 @@ export async function POST(req: Request) {
       });
 
       if (existingMemberPriceProduct) {
-        throw new Error("Produk sudah ditambahkan!, edit produk untuk mengubah harga");
+        throw new Error(
+          "Produk sudah ditambahkan!, edit produk untuk mengubah harga"
+        );
       }
 
       let memberPriceProduct = null;
-      
+
       if (!isNaN(Number(product_id))) {
         const existProduct = await tx.product.findFirst({
           where: {
@@ -234,12 +231,12 @@ export async function POST(req: Request) {
           data: {
             product_id: parseInt(product_id),
             price: existProduct.price,
+            factory_id: existProduct.factory_id || null,
             sale_price: Number(sale_price),
             factory_distributor_id: Number(factory_distributor),
           },
         });
       } else {
-        // Check exist product
         const existProducts = await tx.product.findFirst({
           where: {
             name: product_id,
@@ -265,6 +262,7 @@ export async function POST(req: Request) {
         memberPriceProduct = await tx.memberPriceProduct.create({
           data: {
             product_id: product.id,
+            factory_id: product.factory_id || null,
             price: Number(purchase_price),
             sale_price: Number(sale_price),
             factory_distributor_id: Number(factory_distributor),
@@ -277,7 +275,6 @@ export async function POST(req: Request) {
         data: memberPriceProduct,
       });
     });
-
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -288,7 +285,15 @@ export async function PUT(req: Request) {
     const body = await req.json();
     const id = body.id;
 
-    const { product_id, sale_price } = body;
+    const {
+      product_id,
+      sale_price,
+      purchase_price,
+      per_bal,
+      per_karton,
+      per_slop,
+    } = body;
+
 
     const existingMemberPriceProductId =
       await prisma.memberPriceProduct.findFirst({
@@ -326,21 +331,50 @@ export async function PUT(req: Request) {
       },
     });
 
+    if(!product) {
+      throw new Error("Produk tidak ditemukan!");
+    }
+
+    const inputData = {
+      price: Number(purchase_price),
+    }
+
+    if(product?.factory_id == null) {
+      inputData.price = Number(purchase_price);
+    }
+
     const memberPriceProduct = await prisma.memberPriceProduct.update({
       where: {
         id: parseInt(id),
       },
       data: {
+        factory_id: product?.factory_id,
         product_id: parseInt(product_id),
-        price: product?.price || 0,
+        ...inputData,
         sale_price: Number(sale_price),
       },
     });
 
+    if (product?.factory_id == null) {
+      await prisma.product.update({
+        where: {
+          id: product.id,
+        },
+        data: {
+          price: Number(purchase_price),
+          per_bal: Number(per_bal),
+          per_karton: Number(per_karton),
+          per_slop: Number(per_slop),
+        },
+      });
+    }
+
     return NextResponse.json({
       message: "Produk berhasil diubah",
-      data: memberPriceProduct,
-    });
+      data: {
+        memberPriceProduct,
+      },
+    }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

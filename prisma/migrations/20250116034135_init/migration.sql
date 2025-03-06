@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE `products` ADD COLUMN `per_bal` DOUBLE NULL DEFAULT 200,
-    ADD COLUMN `per_karton` DOUBLE NULL DEFAULT 800,
-    ADD COLUMN `per_slop` DOUBLE NULL DEFAULT 10;

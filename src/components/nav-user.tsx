@@ -48,11 +48,11 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:text-white"
             >
-              <Avatar className="h-8 w-8 rounded-lg hover:text-black">
+              <Avatar className="h-8 w-8 rounded-lg hover:text-black text-black">
                 <AvatarImage src={user?.thumbnail} alt={user?.username} />
-                <AvatarFallback className="rounded-lg hover:text-black">
+                <AvatarFallback className="rounded-lg hover:text-black text-black">
                   {user?.username.charAt(0)}
                 </AvatarFallback>
               </Avatar>

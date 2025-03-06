@@ -153,3 +153,39 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    const exist = await prisma.orderBahanBakuDistributor.findFirst({
+      where: {
+        id: Number(id)
+      }
+    });
+
+    console.log(exist);
+
+    if (!exist) {
+      throw new Error("Order tidak ditemukan");
+    }
+
+    const response = await prisma.orderBahanBakuDistributor.delete({
+      where: {
+        id: Number(id)
+      }
+    });
+
+    return NextResponse.json({
+      message: "Order berhasil dihapus",
+      data: response,
+    });
+
+  } catch (error: any) {
+    return NextResponse.json({
+      message: error.message,
+      error: error,
+    });
+  }
+}

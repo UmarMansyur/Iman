@@ -229,6 +229,9 @@ CREATE TABLE `products` (
     `name` VARCHAR(191) NOT NULL,
     `type` ENUM('Kretek', 'Gabus') NOT NULL,
     `price` DOUBLE NOT NULL,
+    `per_slop` DOUBLE NULL DEFAULT 10,
+    `per_bal` DOUBLE NULL DEFAULT 200,
+    `per_karton` DOUBLE NULL DEFAULT 800,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -606,6 +609,44 @@ CREATE TABLE `services` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `order_bahan_baku_distributors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `factory` VARCHAR(191) NOT NULL,
+    `factory_distributor_id` INTEGER NOT NULL,
+    `distributor_id` INTEGER NOT NULL,
+    `desc` TEXT NOT NULL,
+    `total` DOUBLE NOT NULL,
+    `type_preorder` BOOLEAN NOT NULL,
+    `created_at` DATETIME(3) NOT NULL,
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `material_distributors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(200) NOT NULL,
+    `factory_distributor_id` INTEGER NOT NULL,
+    `unit_id` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `detail_order_bahan_baku_distributors` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `order_bahan_baku_distributor_id` INTEGER NOT NULL,
+    `material_distributor_id` INTEGER NOT NULL,
+    `amount_received` DOUBLE NULL,
+    `amount` DOUBLE NOT NULL,
+    `price` DOUBLE NOT NULL,
+    `sub_total` DOUBLE NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `factory_distributors` ADD CONSTRAINT `factory_distributors_factoryId_fkey` FOREIGN KEY (`factoryId`) REFERENCES `factories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -854,3 +895,21 @@ ALTER TABLE `detail_transaction_services` ADD CONSTRAINT `detail_transaction_ser
 
 -- AddForeignKey
 ALTER TABLE `services` ADD CONSTRAINT `services_factory_id_fkey` FOREIGN KEY (`factory_id`) REFERENCES `factories`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `order_bahan_baku_distributors` ADD CONSTRAINT `order_bahan_baku_distributors_factory_distributor_id_fkey` FOREIGN KEY (`factory_distributor_id`) REFERENCES `factory_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `order_bahan_baku_distributors` ADD CONSTRAINT `order_bahan_baku_distributors_distributor_id_fkey` FOREIGN KEY (`distributor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `material_distributors` ADD CONSTRAINT `material_distributors_factory_distributor_id_fkey` FOREIGN KEY (`factory_distributor_id`) REFERENCES `factory_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `material_distributors` ADD CONSTRAINT `material_distributors_unit_id_fkey` FOREIGN KEY (`unit_id`) REFERENCES `units`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_order_bahan_baku_distributors` ADD CONSTRAINT `detail_order_bahan_baku_distributors_order_bahan_baku_distr_fkey` FOREIGN KEY (`order_bahan_baku_distributor_id`) REFERENCES `order_bahan_baku_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_order_bahan_baku_distributors` ADD CONSTRAINT `detail_order_bahan_baku_distributors_material_distributor_i_fkey` FOREIGN KEY (`material_distributor_id`) REFERENCES `material_distributors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

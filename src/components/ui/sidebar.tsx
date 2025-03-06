@@ -181,7 +181,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-white text-sidebar-foreground",
+            "flex h-full w-[--sidebar-width] flex-col bg-gray-50 backdrop-blur text-sidebar-foreground",
             className
           )}
           ref={ref}
@@ -198,7 +198,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-white p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-gray-50 backdrop-blur p-0 text-sidebar-foreground [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -279,7 +279,7 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <Menu />
+      <Menu className="size-8"/>
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -513,13 +513,13 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-blue-500 hover:text-blue-500 focus-visible:ring-2 active:bg-blue-500 active:text-blue-500 disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-blue-500 data-[active=true]:text-white data-[active=true]:font-medium data-[state=open]:hover:bg-blue-500 data-[state=open]:hover:text-white group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:text-blue-500 focus-visible:ring-2 active:text-blue-500 disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:text-blue-500 data-[active=true]:font-medium data-[state=open]:hover:text-blue-500 group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "hover:bg-blue-500 hover:text-white data-[active=true]:hover:bg-blue-500",
+        default: "hover:text-blue-500 data-[active=true]:hover:text-blue-500",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-blue-500 hover:text-white hover:shadow-[0_0_0_1px_theme(colors.blue.500)] data-[active=true]:hover:bg-blue-500",
+          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:text-blue-500 hover:shadow-[0_0_0_1px_theme(colors.blue.500)] data-[active=true]:hover:text-blue-500",
         none: "hover:bg-transparent hover:text-sidebar-foreground",
       },
       size: {
@@ -724,8 +724,8 @@ const SidebarMenuSubButton = React.forwardRef<
       data-size={size}
       data-active={isActive}
       className={cn(
-        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-blue-500 hover:text-white focus-visible:ring-2 active:bg-blue-500 active:text-white disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-white",
-        "data-[active=true]:bg-blue-500 data-[active=true]:text-white",
+        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:text-blue-500 focus-visible:ring-2 active:text-blue-500 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-blue-500",
+        "data-[active=true]:text-blue-500",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",

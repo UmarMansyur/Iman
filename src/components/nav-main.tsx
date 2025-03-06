@@ -41,7 +41,7 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarMenu className="text-[15px] text-gray-700">
-        <SidebarGroupLabel>{title}</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-gray-600 uppercase font-semibold text-[11px]">{title}</SidebarGroupLabel>
         {items.map((item) =>
           item.items ? (
             <Collapsible
@@ -59,10 +59,10 @@ export function NavMain({
                     variant="default"
                     tooltip={item.title}
                     data-active={item.isActive}
-                    className={`py-5 transition-colors ${
+                    className={`py-5 ${
                       item.isActive
-                        ? "bg-blue-300 text-white"
-                        : "hover:text-white hover:bg-blue-500"
+                        ? "text-blue-500"
+                        : "hover:text-blue-500"
                     }`}
                   >
                     {item.icon && <item.icon />}
@@ -71,10 +71,10 @@ export function NavMain({
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     )}
                   </SidebarMenuButton>
-                </CollapsibleTrigger>
+                </CollapsibleTrigger >
                 {item.items && (
-                  <CollapsibleContent>
-                    <SidebarMenuSub className="group-data-[state=open]/collapsible:block">
+                  <CollapsibleContent className="bg-transparent">
+                    <SidebarMenuSub className="group-data-[state=open]/collapsible:block bg-transparent">
                       {item.items.map((subItem) => (
                         <SidebarMenuSubItem
                           key={subItem.title}
@@ -82,7 +82,7 @@ export function NavMain({
                         >
                           <SidebarMenuSubButton
                             asChild
-                            className={`py-5 hover:font-semibold hover:text-blue-500 hover:bg-transparent focus:font-semibold focus:text-blue-500 focus:bg-transparent active:bg-transparent active:text-blue-500 ${
+                            className={`py-5 hover:bg-white hover:text-blue-600 ${
                               pathname === subItem.url
                                 ? "font-semibold text-blue-500"
                                 : ""
@@ -103,10 +103,10 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                className={`transition-colors py-5 ${
+                className={`transition-colors py-5 hover:bg-white hover:text-blue-600 ${
                   pathname === item.url
-                    ? "bg-blue-500 text-white"
-                    : "hover:text-white hover:bg-blue-500"
+                    ? "text-blue-500"
+                    : "hover:text-blue-500"
                 }`}
               >
                 <Link href={item.url}>
