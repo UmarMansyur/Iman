@@ -1,0 +1,880 @@
+// This is your Prisma schema file
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum PaymentStatus {
+  Unpaid
+  Pending
+  Paid
+  Paid_Off
+  Failed
+  Cancelled
+}
+
+enum UserType {
+  Administrator
+  Operator
+}
+
+enum RoleDistributor {
+  Owner
+  Operator
+}
+
+model FactoryDistributor {
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  no_hp                     String?
+  address                   String?
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  MemberDistributor         MemberDistributor[]
+  Factory                   Factory?                    @relation(fields: [factoryId], references: [id])
+  factoryId                 Int?
+  MemberPriceProduct        MemberPriceProduct[]
+  OrderBahanBakuDistributor OrderBahanBakuDistributor[]
+  MaterialDistributor       MaterialDistributor[]
+
+  @@map("factory_distributors")
+}
+
+model MemberDistributor {
+  id                     Int                @id @default(autoincrement())
+  factoryDistributor     FactoryDistributor @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id Int
+  User                   User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                Int
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+
+  @@map("member_distributors")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  username      String   @unique
+  password      String
+  gender        Gender
+  date_of_birth DateTime
+  thumbnail     String?
+  address       String
+  user_type     UserType @default(Operator)
+  is_active     Boolean  @default(true)
+  is_verified   Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  memberFactories              MemberFactory[]
+  invoices                     Invoice[]
+  reportProducts               ReportProduct[]
+  reportCosts                  ReportCost[]
+  factories                    Factory[]
+  MemberPriceProduct           MemberPriceProduct[]
+  ReportMaterialStock          ReportMaterialStock[]
+  OrderMaterialUnit            OrderMaterialUnit[]
+  morningShiftReportProducts   ReportProduct[]             @relation("report_product_morning_shift_user")
+  afternoonShiftReportProducts ReportProduct[]             @relation("report_product_afternoon_shift_user")
+  TransactionDistributor       TransactionDistributor[]
+  BuyerDistributor             BuyerDistributor[]
+  LocationDistributor          LocationDistributor[]
+  Notification                 Notification[]
+  InvoiceJasa                  InvoiceJasa[]
+  TransactionService           TransactionService[]
+  MemberDistributor            MemberDistributor[]
+  OrderBahanBakuDistributor    OrderBahanBakuDistributor[]
+
+  @@map("users")
+}
+
+model Factory {
+  id         Int           @id @default(autoincrement())
+  nickname   String
+  name       String
+  logo       String?
+  address    String
+  user       User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    Int
+  status     FactoryStatus @default(Pending)
+  is_common  Boolean       @default(false)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+
+  bankAccounts           BankAccount[]
+  memberFactories        MemberFactory[]
+  products               Product[]
+  invoices               Invoice[]
+  reportProducts         ReportProduct[]
+  reportCosts            ReportCost[]
+  MaterialStock          MaterialStock[]
+  OrderMaterialUnit      OrderMaterialUnit[]
+  ReportMaterialStock    ReportMaterialStock[]
+  MemberPriceProduct     MemberPriceProduct[]
+  CostDelivery           CostDelivery[]
+  LogOrderMaterialUnit   LogOrderMaterialUnit[]
+  Location               Location[]
+  Buyer                  Buyer[]
+  BuyerDistributor       BuyerDistributor[]
+  LocationDistributor    LocationDistributor[]
+  TransactionDistributor TransactionDistributor[]
+  Material               Material[]
+  Jasa                   Jasa[]
+  InvoiceJasa            InvoiceJasa[]
+  Service                Service[]
+  TransactionService     TransactionService[]
+  FactoryDistributor     FactoryDistributor[]
+
+  @@map("factories")
+}
+
+enum FactoryStatus {
+  Active
+  Pending
+  Inactive
+  Suspended
+}
+
+model MemberFactory {
+  id                 Int                  @id @default(autoincrement())
+  factory            Factory              @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id         Int
+  role               Role                 @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  role_id            Int
+  user               User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id            Int
+  parent_id          Int?
+  status             MemberFactoryStatus  @default(Pending)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  MemberPriceProduct MemberPriceProduct[]
+
+  @@unique([factory_id, user_id])
+  @@map("member_factories")
+}
+
+enum MemberFactoryStatus {
+  Active
+  Pending
+  Inactive
+}
+
+model Role {
+  id              Int             @id @default(autoincrement())
+  role            String
+  memberFactories MemberFactory[]
+
+  @@map("roles")
+}
+
+model BankAccount {
+  id         Int       @id @default(autoincrement())
+  factory    Factory   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
+  name       String
+  rekening   String
+  bank_name  String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  Invoice    Invoice[]
+
+  @@map("bank_accounts")
+}
+
+model PaymentMethod {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  Invoice                Invoice[]
+  TransactionDistributor TransactionDistributor[]
+  TransactionService     TransactionService[]
+
+  @@map("payment_methods")
+}
+
+model Material {
+  id           Int            @id @default(autoincrement())
+  name         String
+  factory      Factory        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id   Int
+  reportCosts  ReportCost[]
+  MaterialUnit MaterialUnit[]
+
+  @@map("materials")
+}
+
+model Unit {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  reportCosts         ReportCost[]
+  MaterialUnit        MaterialUnit[]
+  MaterialDistributor MaterialDistributor[]
+
+  @@map("units")
+}
+
+model MaterialUnit {
+  id                         Int                          @id @default(autoincrement())
+  material                   Material                     @relation(fields: [material_id], references: [id], onDelete: Cascade)
+  material_id                Int
+  unit                       Unit                         @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id                    Int
+  MaterialStock              MaterialStock[]
+  DetailOrderMaterialUnit    DetailOrderMaterialUnit[]
+  DetailReportMaterialStock  DetailReportMaterialStock[]
+  LogOrderDetailMaterialUnit LogOrderDetailMaterialUnit[]
+
+  @@map("material_units")
+}
+
+model MaterialStock {
+  id                       Int                 @id @default(autoincrement())
+  factory                  Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
+  materialUnit             MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  material_unit_id         Int
+  amount                   Float
+  report_material_stock_id Int?
+  order_material_unit_id   Int?
+  status                   MaterialStockStatus @default(In)
+  created_at               DateTime            @default(now())
+  updated_at               DateTime            @updatedAt
+
+  @@map("material_stocks")
+}
+
+model ReportMaterialStock {
+  id                        Int                         @id @default(autoincrement())
+  factory                   Factory                     @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id                Int
+  total_amount              Float
+  desc                      String
+  user                      User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                   Int
+  created_at                DateTime                    @default(now())
+  updated_at                DateTime                    @updatedAt
+  DetailReportMaterialStock DetailReportMaterialStock[]
+
+  @@map("report_material_stocks")
+}
+
+model DetailReportMaterialStock {
+  id                       Int                 @id @default(autoincrement())
+  reportMaterialStock      ReportMaterialStock @relation(fields: [report_material_stock_id], references: [id], onDelete: Cascade)
+  report_material_stock_id Int
+  materialUnit             MaterialUnit        @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  material_unit_id         Int
+  amount                   Float
+
+  @@map("detail_report_material_stocks")
+}
+
+model OrderMaterialUnit {
+  id                      Int                       @id @default(autoincrement())
+  factory                 Factory                   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id              Int
+  amount                  Float                     @default(0)
+  price                   Float                     @default(0)
+  total_item              Float                     @default(0)
+  total_item_received     Float                     @default(0)
+  type_preorder           Boolean                   @default(false)
+  status                  OrderMaterialUnitStatus   @default(Pending)
+  desc                    String?                   @db.Text
+  user                    User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                 Int
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime                  @updatedAt
+  DetailOrderMaterialUnit DetailOrderMaterialUnit[]
+
+  @@map("order_material_units")
+}
+
+// buatkan log dari order material unit
+
+model LogOrderMaterialUnit {
+  id         Int      @id @default(autoincrement())
+  factory    Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id Int
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("log_order_material_units")
+}
+
+model DetailOrderMaterialUnit {
+  id                         Int                          @id @default(autoincrement())
+  orderMaterialUnit          OrderMaterialUnit            @relation(fields: [order_material_unit_id], references: [id], onDelete: Cascade)
+  order_material_unit_id     Int
+  materialUnit               MaterialUnit                 @relation(fields: [material_unit_id], references: [id], onDelete: Cascade)
+  material_unit_id           Int
+  amount                     Float
+  amount_received            Float?
+  price                      Float
+  status                     OrderMaterialUnitStatus      @default(Pending)
+  created_at                 DateTime                     @default(now())
+  updated_at                 DateTime                     @updatedAt
+  LogOrderDetailMaterialUnit LogOrderDetailMaterialUnit[]
+
+  @@map("detail_order_material_units")
+}
+
+model LogOrderDetailMaterialUnit {
+  id                            Int                     @id @default(autoincrement())
+  detailOrderMaterialUnit       DetailOrderMaterialUnit @relation(fields: [detail_order_material_unit_id], references: [id], onDelete: Cascade)
+  detail_order_material_unit_id Int
+  amount_received               Float?
+  created_at                    DateTime                @default(now())
+  updated_at                    DateTime                @updatedAt
+  MaterialUnit                  MaterialUnit?           @relation(fields: [materialUnitId], references: [id])
+  materialUnitId                Int?
+
+  @@map("log_order_detail_material_units")
+}
+
+enum OrderMaterialUnitStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum MaterialStockStatus {
+  In
+  Out
+}
+
+model Product {
+  id                           Int                            @id @default(autoincrement())
+  factory                      Factory?                       @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id                   Int?
+  name                         String
+  type                         ProductType
+  price                        Float
+  per_slop                     Float?                         @default(10)
+  per_bal                      Float?                         @default(200)
+  per_karton                   Float?                         @default(800)
+  stockProducts                StockProduct[]
+  reportProducts               ReportProduct[]
+  MemberPriceProduct           MemberPriceProduct[]
+  DetailInvoice                DetailInvoice[]
+  DetailTransactionDistributor DetailTransactionDistributor[]
+
+  @@map("products")
+}
+
+enum ProductType {
+  SKM
+  SKT
+  SPM
+}
+
+model MemberPriceProduct {
+  id                     Int                 @id @default(autoincrement())
+  factory                Factory?            @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int?
+  factoryDistributor     FactoryDistributor? @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id Int?
+  product                Product             @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id             Int
+  price                  Float
+  sale_price             Float
+  created_at             DateTime            @default(now())
+  updated_at             DateTime            @updatedAt
+  User                   User?               @relation(fields: [userId], references: [id])
+  userId                 Int?
+  MemberFactory          MemberFactory?      @relation(fields: [memberFactoryId], references: [id])
+  memberFactoryId        Int?
+
+  @@map("member_price_products")
+}
+
+model CostDelivery {
+  id          Int      @id @default(autoincrement())
+  factory     Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id  Int
+  location    Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  location_id Int
+  amount      Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("cost_deliveries")
+}
+
+model StockProduct {
+  id                Int              @id @default(autoincrement())
+  product           Product          @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id        Int
+  amount            Float
+  type              StockProductType @default(In)
+  report_product    ReportProduct?   @relation(fields: [report_product_id], references: [id], onDelete: Cascade)
+  report_product_id Int?
+  invoice           Invoice?         @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id        Int?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+
+  @@map("stock_products")
+}
+
+enum StockProductType {
+  In
+  Out
+}
+
+model ReportProduct {
+  id                      Int            @id @default(autoincrement())
+  product                 Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id              Int
+  factory                 Factory        @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id              Int
+  amount                  Float
+  morning_shift_amount    Float?
+  morning_shift_time      DateTime?      @db.Time
+  morning_shift_user      User?          @relation("report_product_morning_shift_user", fields: [morning_shift_user_id], references: [id], onDelete: Cascade)
+  morning_shift_user_id   Int?
+  afternoon_shift_amount  Float?
+  afternoon_shift_time    DateTime?      @db.Time
+  afternoon_shift_user    User?          @relation("report_product_afternoon_shift_user", fields: [afternoon_shift_user_id], references: [id], onDelete: Cascade)
+  afternoon_shift_user_id Int?
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @updatedAt
+  User                    User?          @relation(fields: [userId], references: [id])
+  userId                  Int?
+  StockProduct            StockProduct[]
+
+  @@map("report_products")
+}
+
+model ReportCost {
+  id          Int      @id @default(autoincrement())
+  material    Material @relation(fields: [material_id], references: [id], onDelete: Cascade)
+  material_id Int
+  factory     Factory  @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id  Int
+  unit        Unit     @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id     Int
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     Int
+  amount      Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("report_costs")
+}
+
+model Discount {
+  id     String @id @default(uuid())
+  code   String @unique
+  name   String
+  amount Float
+
+  @@map("discounts")
+}
+
+model PPN {
+  id         Int       @id @default(autoincrement())
+  desc       String
+  percentage Float
+  status     PPNStatus @default(Active)
+
+  @@map("ppns")
+}
+
+enum PPNStatus {
+  Active
+  Inactive
+}
+
+model Buyer {
+  id                 Int                  @id @default(autoincrement())
+  factory            Factory?             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id         Int?
+  name               String
+  address            String
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  Invoice            Invoice[]
+  TransactionService TransactionService[]
+
+  @@map("buyers")
+}
+
+model Invoice {
+  id                     Int                      @id @default(autoincrement())
+  factory                Factory?                 @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id             Int?
+  user                   User                     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                Int
+  bank_account           BankAccount?             @relation(fields: [bank_account_id], references: [id], onDelete: Cascade)
+  bank_account_id        Int?
+  is_distributor         Boolean                  @default(false)
+  invoice_code           String                   @unique
+  discount               Float?                   @default(0)
+  ppn                    Float?                   @default(0)
+  buyer                  Buyer?                   @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id               Int?
+  maturity_date          DateTime?
+  item_amount            Float
+  discon_member          Float?                   @default(0)
+  down_payment           Float                    @default(0)
+  total                  Float                    @default(0)
+  sub_total              Float                    @default(0)
+  remaining_balance      Float                    @default(0)
+  payment_status         PaymentStatus            @default(Pending)
+  payment_method         PaymentMethod            @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id      Int
+  proof_of_payment       String?                  @db.Text
+  proof_of_payment_2     String?                  @db.Text
+  type_preorder          Boolean                  @default(false)
+  detailInvoices         DetailInvoice[]
+  deliveryTracking       DeliveryTracking[]
+  notes                  String?
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  LogOrderDistributor    LogOrderDistributor[]
+  reject_reason          String?
+  StockProduct           StockProduct[]
+  TransactionDistributor TransactionDistributor[]
+  InvoiceJasa            InvoiceJasa[]
+  DetailInvoiceJasa      DetailInvoiceJasa[]
+
+  @@map("invoices")
+}
+
+model DetailInvoice {
+  id         Int      @id @default(autoincrement())
+  product    Product? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product_id Int?
+  desc       String?
+  amount     Float    @default(0)
+  price      Float    @default(0)
+  discount   Float?   @default(0)
+  sub_total  Float    @default(0)
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id Int
+  is_product Boolean  @default(true)
+
+  @@map("detail_invoices")
+}
+
+model LogOrderDistributor {
+  id         Int      @id @default(autoincrement())
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id Int
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("log_order_distributors")
+}
+
+model Location {
+  id               Int                @id @default(autoincrement())
+  factory          Factory?           @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id       Int?
+  name             String
+  cost             Float              @default(0)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  DeliveryTracking DeliveryTracking[]
+  CostDelivery     CostDelivery[]
+
+  @@map("locations")
+}
+
+model DeliveryTracking {
+  id          Int                    @id @default(autoincrement())
+  sales_man   String?
+  recipient   String?
+  invoice     Invoice                @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id  Int
+  desc        String?
+  location    Location               @relation(fields: [location_id], references: [id], onDelete: Cascade)
+  location_id Int
+  latitude    Float?
+  longitude   Float?
+  cost        Float?                 @default(0)
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
+  status      DeliveryTrackingStatus @default(Process)
+
+  @@map("delivery_trackings")
+}
+
+enum DeliveryTrackingStatus {
+  Process
+  Sent
+  Done
+  Cancel
+}
+
+enum TypeDistributor {
+  In
+  Out
+}
+
+model LocationDistributor {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  cost                   Float                    @default(0)
+  distributor            User                     @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id         Int
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  TransactionDistributor TransactionDistributor[]
+  Factory                Factory?                 @relation(fields: [factoryId], references: [id])
+  factoryId              Int?
+
+  @@map("location_distributors")
+}
+
+model BuyerDistributor {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  address                String
+  distributor            User                     @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id         Int
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  TransactionDistributor TransactionDistributor[]
+  Factory                Factory?                 @relation(fields: [factoryId], references: [id])
+  factoryId              Int?
+
+  @@map("buyer_distributors")
+}
+
+model TransactionDistributor {
+  id                           Int                            @id @default(autoincrement())
+  invoice_code                 String                         @unique
+  distributor                  User                           @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id               Int
+  buyer                        BuyerDistributor               @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id                     Int
+  location_distributor         LocationDistributor            @relation(fields: [location_distributor_id], references: [id], onDelete: Cascade)
+  location_distributor_id      Int
+  status_payment               TransactionDistributorStatus   @default(Pending)
+  status_delivery              DeliveryTrackingStatus         @default(Process)
+  payment_method               PaymentMethod                  @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id            Int
+  amount                       Float
+  cost_delivery                Float?                         @default(0)
+  desc_delivery                String?
+  down_payment                 Float?                         @default(0)
+  remaining_balance            Float?                         @default(0)
+  ppn                          Float?                         @default(0)
+  discount                     Float?                         @default(0)
+  created_at                   DateTime                       @default(now())
+  updated_at                   DateTime                       @updatedAt
+  DetailTransactionDistributor DetailTransactionDistributor[]
+  Invoice                      Invoice?                       @relation(fields: [invoiceId], references: [id])
+  invoiceId                    Int?
+  Factory                      Factory?                       @relation(fields: [factoryId], references: [id])
+  factoryId                    Int?
+
+  @@map("transaction_distributors")
+}
+
+enum TransactionDistributorStatus {
+  Pending
+  Paid
+  Paid_Off
+  Failed
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    Int
+  desc       String
+  url        String?
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+model Jasa {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  price             Float
+  factory           Factory             @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id        Int
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  InvoiceJasa       InvoiceJasa[]
+  DetailInvoiceJasa DetailInvoiceJasa[]
+
+  @@map("jasas")
+}
+
+model InvoiceJasa {
+  id                Int       @id @default(autoincrement())
+  user              User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id           Int
+  factory           Factory   @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id        Int
+  name              String
+  address           String
+  maturity_date     DateTime? @db.Date
+  down_payment      Float?    @default(0)
+  remaining_balance Float?    @default(0)
+  amount            Float
+  discount          Float?    @default(0)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  Invoice           Invoice?  @relation(fields: [invoiceId], references: [id])
+  invoiceId         Int?
+  Jasa              Jasa?     @relation(fields: [jasaId], references: [id])
+  jasaId            Int?
+
+  @@map("invoice_jasas")
+}
+
+model DetailInvoiceJasa {
+  id         Int      @id @default(autoincrement())
+  invoice    Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  invoice_id Int
+  jasa       Jasa     @relation(fields: [jasa_id], references: [id], onDelete: Cascade)
+  jasa_id    Int
+  amount     Float
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("detail_invoice_jasas")
+}
+
+model DetailTransactionDistributor {
+  id                         Int                    @id @default(autoincrement())
+  transactionDistributor     TransactionDistributor @relation(fields: [transaction_distributor_id], references: [id], onDelete: Cascade)
+  transaction_distributor_id Int
+  desc                       String
+  amount                     Float
+  price                      Float
+  discount                   Float?                 @default(0)
+  sale_price                 Float
+  is_product                 Boolean                @default(true)
+  Product                    Product?               @relation(fields: [product_id], references: [id])
+  product_id                 Int?
+  created_at                 DateTime               @default(now())
+  updated_at                 DateTime               @updatedAt
+
+  @@map("detail_transaction_distributors")
+}
+
+model TransactionService {
+  id                       Int                        @id @default(autoincrement())
+  factory                  Factory                    @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
+  transaction_code         String                     @unique
+  user                     User                       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id                  Int
+  buyer                    Buyer                      @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  buyer_id                 Int
+  amount                   Float
+  payment_method           PaymentMethod              @relation(fields: [payment_method_id], references: [id], onDelete: Cascade)
+  payment_method_id        Int
+  down_payment             Float?                     @default(0)
+  maturity_date            DateTime?
+  remaining_balance        Float?                     @db.Double
+  desc                     String
+  proof_of_payment         String?
+  status                   TransactionServiceStatus   @default(Paid)
+  created_at               DateTime                   @default(now())
+  updated_at               DateTime                   @updatedAt
+  DetailTransactionService DetailTransactionService[]
+
+  @@map("transaction_services")
+}
+
+enum TransactionServiceStatus {
+  Pending
+  Paid_Off
+  Paid
+  Unpaid
+}
+
+model DetailTransactionService {
+  id                     Int                @id @default(autoincrement())
+  transactionService     TransactionService @relation(fields: [transaction_service_id], references: [id], onDelete: Cascade)
+  transaction_service_id Int
+  desc                   String
+  amount                 Float
+  price                  Float
+  discount               Float?             @default(0)
+  subtotal               Float
+  subtotal_discount      Float
+  service                Service            @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  service_id             Int
+  created_at             DateTime           @default(now())
+  updated_at             DateTime           @updatedAt
+
+  @@map("detail_transaction_services")
+}
+
+model Service {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  price                    Float
+  factory                  Factory                    @relation(fields: [factory_id], references: [id], onDelete: Cascade)
+  factory_id               Int
+  created_at               DateTime                   @default(now())
+  updated_at               DateTime                   @updatedAt
+  DetailTransactionService DetailTransactionService[]
+
+  @@map("services")
+}
+
+model OrderBahanBakuDistributor {
+  id                              Int                               @id @default(autoincrement())
+  factory                         String
+  factoryDistributor              FactoryDistributor                @relation(fields: [factory_distributor_id], references: [id], onDelete: Cascade)
+  factory_distributor_id          Int
+  distributor                     User                              @relation(fields: [distributor_id], references: [id], onDelete: Cascade)
+  distributor_id                  Int
+  desc                            String                            @db.Text
+  total                           Float                             @db.Double
+  type_preorder                   Boolean
+  created_at                      DateTime
+  updated_at                      DateTime
+  DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+
+  @@map("order_bahan_baku_distributors")
+}
+
+model MaterialDistributor {
+  id                              Int                               @id @default(autoincrement())
+  name                            String                            @db.VarChar(200)
+  factoryDistributor              FactoryDistributor                @relation(fields: [factory_distributor_id], onDelete: Cascade, references: [id])
+  factory_distributor_id          Int
+  unit                            Unit                              @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  unit_id                         Int
+  DetailOrderBahanBakuDistributor DetailOrderBahanBakuDistributor[]
+
+  @@map("material_distributors")
+}
+
+model DetailOrderBahanBakuDistributor {
+  id                              Int                       @id @default(autoincrement())
+  order_bahan_baku_distributor    OrderBahanBakuDistributor @relation(fields: [order_bahan_baku_distributor_id], references: [id], onDelete: Cascade)
+  order_bahan_baku_distributor_id Int
+  material_distributor            MaterialDistributor       @relation(fields: [material_distributor_id], references: [id], onDelete: Cascade)
+  material_distributor_id         Int
+  amount_received                 Float?
+  amount                          Float
+  price                           Float
+  sub_total                       Float
+
+  @@map("detail_order_bahan_baku_distributors")
+}
